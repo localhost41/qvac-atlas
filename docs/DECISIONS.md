@@ -74,3 +74,20 @@ decisions, never contributor evidence. The production allowlist remains empty un
 the public repository protects this metadata with named code ownership, required
 fresh approval, and branch protection. CI is defense in depth and does not turn an
 unreviewed metadata edit into trusted evidence.
+
+## D-014 — Atlas owns production model artifact staging
+
+QVAC SDK 0.16.0's built-in `registry://` path verifies the selected artifact's
+size and SHA-256, but it does not give Atlas fail-closed control over all cache
+destinations or bind verified bytes atomically to the native addon's later path
+open. Atlas therefore cannot use SDK-managed download for a production execution
+grant.
+
+A future grant may reference only an Atlas-acquired canonical local file inside an
+Atlas-private, quiescent directory. Atlas must disclose the exact immutable source,
+Apache-2.0 license, 386,404,992-byte size, destination, and cache behavior before
+network activity; obtain explicit consent; enforce bounded acquisition and the
+pinned SHA-256; reject symlinks and path escapes; compare QVAC's loaded local path;
+and hash again after the lifecycle. This remains a narrow path-based safety model,
+not cryptographic proof of the bytes opened by the native addon. It stays dormant
+until its own implementation, adversarial review, and real-device gate pass.

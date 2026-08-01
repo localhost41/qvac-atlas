@@ -2,31 +2,36 @@
 
 Updated: 2026-07-31
 
-| Task | Owner | Model | Status | Depends on | Deliverable |
-|---|---|---|---|---|---|
-| ATLAS-001 | root | Sol | completed | — | Repository control plane and initial integration branch |
-| ATLAS-002 | runtime worker | Sol | completed | ATLAS-001 | Public-API runtime, model, isolation, and backend feasibility evidence |
-| ATLAS-003 | schema worker | Sol | completed | ATLAS-001 | Provisional report schema, claim derivation, and privacy contract |
-| ATLAS-004 | scaffold worker | Terra | completed | ATLAS-001 | Workspace, package skeleton, baseline CI, and fixture-driven checks |
-| ATLAS-005 | root | Sol | completed | ATLAS-002–004 | First-wave integration and NARROW technical-truth verdict |
-| ATLAS-006 | review worker | Terra | completed | ATLAS-004 | Independent scaffold review and Astro telemetry correction |
-| ATLAS-007 | review worker | Terra | completed | ATLAS-002 | Official Doctor and bundle-verification adapter research |
-| ATLAS-008 | runtime worker | Sol | completed | ATLAS-002 | Safe project-local QVAC SDK resolution and version boundary |
-| ATLAS-009 | CLI worker | Sol | completed | ATLAS-003, ATLAS-008 | Consent, collection, Doctor adapter, isolated fixture runner, preview, and local report write |
-| ATLAS-010 | registry worker | Terra | completed | ATLAS-003 | Validated catalog builder and evidence-driven static registry UI |
-| ATLAS-011 | contribution worker | Terra | completed | ATLAS-003, ATLAS-010 | Report admission audit, PR template, CI validation, and trusted source metadata |
-| ATLAS-012 | security reviewers | Sol | completed | ATLAS-009–011 | Adversarial integration, privacy, process, resolver, and claim review |
-| ATLAS-012A | resolver worker | Sol | completed | ATLAS-012 | Close child-listener and bounded cleanup races in the SDK bootstrap handoff |
-| ATLAS-012B | catalog worker | Terra | completed | ATLAS-012 | Descriptor-safe reads, canonical source boundaries, and end-to-end injection coverage |
-| ATLAS-012C | schema worker | Sol | completed | ATLAS-012 | Central V1 claim-evidence and path-free genuine-report gate |
-| ATLAS-013 | real-device gate | root + volunteer | pending capacity | ATLAS-009 | Hash-verified Node 22/macOS QVAC lifecycle run |
-| ATLAS-014 | Windows gate | volunteer | pending hardware | ATLAS-009 | Real Windows process containment and lifecycle validation |
-| ATLAS-015 | resolver worker | Sol | completed | ATLAS-008 | Fail-closed SDK resolver, opaque grant, and isolated-child bootstrap |
-| ATLAS-016 | architecture worker | Sol | completed | ATLAS-009, ATLAS-012, ATLAS-015 | Production-executor architecture and consent-boundary work packet |
-| ATLAS-016A | runtime worker | Sol | in progress | ATLAS-016 | Dormant resolver-to-executor lifecycle with synthetic SDK, process-group containment, and hostile tests |
-| ATLAS-016B | research worker | Terra | in progress | ATLAS-016 | Tag-scoped local-artifact, download, cache, hash, and cleanup evidence for a future production model grant |
-| ATLAS-017 | schema worker | Sol | in progress | ATLAS-003, ATLAS-012 | Replace provisional handwritten report types with schema-derived types and drift checks |
-| ATLAS-018 | release captain | Sol + human | pending | ATLAS-011, ATLAS-012 | Configure and verify protected maintainer ownership for profile and source-independence metadata |
+| Task       | Owner               | Model            | Status           | Depends on                      | Deliverable                                                                                                |
+| ---------- | ------------------- | ---------------- | ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| ATLAS-001  | root                | Sol              | completed        | —                               | Repository control plane and initial integration branch                                                    |
+| ATLAS-002  | runtime worker      | Sol              | completed        | ATLAS-001                       | Public-API runtime, model, isolation, and backend feasibility evidence                                     |
+| ATLAS-003  | schema worker       | Sol              | completed        | ATLAS-001                       | Provisional report schema, claim derivation, and privacy contract                                          |
+| ATLAS-004  | scaffold worker     | Terra            | completed        | ATLAS-001                       | Workspace, package skeleton, baseline CI, and fixture-driven checks                                        |
+| ATLAS-005  | root                | Sol              | completed        | ATLAS-002–004                   | First-wave integration and NARROW technical-truth verdict                                                  |
+| ATLAS-006  | review worker       | Terra            | completed        | ATLAS-004                       | Independent scaffold review and Astro telemetry correction                                                 |
+| ATLAS-007  | review worker       | Terra            | completed        | ATLAS-002                       | Official Doctor and bundle-verification adapter research                                                   |
+| ATLAS-008  | runtime worker      | Sol              | completed        | ATLAS-002                       | Safe project-local QVAC SDK resolution and version boundary                                                |
+| ATLAS-009  | CLI worker          | Sol              | completed        | ATLAS-003, ATLAS-008            | Consent, collection, Doctor adapter, isolated fixture runner, preview, and local report write              |
+| ATLAS-010  | registry worker     | Terra            | completed        | ATLAS-003                       | Validated catalog builder and evidence-driven static registry UI                                           |
+| ATLAS-011  | contribution worker | Terra            | completed        | ATLAS-003, ATLAS-010            | Report admission audit, PR template, CI validation, and trusted source metadata                            |
+| ATLAS-012  | security reviewers  | Sol              | completed        | ATLAS-009–011                   | Adversarial integration, privacy, process, resolver, and claim review                                      |
+| ATLAS-012A | resolver worker     | Sol              | completed        | ATLAS-012                       | Close child-listener and bounded cleanup races in the SDK bootstrap handoff                                |
+| ATLAS-012B | catalog worker      | Terra            | completed        | ATLAS-012                       | Descriptor-safe reads, canonical source boundaries, and end-to-end injection coverage                      |
+| ATLAS-012C | schema worker       | Sol              | completed        | ATLAS-012                       | Central V1 claim-evidence and path-free genuine-report gate                                                |
+| ATLAS-013  | real-device gate    | root + volunteer | pending capacity | ATLAS-009                       | Hash-verified Node 22/macOS QVAC lifecycle run                                                             |
+| ATLAS-014  | Windows gate        | volunteer        | pending hardware | ATLAS-009                       | Real Windows process containment and lifecycle validation                                                  |
+| ATLAS-015  | resolver worker     | Sol              | completed        | ATLAS-008                       | Fail-closed SDK resolver, opaque grant, and isolated-child bootstrap                                       |
+| ATLAS-016  | architecture worker | Sol              | completed        | ATLAS-009, ATLAS-012, ATLAS-015 | Production-executor architecture and consent-boundary work packet                                          |
+| ATLAS-016A | runtime worker      | Sol              | completed        | ATLAS-016                       | Dormant resolver-to-executor lifecycle with synthetic SDK, process-group containment, and hostile tests    |
+| ATLAS-016B | research worker     | Terra            | completed        | ATLAS-016                       | Tag-scoped local-artifact, download, cache, hash, and cleanup evidence for a future production model grant |
+| ATLAS-016C | quality worker      | Sol              | completed        | ATLAS-016A                      | Independent terminal-state, containment, privacy, and schema-validity audit of the dormant executor        |
+| ATLAS-017  | schema worker       | Sol              | completed        | ATLAS-003, ATLAS-012            | Replace provisional handwritten report types with schema-derived types and drift checks                    |
+| ATLAS-018  | release captain     | Sol + human      | pending          | ATLAS-011, ATLAS-012            | Configure and verify protected maintainer ownership for profile and source-independence metadata           |
+| ATLAS-019  | artifact worker     | Sol              | in progress      | ATLAS-016B                      | Dormant consent-capability and private artifact acquisition/validation package; no probe or CLI wiring     |
+| ATLAS-020  | executor worker     | Sol              | pending          | ATLAS-019                       | Bind a consumed verified local-artifact grant to the isolated child, loaded-path check, and post-run hash  |
+| ATLAS-021  | probe/CLI worker    | Sol              | pending          | ATLAS-020                       | Real-mode consent sequence and report pipeline, still claim-ineligible until ATLAS-013                     |
+| ATLAS-022  | quality worker      | Terra            | in progress      | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
 
 ## Queue rules
 

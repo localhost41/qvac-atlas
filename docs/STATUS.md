@@ -7,9 +7,9 @@ Updated: 2026-07-31
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- The adversarial-remediation wave is integrated on `integration` through commit
-  `f437457`.
-- The complete workspace passes lint, typecheck, 118 package tests, five runtime
+- The dormant-executor wave is integrated on `integration` through commit
+  `9d6d0ca` (with its canonical workspace lock at `332a7d4`).
+- The complete workspace passes lint, typecheck, 146 package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -31,27 +31,38 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-015: the exact project-local SDK resolver and opaque child-bootstrap grant
   are integrated; no production user command consumes the grant yet.
 - ATLAS-016: the real-executor architecture is complete.
-- ATLAS-016A: a dormant synthetic-SDK executor/supervisor implementation is active;
-  it will not be imported by the probe or CLI.
-- ATLAS-016B: tag-scoped model artifact/cache/hash semantics research is active.
-- ATLAS-017: schema-derived TypeScript report types and drift checks are active.
+- ATLAS-016A/C: the dormant synthetic-SDK executor/supervisor and independent
+  adversarial review are integrated. The executor is not imported by the probe or
+  CLI and has no production grant issuer.
+- ATLAS-016B: tag-scoped model artifact/cache/hash research is integrated. Its
+  verdict permits only Atlas-managed private staging; SDK-managed `registry://`
+  download is blocked for a production grant.
+- ATLAS-017: schema-derived TypeScript report types and full-schema drift checks
+  are integrated.
+- ATLAS-019: dormant Atlas-private artifact acquisition and validation is active.
+- ATLAS-022: the expanded hostile executor-protocol matrix is active.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
   4.8 GiB before safety margin.
 
 ## Next integration gate
 
-The release captain will integrate contribution admission, close the independent
-adversarial findings, and then bind the opaque resolver grant to a bounded production
-executor. Production claim admission and user-facing real execution stay disabled
-until a hash-verified real lifecycle succeeds.
+The release captain will integrate private, consent-capability-gated artifact
+staging and the expanded executor protocol matrix. Only then may a separate packet
+bind a verified canonical local artifact to the isolated child. Production claim
+admission and user-facing real execution stay disabled until a hash-verified real
+lifecycle succeeds.
 
 ## Known risks
 
 - Exact graphics backend name is not public evidence; UI/schema must say only CPU
   or GPU device class.
-- The standardized model is a 386,404,992-byte Apache-2.0 artifact; download and
-  cache behavior still need real validation.
+- The standardized model is a 386,404,992-byte Apache-2.0 artifact; Atlas-private
+  acquisition and cache behavior still need implementation and real validation.
+  QVAC-managed registry downloading is not an accepted production path.
+- QVAC passes a model path to its native addon after verification; a private,
+  quiescent Atlas directory narrows but cannot cryptographically eliminate the
+  verify-to-open interval.
 - Windows process-tree cleanup needs a Job Object or equivalent verified design.
 - Real launch evidence requires volunteer physical devices; CI runners are not GPU compatibility evidence.
 - QVAC SDK 0.16.0 has a multi-gigabyte native dependency footprint, so Atlas must
