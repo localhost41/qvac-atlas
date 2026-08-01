@@ -763,5 +763,15 @@
     "name": "compact private emergency key assignment",
     "value": "PRIVATEEMERGENCYKEY=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "AWS-namespaced compact API backup key assignment",
+    "value": "AWSAPIBACKUPKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "OpenAI-namespaced compact API backup key assignment",
+    "value": "OPENAIAPIBACKUPKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]

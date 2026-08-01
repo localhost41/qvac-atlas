@@ -51,8 +51,57 @@ const ASSIGNMENT_CANDIDATE =
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
 const COMPACT_ADJACENT_SENSITIVE_KEY =
   /(?:SECRET(?:V(?:ERSION)?\d*|\d+)?(?:ACCESS(?:V(?:ERSION)?\d*|\d+)?)?KEY|PRIVATE(?:V(?:ERSION)?\d*|\d+)?KEY|ACCESS(?:V(?:ERSION)?\d*|\d+)?KEY|API(?:V(?:ERSION)?\d*|\d+)?KEY)/gu;
-const COMPACT_LEADING_SENSITIVE_PREFIX = /^(?:SECRET|PRIVATE|ACCESS|API)/u;
+const COMPACT_SENSITIVE_PREFIX = /(?:SECRET|PRIVATE|ACCESS|API)/gu;
 const SAFE_KEY_WORD_PREFIX = /^KEY(?:BOARD|STONE|WORD|NOTE)/u;
+const SAFE_COMPACT_PREFIX_WORDS = [
+  "ACCESSIBILITIES",
+  "ACCESSIBILITY",
+  "ACCESSIBLE",
+  "ACCESSORIES",
+  "ACCESSORY",
+  "APICULTURE",
+  "APIOLOGY",
+  "APIARIES",
+  "APIARY",
+  "APICAL",
+  "APIECE",
+  "APISH",
+  "PRIVATEERS",
+  "PRIVATEER",
+  "PRIVATELY",
+  "SECRETARIAT",
+  "SECRETARIES",
+  "SECRETARY",
+  "SECRETIVE",
+  "SECRETION",
+  "SECRETORY",
+];
+const COMPACT_PREFIX_BOUNDARY_WORDS = [
+  ...SAFE_COMPACT_PREFIX_WORDS,
+  "OPENAI",
+  "GITHUB",
+  "GITLAB",
+  "GOOGLE",
+  "CUSTOM",
+  "SERVICE",
+  "CLIENT",
+  "SERVER",
+  "ATLAS",
+  "AZURE",
+  "QVAC",
+  "PROD",
+  "STAGING",
+  "TEST",
+  "AWS",
+  "GCP",
+  "APP",
+  "DEV",
+  "TEAM",
+  "ORG",
+  "MY",
+  "CI",
+  "CD",
+];
 const SAFE_KEY_ENDING_STEMS = [
   "DON",
   "FLUN",
@@ -200,27 +249,30 @@ function hasCompactSensitiveKey(segment) {
     if (SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`)) continue;
     return true;
   }
-  const prefix = segment.match(COMPACT_LEADING_SENSITIVE_PREFIX);
-  if (prefix === null) return false;
-  const prefixEnd = prefix[0].length;
-  // Avoid ordinary words whose spelling begins with a policy prefix.
-  if (
-    (prefix[0] === "SECRET" && segment.startsWith("ARY", prefixEnd)) ||
-    (prefix[0] === "ACCESS" && segment.startsWith("ORY", prefixEnd)) ||
-    (prefix[0] === "API" && segment.startsWith("ARY", prefixEnd)) ||
-    (prefix[0] === "PRIVATE" && segment.startsWith("ER", prefixEnd))
-  )
-    return false;
-  let keyIndex = segment.indexOf("KEY", prefixEnd);
-  while (keyIndex !== -1) {
-    const bridge = segment.slice(prefixEnd, keyIndex);
-    const tail = segment.slice(keyIndex + 3);
-    const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
-      bridge.endsWith(stem),
-    );
-    if (!ordinaryKeyWord && !SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`))
-      return true;
-    keyIndex = segment.indexOf("KEY", keyIndex + 3);
+  for (const prefix of segment.matchAll(COMPACT_SENSITIVE_PREFIX)) {
+    const left = segment.slice(0, prefix.index);
+    const hasBoundary =
+      prefix.index === 0 ||
+      COMPACT_PREFIX_BOUNDARY_WORDS.some((word) => left.endsWith(word));
+    if (!hasBoundary) continue;
+    if (
+      SAFE_COMPACT_PREFIX_WORDS.some((word) =>
+        segment.startsWith(word, prefix.index),
+      )
+    )
+      continue;
+    const prefixEnd = prefix.index + prefix[0].length;
+    let keyIndex = segment.indexOf("KEY", prefixEnd);
+    while (keyIndex !== -1) {
+      const bridge = segment.slice(prefixEnd, keyIndex);
+      const tail = segment.slice(keyIndex + 3);
+      const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
+        bridge.endsWith(stem),
+      );
+      if (!ordinaryKeyWord && !SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`))
+        return true;
+      keyIndex = segment.indexOf("KEY", keyIndex + 3);
+    }
   }
   return false;
 }
@@ -240,9 +292,14 @@ function isSensitiveAssignmentName(name) {
   const policySegments = segments.map(
     (segment) => PLURAL_ASSIGNMENT_SEGMENTS.get(segment) ?? segment,
   );
-  const policyName = policySegments.join("_");
+  const safePolicySegments = policySegments.map((segment, index) =>
+    segments[index] === "SECRET" &&
+    SAFE_KEY_WORD_PREFIX.test(policySegments[index + 1] ?? "")
+      ? "SAFE"
+      : segment,
+  );
+  const policyName = safePolicySegments.join("_");
   if (
-    FORBIDDEN_KEY.test(name) ||
     FORBIDDEN_KEY.test(policyName) ||
     /(?:API_?KEYS?|AUTHORIZATIONS?|COOKIES?|CREDENTIALS?|PASSWORDS?|SECRETS?|TOKENS?)$/u.test(
       name,
