@@ -1,15 +1,12 @@
-# QVAC Atlas 0.1.0 local release-candidate notes
+# QVAC Atlas 0.1.0 release notes
 
-Status: **prepared locally; not published, deployed, or announced**.
-
-QVAC Atlas 0.1.0 is the first installable candidate for the narrow,
-evidence-backed QVAC compatibility-registry workflow. This candidate is suitable
-for local fixture evaluation and release review only.
+QVAC Atlas 0.1.0 is the first installable fixture-only developer preview for the
+narrow, evidence-backed QVAC compatibility-registry workflow.
 
 ## Included
 
-- A deterministic `qvac-atlas@0.1.0` package artifact built locally with
-  `pnpm package:local` at `.artifacts/qvac-atlas-0.1.0.tgz`.
+- An Apache-2.0 `qvac-atlas@0.1.0` package published from the exact deterministic
+  artifact audited with `pnpm package:local`.
 - Offline installation into a fresh non-workspace project with no runtime
   dependencies and no QVAC installation.
 - Audit-before-publish, atomic no-clobber local artifact construction and an exact
@@ -33,8 +30,6 @@ for local fixture evaluation and release review only.
   claims.
 - Automatic upload, issue or pull-request creation, accounts, telemetry, repair,
   recommendations, scores, or a service backend.
-- npm publication, public repository creation, site deployment, or GitHub/Discord
-  announcements.
 
 ## Evidence status
 
@@ -43,10 +38,15 @@ derive `unknown`, and cannot enter genuine claims. The earlier private physical 
 remains nonconforming engineering evidence with `STOP / MANUAL REVIEW`; it does not
 authorize activation or publication.
 
-## Remaining release gates
+## Deliberately separate future gates
 
-Human license/contact/owner decisions, protected public-host configuration, final
-distribution review, at least 10 GiB physical-ceremony headroom, a fresh conforming
-ATLAS-013 run, production-profile admission, first genuine-report ceremony and
-protected admission, activation review, registry credentials, deployment approval,
-and announcement approval all remain separate gates.
+A fresh conforming ATLAS-013 run, production-profile admission, first
+genuine-report ceremony and protected admission, and real-mode activation remain
+separate future gates. The public fixture-only release does not satisfy or weaken
+any of them.
+
+## Links
+
+- Source: <https://github.com/localhost41/qvac-atlas>
+- Package: <https://www.npmjs.com/package/qvac-atlas/v/0.1.0>
+- Fixture registry: <https://localhost41.github.io/qvac-atlas/>

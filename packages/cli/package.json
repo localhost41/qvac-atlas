@@ -3,7 +3,21 @@
   "version": "0.1.0",
   "description": "Local-only QVAC Atlas report CLI; real execution is release-gated",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/localhost41/qvac-atlas#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/localhost41/qvac-atlas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/localhost41/qvac-atlas/issues"
+  },
+  "keywords": [
+    "qvac",
+    "compatibility",
+    "hardware",
+    "local-first"
+  ],
   "bin": {
     "qvac-atlas": "./bundle/bin.js"
   },
@@ -11,6 +25,7 @@
     "bundle",
     "schemas",
     "README.md",
+    "LICENSE",
     "NOTICE"
   ],
   "scripts": {

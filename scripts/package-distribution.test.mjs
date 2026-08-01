@@ -226,6 +226,11 @@ test(
       );
       assert.equal(installedManifest.name, PACKAGE_NAME);
       assert.equal(installedManifest.version, PACKAGE_VERSION);
+      assert.equal(installedManifest.license, "Apache-2.0");
+      assert.deepEqual(installedManifest.repository, {
+        type: "git",
+        url: "git+https://github.com/localhost41/qvac-atlas.git",
+      });
       assert.equal(installedManifest.dependencies, undefined);
       assert.equal(installedManifest.devDependencies, undefined);
       assert.equal(

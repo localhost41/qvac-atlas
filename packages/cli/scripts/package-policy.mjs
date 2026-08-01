@@ -18,7 +18,24 @@ export const PACKAGE_FILES = Object.freeze([
   "bundle",
   "schemas",
   "README.md",
+  "LICENSE",
   "NOTICE",
+]);
+
+export const PACKAGE_HOMEPAGE =
+  "https://github.com/localhost41/qvac-atlas#readme";
+export const PACKAGE_REPOSITORY = Object.freeze({
+  type: "git",
+  url: "git+https://github.com/localhost41/qvac-atlas.git",
+});
+export const PACKAGE_BUGS = Object.freeze({
+  url: "https://github.com/localhost41/qvac-atlas/issues",
+});
+export const PACKAGE_KEYWORDS = Object.freeze([
+  "qvac",
+  "compatibility",
+  "hardware",
+  "local-first",
 ]);
 
 export const BUNDLED_RUNTIME_PACKAGES = new Map([

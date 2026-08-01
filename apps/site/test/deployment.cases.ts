@@ -257,7 +257,7 @@ test("site release catalog gate permits genuine evidence but rejects fixture cro
   );
 });
 
-test("walkthrough and launch kit remain executable, unsent, and fixture-only", async () => {
+test("walkthrough and launch kit remain executable, release-bound, and fixture-only", async () => {
   const [walkthrough, beta, reviewer, rollback, notes, announcements] =
     await Promise.all(
       [
@@ -274,7 +274,7 @@ test("walkthrough and launch kit remain executable, unsent, and fixture-only", a
   assert.match(walkthrough, /\.artifacts\/qvac-atlas-0\.1\.0\.tgz/u);
   assert.match(
     walkthrough,
-    /npm install --offline --ignore-scripts --no-audit --no-fund/u,
+    /npm install --ignore-scripts --no-audit --no-fund/u,
   );
   assert.match(walkthrough, /--fixture success/u);
   assert.match(
@@ -298,13 +298,11 @@ test("walkthrough and launch kit remain executable, unsent, and fixture-only", a
   assert.match(rollback, /gh workflow disable site-release\.yml/u);
   assert.match(rollback, /gh api --method DELETE/u);
   assert.match(rollback, /does not authorize any external\s+mutation/u);
-  assert.match(notes, /not published, deployed, or announced/iu);
+  assert.match(notes, /fixture-only developer preview/iu);
+  assert.match(notes, /Apache-2\.0/u);
   assert.match(notes, /synthetic fixtures only/u);
-  assert.match(announcements, /UNSENT DRAFTS — DO NOT POST/u);
-  assert.match(announcements, /current registry is fixture-only/u);
+  assert.match(announcements, /UNSENT RELEASE-APPROVED DRAFTS/u);
+  assert.match(announcements, /current\s+registry remains fixture-only/u);
   assert.match(announcements, /protected maintainer admission/u);
-  assert.doesNotMatch(
-    `${walkthrough}\n${beta}\n${reviewer}\n${rollback}\n${notes}\n${announcements}`,
-    /(?:https?:\/\/)(?!github\.com\/actions\/)/u,
-  );
+  assert.doesNotMatch(announcements, /\[(?:reviewed|authorized)[^\]]*URL\]/u);
 });

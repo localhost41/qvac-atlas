@@ -244,16 +244,16 @@ test("repository ownership supports only complete preparation or launch states",
   );
   const requiredCoverage = new Map([
     ["*", 1],
-    ["/.github/CODEOWNERS", 2],
-    ["/.github/workflows/", 2],
-    ["/registry/catalog.json", 2],
-    ["/profiles/", 2],
-    ["/reports/v1/", 2],
-    ["/packages/catalog/", 2],
-    ["/packages/schema/", 2],
-    ["/scripts/validate-contribution.mjs", 2],
-    ["/scripts/validate-site-release-catalog.mjs", 3],
-    ["/scripts/validate-initial-baseline.mjs", 3],
+    ["/.github/CODEOWNERS", 1],
+    ["/.github/workflows/", 1],
+    ["/registry/catalog.json", 1],
+    ["/profiles/", 1],
+    ["/reports/v1/", 1],
+    ["/packages/catalog/", 1],
+    ["/packages/schema/", 1],
+    ["/scripts/validate-contribution.mjs", 1],
+    ["/scripts/validate-site-release-catalog.mjs", 1],
+    ["/scripts/validate-initial-baseline.mjs", 1],
   ]);
   const placeholders = new Set([
     "@PRIMARY_CODE_OWNER_HANDLE_REQUIRED",
@@ -298,8 +298,8 @@ test("repository ownership supports only complete preparation or launch states",
       ),
     /all-placeholder owners or concrete owners/u,
   );
-  assert.match(security, /launch-blocking placeholder/u);
-  assert.match(release, /local preparation only/u);
+  assert.match(security, /`@localhost41` is the repository security owner/u);
+  assert.match(release, /still only preparation until GitHub reports/u);
   assert.match(bootstrap, /performs authenticated `GET` requests only/u);
   assert.match(bootstrap, /Ordinary\s+`pnpm ready:local` never runs it/iu);
   assert.deepEqual(protection.required_status_checks, {
@@ -344,14 +344,11 @@ test("security, support, release, and dependency policies preserve human gates",
   assert.match(security, /no invented email address/u);
   assert.match(
     support,
-    /does not currently offer public hardware compatibility\s+support/u,
+    /does not currently offer public hardware\s+compatibility support/u,
   );
   assert.match(support, /never installs QVAC/u);
   assert.match(release, /Legal\/license approver/u);
-  assert.match(
-    release,
-    /Each step needs a fresh explicit human authorization/u,
-  );
+  assert.match(release, /explicit owner authorization for all five steps/u);
   assert.match(release, /literal `false`/u);
   assert.match(dependencies, /full\s+40-character commit SHA/iu);
   assert.match(dependencies, /must not auto-merge/u);
@@ -375,7 +372,25 @@ test("release metadata and package-content contract cannot drift", async () => {
   assert.equal(Object.hasOwn(cli, "private"), false);
   assert.equal(Object.hasOwn(cli, "dependencies"), false);
   assert.deepEqual(cli.bin, { "qvac-atlas": "./bundle/bin.js" });
-  assert.deepEqual(cli.files, ["bundle", "schemas", "README.md", "NOTICE"]);
+  assert.equal(cli.license, "Apache-2.0");
+  assert.equal(
+    cli.homepage,
+    "https://github.com/localhost41/qvac-atlas#readme",
+  );
+  assert.deepEqual(cli.repository, {
+    type: "git",
+    url: "git+https://github.com/localhost41/qvac-atlas.git",
+  });
+  assert.deepEqual(cli.bugs, {
+    url: "https://github.com/localhost41/qvac-atlas/issues",
+  });
+  assert.deepEqual(cli.files, [
+    "bundle",
+    "schemas",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+  ]);
   assert.equal(cli.engines?.node, ">=22 <23");
   for (const hook of ["preinstall", "install", "postinstall"]) {
     assert.equal(Object.hasOwn(cli.scripts ?? {}, hook), false, hook);

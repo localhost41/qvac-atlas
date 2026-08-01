@@ -22,7 +22,11 @@ import {
   BUNDLE_FILENAMES,
   PACKAGE_FILENAME,
   PACKAGE_FILES,
+  PACKAGE_BUGS,
+  PACKAGE_HOMEPAGE,
+  PACKAGE_KEYWORDS,
   PACKAGE_NAME,
+  PACKAGE_REPOSITORY,
   PACKAGE_VERSION,
   SCHEMA_FILENAMES,
 } from "../packages/cli/scripts/package-policy.mjs";
@@ -74,6 +78,9 @@ async function copyReleaseFiles(stagingRoot) {
     await copyFile(path.join(cliRoot, filename), destination);
     await chmod(destination, 0o644);
   }
+  const licenseDestination = path.join(stagingRoot, "LICENSE");
+  await copyFile(path.join(repositoryRoot, "LICENSE"), licenseDestination);
+  await chmod(licenseDestination, 0o644);
 }
 
 async function releaseManifest() {
@@ -84,7 +91,11 @@ async function releaseManifest() {
     source.name !== PACKAGE_NAME ||
     source.version !== PACKAGE_VERSION ||
     source.private !== undefined ||
-    source.license !== "UNLICENSED" ||
+    source.license !== "Apache-2.0" ||
+    source.homepage !== PACKAGE_HOMEPAGE ||
+    JSON.stringify(source.repository) !== JSON.stringify(PACKAGE_REPOSITORY) ||
+    JSON.stringify(source.bugs) !== JSON.stringify(PACKAGE_BUGS) ||
+    JSON.stringify(source.keywords) !== JSON.stringify(PACKAGE_KEYWORDS) ||
     source.dependencies !== undefined ||
     JSON.stringify(source.bin) !==
       JSON.stringify({ "qvac-atlas": "./bundle/bin.js" }) ||
@@ -101,6 +112,10 @@ async function releaseManifest() {
     description: source.description,
     type: source.type,
     license: source.license,
+    homepage: source.homepage,
+    repository: source.repository,
+    bugs: source.bugs,
+    keywords: source.keywords,
     bin: source.bin,
     files: source.files,
     engines: source.engines,

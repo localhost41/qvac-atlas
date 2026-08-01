@@ -1,9 +1,11 @@
-QVAC Atlas 0.1.0 local release-candidate notice
-================================================
+QVAC Atlas 0.1.0 notice
+=======================
 
-QVAC Atlas itself is currently marked UNLICENSED. This local artifact is prepared
-for review and offline installation only. It is not authorization to publish,
-redistribute, enable real execution, submit reports, or use the unreserved npm name.
+Copyright 2026 QVAC Atlas contributors
+
+QVAC Atlas is licensed under the Apache License, Version 2.0. The complete license
+is included as LICENSE. This notice does not enable real execution, admit reports,
+or turn publication intent into upload authority.
 
 The artifact does not contain QVAC, a model, a model cache, reports, or telemetry.
 Its bundled schema validator contains these production dependencies:

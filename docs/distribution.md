@@ -7,10 +7,10 @@ smallest supportable topology: an installer receives one zero-dependency artifac
 while the supervised executor and acquisition processes still start from distinct
 fixed package-owned entry files.
 
-This is local release-candidate preparation, not publication authority. The npm
-name has not been reserved, the project is marked `UNLICENSED`, registry credentials
-are not configured, and no package may be published until a human approves the
-name, license, owner, credentials, and exact reviewed commit.
+The project owner approved Apache-2.0, the unscoped npm name, `@localhost41` as
+repository owner, and publication of the exact independently reviewed `0.1.0`
+artifact. Registry authentication and exact-byte verification remain mandatory;
+authorization never permits publishing a rebuilt or nearby artifact.
 
 ## Build the local artifact
 
@@ -33,6 +33,7 @@ The artifact allowlist is exactly:
 ```text
 package/package.json
 package/README.md
+package/LICENSE
 package/NOTICE
 package/bundle/bin.js
 package/bundle/child-runner.js

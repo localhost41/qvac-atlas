@@ -19,11 +19,11 @@ The fixture-driven vertical slice is implemented: consent ordering, report
 validation, a fail-closed project-local SDK resolver, deterministic Git admission,
 and the static registry all pass the workspace gate. The CLI deliberately exposes
 only synthetic scenarios today. A deterministic, zero-runtime-dependency local
-`qvac-atlas@0.1.0` tarball can now be built and installed outside the monorepo for
-fixture-only evaluation; it is not published.
+`qvac-atlas@0.1.0` tarball can be built and installed outside the monorepo for
+fixture-only evaluation. The authorized public launch is tracked in ATLAS-035.
 
 Real QVAC execution, model download, production-profile admission, genuine claims,
-publishing, and deployment remain disabled. A real lifecycle needs an existing
+and real-mode activation remain disabled. A real lifecycle needs an existing
 project-local QVAC SDK, enough disk for its multi-gigabyte dependency graph and the
 386,404,992-byte pinned model, then explicit human review. Do not describe the
 current fixture registry as hardware compatibility evidence.
@@ -33,6 +33,18 @@ must refuse before project resolution or any cache, network, temporary-file, or
 process effect; support for those hosts is post-V1 work.
 
 See [`docs/PROJECT.md`](docs/PROJECT.md) for the immutable V1 boundary and [`docs/STATUS.md`](docs/STATUS.md) for the current verified state.
+
+## Try the fixture-only preview
+
+Use Node 22 in a fresh project:
+
+```bash
+npm install --ignore-scripts --save-dev qvac-atlas@0.1.0
+npx qvac-atlas --help
+```
+
+The public static registry is at <https://localhost41.github.io/qvac-atlas/>. Start
+with the [five-minute synthetic walkthrough](docs/contributing/five-minute-fixture-walkthrough.md).
 
 ## Genuine report submissions are closed
 
@@ -74,5 +86,10 @@ pnpm package:audit -- .artifacts/qvac-atlas-0.1.0.tgz
 The artifact is audited before atomic no-clobber publication to `.artifacts/` and
 installs offline with no runtime dependencies or QVAC installation. See
 [`docs/distribution.md`](docs/distribution.md) for the exact file allowlist and
-fresh-project smoke test. Package publication remains blocked on the legal,
-ownership, registry, and explicit external-release gates.
+fresh-project smoke test. Only the exact audited artifact may be published;
+registry and protected-host verification remain mandatory release gates.
+
+## License
+
+QVAC Atlas is licensed under [Apache-2.0](LICENSE). Bundled third-party
+attributions are recorded in the CLI package `NOTICE`.

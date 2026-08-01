@@ -1,31 +1,30 @@
-# QVAC Atlas ownership preparation
+# QVAC Atlas ownership
 #
-# HUMAN GATE: these three tokens are intentionally unresolved placeholders.
-# Replace each token with a valid GitHub user or team before public bootstrap,
-# then require GitHub's CODEOWNERS error endpoint to report zero errors.
-# Their presence proves local structure only; it does not establish trust.
+# @localhost41 holds the primary, evidence, and security operational roles for
+# the fixture-only 0.1.0 launch. Protected Pages deployment separately requires
+# a different named human reviewer and prevents self-review.
 
-* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED
+* @localhost41
 
 # Repository trust and security controls require independent review.
-/.github/CODEOWNERS @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/.github/workflows/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/.github/branch-protection.json @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/SECURITY.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/scripts/verify-host-protection.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/.github/CODEOWNERS @localhost41
+/.github/workflows/ @localhost41
+/.github/branch-protection.json @localhost41
+/SECURITY.md @localhost41
+/scripts/verify-host-protection.mjs @localhost41
 
 # Claim admission and source-independence metadata are maintainer-owned.
-/registry/catalog.json @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/profiles/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/reports/v1/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/packages/catalog/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/packages/schema/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/scripts/validate-contribution.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
-/scripts/validate-site-release-catalog.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/scripts/validate-initial-baseline.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/docs/contributing/maintainer-admission.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/registry/catalog.json @localhost41
+/profiles/ @localhost41
+/reports/v1/ @localhost41
+/packages/catalog/ @localhost41
+/packages/schema/ @localhost41
+/scripts/validate-contribution.mjs @localhost41
+/scripts/validate-site-release-catalog.mjs @localhost41
+/scripts/validate-initial-baseline.mjs @localhost41
+/docs/contributing/maintainer-admission.md @localhost41
 
 # Release and dependency policy changes require release/security review.
-/docs/RELEASE-PROCESS.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/docs/contributing/dependency-updates.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
-/docs/operations/public-host-bootstrap.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/docs/RELEASE-PROCESS.md @localhost41
+/docs/contributing/dependency-updates.md @localhost41
+/docs/operations/public-host-bootstrap.md @localhost41

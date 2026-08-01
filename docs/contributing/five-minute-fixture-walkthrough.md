@@ -4,35 +4,27 @@ This walkthrough tests the install and consent experience with synthetic data. I
 does **not** run QVAC, inspect hardware, download a model, produce compatibility
 evidence, or submit anything.
 
-> **Current boundary:** the package is a local release candidate, real mode is
+> **Current boundary:** this is a fixture-only developer preview, real mode is
 > disabled, and genuine report submissions are closed. Fixture output must never
 > be presented or submitted as hardware evidence.
 
-## 1. Obtain the reviewed local artifact
+## 1. Install the exact release
 
-The release candidate is not published to npm. A maintainer builds it from the
-reviewed repository commit with:
-
-```sh
-pnpm package:local
-```
-
-That command produces `.artifacts/qvac-atlas-0.1.0.tgz`. The maintainer must give
-you the artifact through the separately approved private-beta channel together
-with its SHA-256. Do not substitute a similarly named download or npm package.
-
-## 2. Install it in a fresh directory
-
-Use Node 22. Replace the placeholder with the absolute path to the reviewed local
-artifact:
+Use Node 22 in a fresh directory:
 
 ```sh
 mkdir qvac-atlas-fixture-tour
 cd qvac-atlas-fixture-tour
-npm install --offline --ignore-scripts --no-audit --no-fund --package-lock=false \
-  /absolute/path/qvac-atlas-0.1.0.tgz
+npm install --ignore-scripts --no-audit --no-fund --package-lock=false \
+  qvac-atlas@0.1.0
 ./node_modules/.bin/qvac-atlas --help
 ```
+
+For exact pre-publication review, a maintainer instead runs `pnpm package:local`
+and supplies `.artifacts/qvac-atlas-0.1.0.tgz` with its reviewed SHA-256. Install
+that artifact with `npm install --offline --ignore-scripts --no-audit --no-fund`.
+
+## 2. Confirm the boundary
 
 The help must say that this build accepts synthetic fixture scenarios only and
 that real execution requires separate physical/privacy and activation decisions.

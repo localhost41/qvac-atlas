@@ -1,9 +1,9 @@
 # Public GitHub bootstrap and verification
 
-These commands are a prepared operator runbook, not authorization. They target
+These commands are the authorized ATLAS-035 operator runbook. They target
 GitHub.com because the repository already uses GitHub Actions and CODEOWNERS. Do
-not run them until a human explicitly approves the public repository, names the
-owners, chooses a license, and accepts the exact candidate commit.
+not run them until the exact Apache-2.0 candidate passes independent review and a
+separate GitHub user is named for protected Pages approval.
 
 The local candidate currently has no remote. The commands below deliberately use
 visible placeholders and stop-on-error checks. Run them one block at a time from a
@@ -14,9 +14,9 @@ repository.
 
 Before bootstrap:
 
-- replace every `*_HANDLE_REQUIRED` token in `.github/CODEOWNERS` with a valid
-  GitHub user or team that has repository access;
-- select and commit the human-approved license;
+- confirm `.github/CODEOWNERS` consistently names `@localhost41` and GitHub reports
+  no syntax or ownership errors;
+- confirm the repository and package contain the approved Apache-2.0 license;
 - enable a valid private security-reporting owner and support path;
 - name one GitHub user, distinct from the person triggering deployment, as the
   required Pages reviewer and grant that reviewer repository access;
@@ -28,7 +28,7 @@ Before bootstrap:
 Set non-secret identifiers explicitly:
 
 ```bash
-ATLAS_GITHUB_OWNER='REPLACE_WITH_APPROVED_OWNER'
+ATLAS_GITHUB_OWNER='localhost41'
 ATLAS_GITHUB_REPOSITORY='qvac-atlas'
 ATLAS_REVIEWED_COMMIT='REPLACE_WITH_40_HEX_COMMIT'
 ATLAS_PAGES_REVIEWER='REPLACE_WITH_INDEPENDENT_GITHUB_LOGIN'

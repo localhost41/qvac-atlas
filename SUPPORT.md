@@ -1,19 +1,15 @@
 # Support policy
 
-QVAC Atlas currently supports development and review of its fixture-only release
-candidate. It does not currently offer public hardware compatibility support,
-production report submission, real-mode troubleshooting, package installation,
-model download, or a hosted registry.
+QVAC Atlas `0.1.x` supports installation, development, review, and issue reporting
+for its fixture-only developer preview. It does not currently offer public hardware
+compatibility support, production report submission, real-mode troubleshooting,
+model download, or compatibility claims.
 
 ## Appropriate support requests
 
-After a public repository is explicitly authorized, ordinary questions may use its
-GitHub issue or discussion features if maintainers enable them. Appropriate topics
-include fixture-only setup, documented schema and catalog behavior, contributor
-workflow, and reproducible defects that contain no private data.
-
-Before then, there is intentionally no public support URL or invented maintainer
-identity. Keep questions local to the existing project collaboration channel.
+Ordinary questions may use the public repository's GitHub issues. Appropriate
+topics include fixture-only setup, documented schema and catalog behavior,
+contributor workflow, and reproducible defects that contain no private data.
 
 ## Boundaries
 

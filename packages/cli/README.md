@@ -1,7 +1,7 @@
 # QVAC Atlas CLI
 
-This is the locally built `qvac-atlas@0.1.0` release candidate. It creates
-sanitized QVAC Atlas reports locally and never uploads them.
+`qvac-atlas@0.1.0` is a fixture-only developer preview. It creates sanitized QVAC
+Atlas reports locally and never uploads them.
 
 The candidate is fixture-only. Real QVAC execution is compiled behind a literal
 `false` release gate and remains unavailable until the separate physical-device,
@@ -15,7 +15,16 @@ privacy, and activation reviews pass. Genuine report submission is also closed.
 Atlas does not install QVAC. A future reviewed real probe will resolve only an
 already-present, exact project-local QVAC installation from the selected project.
 
-## Local artifact installation
+## Installation
+
+After the public `0.1.0` release:
+
+```bash
+npm install --ignore-scripts --save-dev qvac-atlas@0.1.0
+npx qvac-atlas --help
+```
+
+To review an exact local release artifact from a fresh directory:
 
 From a fresh directory, install the reviewed local tarball without running package
 scripts:
@@ -26,5 +35,9 @@ npx --offline qvac-atlas --help
 ```
 
 The package has no runtime npm dependencies and does not need the Atlas monorepo.
-Do not publish this release candidate: the package name, project license, registry
-credentials, and public release decision remain human-controlled gates.
+Source, issues, security policy, and exact release notes are maintained at
+<https://github.com/localhost41/qvac-atlas>.
+
+## License
+
+Apache-2.0. Third-party attributions are included in `NOTICE`.

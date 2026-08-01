@@ -1,11 +1,10 @@
 # Unsent announcement drafts
 
-**UNSENT DRAFTS — DO NOT POST, PUBLISH, OR COPY TO AN EXTERNAL SERVICE.**
+**UNSENT RELEASE-APPROVED DRAFTS — DO NOT POST BEFORE ALL ATLAS-035 GATES PASS.**
 
-These drafts are local review material. Placeholder URLs, contacts, owner names,
-license decisions, artifact digests, and release authority must be resolved by the
-responsible humans. The current registry is fixture-only until a production profile
-and genuine report pass protected maintainer admission.
+These drafts contain the final public URLs and fixture-only boundary. The current
+registry remains fixture-only until a production profile and genuine report pass
+protected maintainer admission.
 
 ## Draft GitHub release/announcement
 
@@ -21,9 +20,13 @@ and genuine report pass protected maintainer admission.
 > genuine submissions remain closed. Synthetic fixture results demonstrate the
 > interface and are never hardware evidence.
 >
-> Try the five-minute synthetic walkthrough: `[reviewed documentation URL]`
+> Try the five-minute synthetic walkthrough:
+> <https://github.com/localhost41/qvac-atlas/blob/v0.1.0/docs/contributing/five-minute-fixture-walkthrough.md>
 >
-> Source and release notes: `[authorized repository/release URL]`
+> Source and release notes:
+> <https://github.com/localhost41/qvac-atlas/releases/tag/v0.1.0>
+>
+> Install: `npm install --save-dev qvac-atlas@0.1.0`
 >
 > Genuine evidence will appear only after conforming physical/privacy validation,
 > production-profile approval, named ownership, protected review, and
@@ -31,14 +34,14 @@ and genuine report pass protected maintainer admission.
 > submits a report automatically.
 
 Do not send until the release captain records the approved commit/artifact digest,
-license, named owners/contact, public URLs, protected host checks, deployment
-approval, and announcement authority. If the launch state is no longer fixture-only,
-rewrite and independently review the evidence paragraph against the exact admitted
-catalog; do not silently reuse this draft.
+protected host checks, matching npm bytes, successful Pages deployment, and release
+URL. If the launch state is no longer fixture-only, rewrite and independently
+review the evidence paragraph against the exact admitted catalog; do not silently
+reuse this draft.
 
 ## Draft Discord announcement
 
-> We’re preparing QVAC Atlas 0.1.0: a local-first, evidence-backed view of whether an
+> We’ve released QVAC Atlas 0.1.0: a local-first, evidence-backed view of whether an
 > exact QVAC workload was observed succeeding, falling back, failing, or remaining
 > inconclusive on a specific setup.
 >
@@ -48,8 +51,9 @@ catalog; do not silently reuse this draft.
 > admission. Atlas installs no QVAC, uploads nothing, and is not a replacement for
 > `qvac doctor`.
 >
-> Local fixture walkthrough: `[reviewed documentation URL]`
-> Project/release notes: `[authorized public URL]`
+> Fixture registry: <https://localhost41.github.io/qvac-atlas/>
+> Project/release notes: <https://github.com/localhost41/qvac-atlas/releases/tag/v0.1.0>
+> Install: `npm install --save-dev qvac-atlas@0.1.0`
 
 Do not post until a human with Discord authority approves the exact channel, text,
 links, timing, and moderation/contact plan after the repository, package, and site

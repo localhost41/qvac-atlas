@@ -11,7 +11,11 @@ import {
   BUNDLE_FILENAMES,
   PACKAGE_FILES,
   PACKAGE_FILENAME,
+  PACKAGE_BUGS,
+  PACKAGE_HOMEPAGE,
+  PACKAGE_KEYWORDS,
   PACKAGE_NAME,
+  PACKAGE_REPOSITORY,
   PACKAGE_VERSION,
   SCHEMA_FILENAMES,
 } from "../packages/cli/scripts/package-policy.mjs";
@@ -22,6 +26,7 @@ const repositoryRoot = path.resolve(
   "..",
 );
 const expectedEntries = [
+  "package/LICENSE",
   "package/NOTICE",
   "package/README.md",
   ...BUNDLE_FILENAMES.map((filename) => `package/bundle/${filename}`),
@@ -109,15 +114,19 @@ export async function auditPackage(tarball, options = {}) {
     ) {
       fail("name or version drifted");
     }
-    if (manifest.private !== undefined || manifest.license !== "UNLICENSED") {
-      fail("release-candidate publication metadata drifted");
+    if (manifest.private !== undefined || manifest.license !== "Apache-2.0") {
+      fail("publication license metadata drifted");
     }
     if (
+      manifest.homepage !== PACKAGE_HOMEPAGE ||
+      !sameJson(manifest.repository, PACKAGE_REPOSITORY) ||
+      !sameJson(manifest.bugs, PACKAGE_BUGS) ||
+      !sameJson(manifest.keywords, PACKAGE_KEYWORDS) ||
       !sameJson(manifest.bin, { "qvac-atlas": "./bundle/bin.js" }) ||
       !sameJson(manifest.files, PACKAGE_FILES) ||
       !sameJson(manifest.engines, { node: ">=22 <23" })
     ) {
-      fail("bin, files, or Node contract drifted");
+      fail("repository, bin, files, or Node contract drifted");
     }
     for (const field of [
       "dependencies",

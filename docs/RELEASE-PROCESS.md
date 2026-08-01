@@ -7,18 +7,18 @@ send an announcement.
 
 ## Human assignments required before launch
 
-Record real people or valid GitHub teams in the private release record and replace
-the bounded repository placeholders before public bootstrap:
+Record real people or valid GitHub teams in the private release record before
+public bootstrap:
 
-| Responsibility                         | Repository placeholder                 | Required decision                                                             |
-| -------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
-| Primary code owner and release captain | `@PRIMARY_CODE_OWNER_HANDLE_REQUIRED`  | Accept the exact release commit and coordinate gates.                         |
-| Evidence/admission owner               | `@EVIDENCE_CODE_OWNER_HANDLE_REQUIRED` | Review profiles, genuine reports, and source-independence metadata.           |
-| Security owner                         | `@SECURITY_CODE_OWNER_HANDLE_REQUIRED` | Receive private reports and approve security/incident readiness.              |
-| Host operator                          | none; record privately                 | Create/configure the authorized public host and return verification evidence. |
-| Independent reviewer                   | none; record privately                 | Review the exact candidate after the latest change.                           |
-| Legal/license approver                 | none; record privately                 | Choose and approve the repository/package license.                            |
-| Registry publisher                     | none; record privately                 | Control package-registry identity and credentials.                            |
+| Responsibility                         | Current assignment                | Required decision                                                             |
+| -------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| Primary code owner and release captain | `@localhost41`                    | Accept the exact release commit and coordinate gates.                         |
+| Evidence/admission owner               | `@localhost41`                    | Review profiles, genuine reports, and source-independence metadata.           |
+| Security owner                         | `@localhost41`                    | Receive private reports and approve security/incident readiness.              |
+| Host operator                          | `@localhost41`                    | Create/configure the authorized public host and return verification evidence. |
+| Independent reviewer                   | separate human; GitHub login due  | Review the exact candidate after the latest change and approve Pages.         |
+| Legal/license approver                 | project owner; Apache-2.0 approved| Confirm Apache-2.0 and third-party notice obligations.                        |
+| Registry publisher                     | project owner; login due          | Authenticate the approved npm publishing identity.                            |
 
 One person may hold multiple operational roles only if the required independent
 review still comes from someone other than the author of the latest protected
@@ -30,7 +30,7 @@ identities in reports.
 The V1 distribution contract is one unscoped `qvac-atlas@0.1.0` CLI package with
 the `qvac-atlas` binary. It contains one bundled zero-runtime-dependency CLI, the
 three fixed supervised child entry files required by that bundle, the two exact
-runtime JSON Schemas, `README.md`, and `NOTICE`; it contains no tests, fixtures,
+runtime JSON Schemas, `README.md`, `LICENSE`, and `NOTICE`; it contains no tests, fixtures,
 reports, source maps, caches, credentials, local paths, or workspace-only packages.
 All internal workspace packages remain private at `0.1.0`. The workspace root
 remains private and is not a release artifact.
@@ -65,8 +65,8 @@ requires an explicit reviewed update to this contract and its readiness tests.
 
 Before any external publication:
 
-- the legal approver selects a license and confirms third-party notice obligations;
-- all three CODEOWNERS placeholders are replaced with valid handles;
+- Apache-2.0 and all third-party notice obligations are committed and audited;
+- all CODEOWNERS entries resolve to the approved `@localhost41` account;
 - the host operator follows
   [`operations/public-host-bootstrap.md`](operations/public-host-bootstrap.md) and
   returns a passing read-only verification for the exact imported commit;
@@ -77,13 +77,14 @@ Before any external publication:
 - the initial trusted baseline is recorded before the next change, as required by
   the maintainer-admission procedure.
 
-A placeholder CODEOWNERS file is local preparation only and must never be described
-as named ownership or repository trust.
+A locally concrete CODEOWNERS file is still only preparation until GitHub reports
+zero ownership errors and the complete public-host verifier passes.
 
 ## External release sequence
 
-Each step needs a fresh explicit human authorization. Do not infer later authority
-from approval of an earlier step.
+ATLAS-035 records explicit owner authorization for all five steps below. Each step
+still executes only after its listed technical and independent-review prerequisites
+pass; authorization does not permit skipping or reordering a gate.
 
 1. Authorize and bootstrap the public GitHub repository at the exact reviewed
    commit; verify protection before accepting changes.
