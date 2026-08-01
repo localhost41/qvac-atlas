@@ -12,11 +12,13 @@ permissions:
 
 jobs:
   check:
-    name: Install, lint, typecheck, test, and build
+    name: Validate workspace and contribution data
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
           version: 11.10.0
@@ -25,4 +27,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Audit report and registry admission
+        run: node scripts/validate-contribution.mjs
       - run: pnpm check
+      - name: Rebuild deterministic catalog
+        run: node scripts/build-catalog.mjs
+      - name: Reject generated catalog drift
+        run: git diff --exit-code -- apps/site/src/generated/catalog.json

@@ -1,2 +1,3 @@
 export { buildCatalog, serializeCatalog } from "./catalog.js";
-export { buildCatalogFromFiles } from "./filesystem.js";
+export { auditContributions } from "./audit.js";
+export { buildCatalogFromFiles, readRegistryConfig } from "./filesystem.js";

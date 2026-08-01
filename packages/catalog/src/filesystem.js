@@ -57,22 +57,10 @@ async function readJson(root, path, label, maxBytes) {
   }
 }
 
-function validateConfiguredPath(kind, path) {
-  const fixturePath =
-    path.startsWith("packages/schema/fixtures/") ||
-    path.startsWith("reports/fixtures/");
-  const genuinePath = /^reports\/v1\/sha256-[a-f0-9]{64}\.json$/.test(path);
-  if (
-    (kind === "fixture" && !fixturePath) ||
-    (kind === "genuine" && !genuinePath)
-  ) {
-    throw new Error(
-      "Catalog admission failed: report path is outside its trusted source area",
-    );
-  }
-}
-
-export async function buildCatalogFromFiles({ root, configPath }) {
+export async function readRegistryConfig({
+  root,
+  configPath = "registry/catalog.json",
+}) {
   const config = await readJson(
     root,
     configPath,
@@ -96,6 +84,29 @@ export async function buildCatalogFromFiles({ root, configPath }) {
       "Catalog admission failed: registry configuration has an unsupported field",
     );
   }
+  return config;
+}
+
+function validateConfiguredPath(kind, path) {
+  const fixturePath =
+    path.startsWith("packages/schema/fixtures/") ||
+    path.startsWith("reports/fixtures/");
+  const genuinePath = /^reports\/v1\/sha256-[a-f0-9]{64}\.json$/.test(path);
+  if (
+    (kind === "fixture" && !fixturePath) ||
+    (kind === "genuine" && !genuinePath)
+  ) {
+    throw new Error(
+      "Catalog admission failed: report path is outside its trusted source area",
+    );
+  }
+}
+
+export async function buildCatalogFromFiles({ root, configPath }) {
+  const config = await readRegistryConfig({
+    root,
+    configPath,
+  });
 
   const sources = [];
   for (const metadata of [...config.sources].sort((left, right) =>
