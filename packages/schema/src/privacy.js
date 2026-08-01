@@ -32,7 +32,7 @@ const CONTENT_RULES = [
   ],
   [
     "mac-address",
-    /(?<![0-9A-F])(?<![0-9A-F]{2}[:-])(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}(?![0-9A-F]|[:-][0-9A-F]{2})/i,
+    /(?<![A-Za-z0-9])(?<![0-9A-F]{2}[:-])(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}(?![A-Za-z0-9]|[:-][0-9A-F]{2})/i,
   ],
   [
     "stable-identifier",
@@ -44,7 +44,7 @@ const CONTENT_RULES = [
   ],
   [
     "sensitive-assignment",
-    /(?<![A-Za-z0-9_])_?(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)\s*=\s*\S+/i,
+    /(?<![A-Za-z0-9_])(?!_*NOT_TOKEN\s*=)_*[A-Za-z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|AUTHORIZATION)\s*=\s*\S+/i,
   ],
 ];
 
@@ -61,7 +61,7 @@ const EXACT_ENTROPY_EXEMPT_PATHS = new Set([
 const PACKAGE_VERSION_PATH = /^\/qvac\/packages\/\d+\/version$/;
 const IPV6_CANDIDATE =
   /\[[0-9A-Fa-f:.]{2,128}(?:%[0-9A-Za-z_.~-]{1,64})?\]|[0-9A-Fa-f:.]{0,128}:[0-9A-Fa-f:.]{1,128}(?:%[0-9A-Za-z_.~-]{1,64})?/gu;
-const IPV6_ADJACENT = /[0-9A-Za-z_.%~-]/u;
+const IPV6_ADJACENT = /[0-9A-Za-z.%~]/u;
 
 function pointerSegment(value) {
   return value.replaceAll("~", "~0").replaceAll("/", "~1");

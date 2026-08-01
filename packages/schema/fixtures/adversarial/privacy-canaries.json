@@ -110,6 +110,21 @@
     "expected_rule": "ipv6-address"
   },
   {
+    "name": "underscore-delimited IPv6 address",
+    "value": "_2001:db8::1_",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "hyphen-delimited IPv6 address",
+    "value": "-2001:db8::1-",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "underscore-delimited bracketed IPv6 address",
+    "value": "_[2001:db8::1]_",
+    "expected_rule": "ipv6-address"
+  },
+  {
     "name": "canonical UUID",
     "value": "machine 123e4567-e89b-12d3-a456-426614174000",
     "expected_rule": "stable-identifier"
@@ -142,6 +157,26 @@
   {
     "name": "underscore-delimited sensitive assignment",
     "value": "_TOKEN=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "multi-underscore-delimited sensitive assignment",
+    "value": "__TOKEN=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "OpenAI API key assignment",
+    "value": "OPENAI_API_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "GitHub token assignment",
+    "value": "GITHUB_TOKEN=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "Hugging Face token assignment",
+    "value": "HF_TOKEN=secretvalue_",
     "expected_rule": "sensitive-assignment"
   }
 ]
