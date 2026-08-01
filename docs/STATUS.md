@@ -7,11 +7,11 @@ Updated: 2026-07-31
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- The first implementation wave is integrated on `integration` through commit
-  `d3513c9`.
-- The complete workspace passes lint, typecheck, 27 package tests, five runtime
-  isolation tests, static build, strict schema compilation, and a frozen-lockfile
-  install.
+- The second implementation wave is integrated on `integration` through commit
+  `eeb12fc`.
+- The complete workspace passes lint, typecheck, 87 package tests, five runtime
+  isolation tests, static build, strict schema compilation, deterministic catalog
+  regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
 - The technical-truth verdict is **NARROW**: published QVAC SDK 0.16.0 directly
   exposes actual `cpu|gpu` device class, but not Metal/CUDA/Vulkan backend name.
@@ -22,21 +22,23 @@ M1 — Local probe and registry vertical slice.
 
 ## Active work
 
-- ATLAS-008: safe project-local QVAC SDK discovery and import policy is complete.
-- ATLAS-009: fixture-driven probe/report pipeline is active on
-  `feat/ATLAS-009-probe`.
-- ATLAS-010: validated catalog and static registry UI is active on
-  `feat/ATLAS-010-registry`.
-- ATLAS-015: binding the fail-closed resolver to the real executor is queued after
-  the probe adapter boundary lands.
+- ATLAS-009: the consented fixture-driven probe/report pipeline is integrated.
+- ATLAS-010: the validated catalog and static evidence registry are integrated.
+- ATLAS-011: contribution admission, pull-request, and CI workflows are active.
+- ATLAS-012: independent adversarial reviews of the integrated boundaries are active.
+- ATLAS-015: the exact project-local SDK resolver and opaque child-bootstrap grant
+  are integrated; no production user command consumes the grant yet.
+- ATLAS-016: real executor binding is queued after the adversarial findings are
+  reconciled.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
   4.8 GiB before safety margin.
 
 ## Next integration gate
 
-The release captain will bind the selected SmolLM2 profile, implement a complete
-fixture-driven probe-to-site path, and keep production claim admission disabled
+The release captain will integrate contribution admission, close the independent
+adversarial findings, and then bind the opaque resolver grant to a bounded production
+executor. Production claim admission and user-facing real execution stay disabled
 until a hash-verified real lifecycle succeeds.
 
 ## Known risks

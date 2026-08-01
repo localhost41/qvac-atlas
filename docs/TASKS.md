@@ -12,13 +12,15 @@ Updated: 2026-07-31
 | ATLAS-006 | review worker | Terra | completed | ATLAS-004 | Independent scaffold review and Astro telemetry correction |
 | ATLAS-007 | review worker | Terra | completed | ATLAS-002 | Official Doctor and bundle-verification adapter research |
 | ATLAS-008 | runtime worker | Sol | completed | ATLAS-002 | Safe project-local QVAC SDK resolution and version boundary |
-| ATLAS-009 | CLI worker | Sol | in progress | ATLAS-003, ATLAS-008 | Consent, collection, Doctor adapter, isolated runner, preview, and local report write |
-| ATLAS-010 | registry worker | Terra | in progress | ATLAS-003 | Validated catalog builder and evidence-driven static registry UI |
-| ATLAS-011 | contribution worker | Terra | pending | ATLAS-003, ATLAS-010 | Report admission, PR template, CI validation, and trusted source metadata |
-| ATLAS-012 | security reviewer | Sol | pending | ATLAS-009–011 | Adversarial integration, privacy, process, and claim review |
+| ATLAS-009 | CLI worker | Sol | completed | ATLAS-003, ATLAS-008 | Consent, collection, Doctor adapter, isolated fixture runner, preview, and local report write |
+| ATLAS-010 | registry worker | Terra | completed | ATLAS-003 | Validated catalog builder and evidence-driven static registry UI |
+| ATLAS-011 | contribution worker | Terra | in progress | ATLAS-003, ATLAS-010 | Report admission audit, PR template, CI validation, and trusted source metadata |
+| ATLAS-012 | security reviewers | Sol | in progress | ATLAS-009–011 | Adversarial integration, privacy, process, resolver, and claim review |
 | ATLAS-013 | real-device gate | root + volunteer | pending capacity | ATLAS-009 | Hash-verified Node 22/macOS QVAC lifecycle run |
 | ATLAS-014 | Windows gate | volunteer | pending hardware | ATLAS-009 | Real Windows process containment and lifecycle validation |
-| ATLAS-015 | resolver worker | Sol | pending | ATLAS-008, ATLAS-009 | Fail-closed SDK resolver and real executor binding |
+| ATLAS-015 | resolver worker | Sol | completed | ATLAS-008 | Fail-closed SDK resolver, opaque grant, and isolated-child bootstrap |
+| ATLAS-016 | runtime worker | Sol | pending | ATLAS-009, ATLAS-012, ATLAS-015 | Bind the opaque resolver grant to a bounded real SDK executor without enabling production claims |
+| ATLAS-017 | schema worker | Terra | pending | ATLAS-003, ATLAS-012 | Replace provisional handwritten report types with schema-derived types and drift checks |
 
 ## Queue rules
 

@@ -8,8 +8,8 @@ and production claim admission remain disabled.
 The probe package owns the local sequence from disclosure through an exclusive
 local report write. It has no network client, uploader, installer, downloader,
 repair action, telemetry, service, or default output path. The CLI exposes only
-fully synthetic fixture execution until ATLAS-008's resolver is integrated and a
-hash-verified real lifecycle passes the device gate. Its Doctor result is synthetic
+fully synthetic fixture execution until the integrated ATLAS-015 resolver is bound
+to a production executor and a hash-verified real lifecycle passes the device gate. Its Doctor result is synthetic
 as well; the separately tested real Doctor adapter is not wired to a user command in
 this packet.
 
@@ -113,7 +113,7 @@ ATLAS-009 supplies only a fake executor for success, missing-QVAC, worker-crash,
 timeout scenarios. Every assembled report therefore has fixture provenance and can
 never create a registry claim.
 
-## ATLAS-008 production integration contract
+## ATLAS-015 production integration contract
 
 The future real executor may accept only a private, pre-audited resolver grant for:
 

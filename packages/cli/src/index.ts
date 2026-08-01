@@ -70,7 +70,7 @@ export async function runCli(
   const options = parseArgs(args, dependencies.cwd());
   if (options === null) {
     dependencies.stderr(
-      `${usage()}\nReal QVAC execution remains disabled until the audited SDK resolver is integrated.\n`,
+      `${usage()}\nReal QVAC execution remains disabled until the audited SDK resolver is bound to a reviewed executor and passes the device gate.\n`,
     );
     return 2;
   }
