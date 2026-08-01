@@ -1,8 +1,7 @@
 # Private model artifact boundary
 
-Status: ATLAS-020 dormant acquisition and executor-bridge foundation. No CLI
-command, probe binding, acquisition-consent issuer, report field, candidate
-eligibility, or profile allowlist is enabled.
+Status: ATLAS-021A dormant contained-acquisition foundation. No CLI command, probe
+binding, report field, candidate eligibility, or profile allowlist is enabled.
 
 ## Candidate and disclosure
 
@@ -69,13 +68,44 @@ chunks are invalid. Timeout owns the terminal reason, aborts the source signal, 
 settles after owned-file cleanup even if the source never yields or ignores abort.
 Local filesystem operations and cleanup are deliberately awaited instead of being
 abandoned after a race: this prevents late handle leaks and post-return mutation.
-Consequently, activation still requires process-level containment for a stalled or
-hostile filesystem in ATLAS-020/021; this dormant package alone does not claim that
-hard bound. Production acquisition owns the exact pinned HTTPS request. Acceptance
-tests use only an unexported injected byte-source seam and disable network access.
+Production acquisition owns the exact pinned HTTPS request. ATLAS-021A replaces
+automatic redirects with at most three manually validated HTTPS redirects through
+a finite reviewed Hugging Face host set. The transport sends only exact Host,
+Accept, and Atlas User-Agent headers, accepts only an unencoded exact `200`, rejects
+ambiguous scalar headers, and retains exact stream length and hash as authority.
+Acceptance tests use only unexported relative transport/byte-source seams and
+disable real network access.
 
 All boundary failures have fixed codes and messages. They contain no URL, local
 path, response body, upstream exception, or digest material.
+
+## Contained acquisition and recovery
+
+The narrow `./contained` transaction creates the exact frozen disclosure for the
+OS-account-owned `~/.qvac-atlas-models` root, awaits one callback decision, and
+internally issues and consumes a non-exported consent before any cache or network
+effect. It exposes no cache-root, source, candidate, timeout, runner, nonce, or
+cleanup control. It remains dormant and is not imported by probe or CLI.
+
+After approval the root process generates one 192-bit lowercase-hex attempt nonce
+and forks only the package-owned acquisition child in a detached POSIX process
+group with empty environment, empty `execArgv`, ignored stdin, bounded/drained
+stdio, and exact bounded JSON IPC. Windows refuses before spawn. The parent owns a
+hard deadline and abort path, applies TERM then KILL, reaps the root, sweeps the
+whole process group to absence, waits for IPC close, and accepts only the exact
+state grammar plus a clean terminal/exit pairing. Only then does the parent mint
+the expected pinned capability; no child-supplied path or digest is accepted.
+
+The child fully verifies cache state, then requires 512 MiB available reserve for
+a valid hit or exactly 923,275,904 bytes for a miss before source creation. A miss
+uses the exact nonce-derived `0600` staging name. After abnormal termination and a
+legal `staging-open` acknowledgement, the parent runs at most one separately
+bounded package-owned recovery child for that name. Recovery opens only an
+existing safe `0700` root, never scans, deletes a safe one-link partial after an
+adjacent identity check, and normalizes a two-link publication only after exact
+inode, size, and full descriptor hash verification. Unsafe or uncertain entries
+are preserved with a fixed path-free cleanup failure; recovery never issues a
+capability.
 
 ## Execution revalidation and dormancy
 
@@ -88,6 +118,7 @@ same-UID quiescence limitation still applies; this does not claim cryptographic
 binding against swap-and-restore races.
 
 The package is imported only by the dormant QVAC executor, not probe, CLI, catalog,
-or schema. The candidate remains ineligible for claims. ATLAS-021 must separately
-design interactive disclosure and consent activation; the execution-grant wrapper
-alone neither authorizes acquisition nor runs the model.
+or schema. The candidate remains ineligible for claims. ATLAS-021C must compose the
+project/SDK/GPU ceremony and the two directly supervised worker waves behind its
+disabled release gate; neither this contained transaction nor the execution-grant
+wrapper runs the model by itself.

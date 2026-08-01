@@ -116,11 +116,14 @@ arbitrary byte source, URL/candidate override, synthetic runner, or filesystem
 cleanup primitive. The existing public in-process acquisition remains dormant and
 must not be wired to probe or CLI.
 
-The approval transaction is bound to the exact candidate/disclosure, fixed cache
-root, canonical project root, exact SDK handle/version, requested `gpu`, and a
-fresh session nonce at the CLI coordinator. It is single-use and consumed before
-the first model filesystem or network effect. A JavaScript library cannot prove a
-human is present; the TTY-only CLI is the ceremony boundary.
+The narrow artifact decision transaction is bound to the exact
+candidate/disclosure and internally fixed account cache root. Its internal consent
+is single-use and consumed before the first model filesystem or network effect. It
+then generates a fresh attempt nonce solely for staging and recovery. ATLAS-021C's
+CLI coordinator owns the larger continuous binding to canonical project root,
+exact SDK handle/version, requested `gpu`, and the later execution grant; 021A
+does not pretend an arbitrary object proves that binding. A JavaScript library
+cannot prove a human is present; the TTY-only CLI is the ceremony boundary.
 
 ## Acquisition containment and protocol
 
@@ -192,11 +195,14 @@ credential lookup. Replace `redirect: "follow"` with manual handling:
   `transfer.xethub.hf.co`, `transfer.xethub-eu.hf.co`,
   `us.aws.cdn.hf.co`, `us.gcp.cdn.hf.co`, `cdn-lfs-us-1.hf.co`, or
   `cdn-lfs-eu-1.hf.co`;
-- never forward headers other than a fixed Atlas user agent and generic accept;
+- send only the mandatory exact URL-derived `Host`, a fixed Atlas user agent, and
+  generic accept header;
 - reject unexpected status, missing/invalid `Location`, downgrade, loop, excess,
   unexpected origin, localhost/private IP literal, or a final non-2xx response;
-- retain content-length bound, exact streamed byte count, and final SHA-256 as the
-  authority. Signed redirect query strings never enter logs, errors, IPC, or docs.
+- require an exact `200` final response with no content encoding other than
+  explicit `identity`; retain content-length bound, exact streamed byte count, and
+  final SHA-256 as the authority. Signed redirect query strings never enter logs,
+  errors, IPC, or docs.
 
 Hugging Face documents that large immutable Hub files resolve to separate
 content-addressed CDN/storage URLs. Atlas deliberately pins the currently

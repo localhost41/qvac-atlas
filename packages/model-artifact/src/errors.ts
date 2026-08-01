@@ -3,6 +3,8 @@ export type ArtifactErrorCode =
   | "artifact-consent-required"
   | "artifact-private-root-unsafe"
   | "artifact-cache-unsafe"
+  | "artifact-capacity-insufficient"
+  | "artifact-capacity-unavailable"
   | "artifact-source-failed"
   | "artifact-acquisition-timeout"
   | "artifact-acquisition-aborted"
@@ -11,6 +13,10 @@ export type ArtifactErrorCode =
   | "artifact-publish-collision"
   | "artifact-publish-failed"
   | "artifact-verification-failed"
+  | "artifact-containment-unavailable"
+  | "artifact-worker-failed"
+  | "artifact-worker-protocol-invalid"
+  | "artifact-cleanup-failed"
   | "artifact-execution-capability-invalid"
   | "artifact-execution-validation-failed";
 

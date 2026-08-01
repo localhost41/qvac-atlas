@@ -16,6 +16,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { globalAgent as httpsGlobalAgent } from "node:https";
 import { after, afterEach, test } from "node:test";
 
 import {
@@ -39,6 +40,7 @@ import {
 
 const temporaryDirectories = [];
 const originalFetch = globalThis.fetch;
+const originalHttpsAddRequest = httpsGlobalAgent.addRequest;
 let networkCalls = 0;
 const networkUrls = [];
 globalThis.fetch = async (input) => {
@@ -46,9 +48,14 @@ globalThis.fetch = async (input) => {
   networkUrls.push(String(input));
   throw new Error("network-disabled-in-acceptance-tests");
 };
+httpsGlobalAgent.addRequest = function blockedHttpsRequest() {
+  networkCalls += 1;
+  throw new Error("network-disabled-in-acceptance-tests");
+};
 
 after(() => {
   globalThis.fetch = originalFetch;
+  httpsGlobalAgent.addRequest = originalHttpsAddRequest;
 });
 
 afterEach(async () => {
@@ -242,11 +249,14 @@ test("public acquisition ignores hostile candidate, source, and hook extras", as
     privateRoot: root,
   });
   const beforeCalls = networkCalls;
+  const controller = new AbortController();
+  controller.abort();
   await assertCode(
     acquirePinnedArtifact({
       privateRoot: root,
       consent: issued,
       timeoutMs: 2_000,
+      signal: controller.signal,
       candidate: {
         ...PINNED_MODEL_CANDIDATE,
         sourceUrl: "https://hostile.invalid/private-model",
@@ -266,16 +276,16 @@ test("public acquisition ignores hostile candidate, source, and hook extras", as
         },
       },
     }),
-    "artifact-source-failed",
+    "artifact-acquisition-aborted",
   );
   assert.equal(hostileSourceCalled, false);
   assert.equal(hostileHookCalled, false);
-  assert.equal(networkCalls, beforeCalls + 1);
-  assert.equal(networkUrls.at(-1), PINNED_MODEL_CANDIDATE.sourceUrl);
+  assert.equal(networkCalls, beforeCalls);
   assert.equal(
-    (await readdir(root)).includes("hostile-private-model.gguf"),
+    networkUrls.includes("https://hostile.invalid/private-model"),
     false,
   );
+  await assert.rejects(lstat(root), { code: "ENOENT" });
   assert.deepEqual(await partials(root), []);
 });
 
@@ -769,6 +779,7 @@ test("remains dormant with one narrow executor dependency and no real network", 
   );
   assert.deepEqual(Object.keys(packageManifest.exports).sort(), [
     ".",
+    "./contained",
     "./executor-bridge",
   ]);
   assert.equal("./internal" in packageManifest.exports, false);

@@ -51,6 +51,10 @@ M1 — Local probe and registry vertical slice.
   load, confirms the SDK-reported loaded path, and revalidates after close. It adds
   no acquisition consent issuer, user command, report field, profile approval, or
   claim path.
+- ATLAS-021A: the dormant `./contained` artifact transaction is complete. It owns
+  the fixed account cache root, finite manual HTTPS redirects, reserve checks,
+  nonce-exact staging/recovery, and a directly supervised fully reaped acquisition
+  child. It remains absent from probe and CLI and performs no real model fetch.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than

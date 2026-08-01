@@ -1,8 +1,16 @@
 import { createHash, randomBytes } from "node:crypto";
 import { constants, type Stats } from "node:fs";
-import { link, lstat, open, unlink, type FileHandle } from "node:fs/promises";
+import {
+  link,
+  lstat,
+  open,
+  statfs,
+  unlink,
+  type FileHandle,
+} from "node:fs/promises";
 import { basename, join } from "node:path";
 import { performance } from "node:perf_hooks";
+import { request as httpsRequest } from "node:https";
 import {
   PINNED_MODEL_CANDIDATE,
   createPinnedArtifactDisclosure,
@@ -28,6 +36,22 @@ import {
 const MAX_SOURCE_CHUNK = 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000;
 const MAX_TIMEOUT_MS = 60 * 60 * 1000;
+const CAPACITY_RESERVE_BYTES = 512n * 1024n * 1024n;
+const SESSION_NONCE_PATTERN = /^[0-9a-f]{48}$/;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 3;
+const SOURCE_ACCEPT = "application/octet-stream";
+const SOURCE_USER_AGENT = "qvac-atlas/0.1 model-artifact";
+const ALLOWED_REDIRECT_HOSTS = new Set([
+  "cas-server.xethub.hf.co",
+  "cas-server.xethub-eu.hf.co",
+  "transfer.xethub.hf.co",
+  "transfer.xethub-eu.hf.co",
+  "us.aws.cdn.hf.co",
+  "us.gcp.cdn.hf.co",
+  "cdn-lfs-us-1.hf.co",
+  "cdn-lfs-eu-1.hf.co",
+]);
 
 export interface ArtifactByteSourceContext {
   readonly candidate: ModelArtifactCandidate;
@@ -48,6 +72,12 @@ export interface AcquirePinnedArtifactOptions {
 interface InternalAcquireOptions extends AcquirePinnedArtifactOptions {
   readonly byteSource: ArtifactByteSource;
   readonly candidate?: ModelArtifactCandidate;
+  readonly sessionNonce?: string;
+  readonly capacityCheck?: (
+    root: OpenPrivateRoot,
+    requiredBytes: bigint,
+  ) => void | Promise<void>;
+  readonly enforceCapacity?: boolean;
   readonly hooks?: {
     readonly beforePublish?: (destinationPath: string) => void | Promise<void>;
     readonly afterRename?: (destinationPath: string) => void | Promise<void>;
@@ -58,6 +88,15 @@ interface InternalAcquireOptions extends AcquirePinnedArtifactOptions {
     readonly afterCacheClose?: (handle: FileHandle) => void | Promise<void>;
     readonly afterStagingOpen?: (stagingPath: string) => void | Promise<void>;
     readonly afterStagingClose?: (handle: FileHandle) => void | Promise<void>;
+    readonly afterCacheCheck?: (hit: boolean) => void | Promise<void>;
+    readonly afterCapacityCheck?: (hit: boolean) => void | Promise<void>;
+    readonly afterHardLink?: (destinationPath: string) => void | Promise<void>;
+    readonly afterStagingUnlink?: (
+      destinationPath: string,
+    ) => void | Promise<void>;
+    readonly afterDirectorySync?: (
+      destinationPath: string,
+    ) => void | Promise<void>;
   };
 }
 
@@ -263,45 +302,96 @@ async function writeAll(
 async function openStagingFile(
   root: OpenPrivateRoot,
   filename: string,
+  sessionNonce?: string,
 ): Promise<{ path: string; handle: FileHandle; snapshot: Stats }> {
+  if (sessionNonce !== undefined && !SESSION_NONCE_PATTERN.test(sessionNonce)) {
+    throw new ArtifactError("artifact-request-invalid");
+  }
+  if (sessionNonce !== undefined) {
+    return openExactStagingFile(root, filename, sessionNonce);
+  }
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const path = join(
-      root.canonicalRoot,
-      `.${filename}.${randomBytes(12).toString("hex")}.partial`,
-    );
-    let handle: FileHandle | undefined;
-    let snapshot: Stats | undefined;
+    const nonce = randomBytes(24).toString("hex");
     try {
-      handle = await open(
-        path,
-        constants.O_RDWR |
-          constants.O_CREAT |
-          constants.O_EXCL |
-          constants.O_NOFOLLOW,
-        0o600,
-      );
-      snapshot = await handle.stat();
-      await handle.chmod(0o600);
-      snapshot = await handle.stat();
-      if (!snapshot.isFile() || snapshot.nlink !== 1) {
-        throw new ArtifactError("artifact-publish-failed");
-      }
-      return { path, handle, snapshot };
+      return await openExactStagingFile(root, filename, nonce);
     } catch (error) {
-      await handle?.close().catch(() => undefined);
-      await unlinkIfSame(path, snapshot);
       if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "EEXIST"
+        error instanceof ArtifactError &&
+        error.code === "artifact-publish-collision"
       ) {
         continue;
       }
-      throw new ArtifactError("artifact-publish-failed");
+      throw error;
     }
   }
   throw new ArtifactError("artifact-publish-failed");
+}
+
+function stagingPathFor(
+  root: OpenPrivateRoot,
+  filename: string,
+  sessionNonce: string,
+): string {
+  return join(root.canonicalRoot, `.${filename}.${sessionNonce}.partial`);
+}
+
+async function openExactStagingFile(
+  root: OpenPrivateRoot,
+  filename: string,
+  sessionNonce: string,
+): Promise<{ path: string; handle: FileHandle; snapshot: Stats }> {
+  const path = stagingPathFor(root, filename, sessionNonce);
+  let handle: FileHandle | undefined;
+  let snapshot: Stats | undefined;
+  try {
+    handle = await open(
+      path,
+      constants.O_RDWR |
+        constants.O_CREAT |
+        constants.O_EXCL |
+        constants.O_NOFOLLOW,
+      0o600,
+    );
+    snapshot = await handle.stat();
+    await handle.chmod(0o600);
+    snapshot = await handle.stat();
+    if (!snapshot.isFile() || snapshot.nlink !== 1) {
+      throw new ArtifactError("artifact-publish-failed");
+    }
+    return { path, handle, snapshot };
+  } catch (error) {
+    await handle?.close().catch(() => undefined);
+    await unlinkIfSame(path, snapshot);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "EEXIST"
+    ) {
+      throw new ArtifactError("artifact-publish-collision");
+    }
+    throw new ArtifactError("artifact-publish-failed");
+  }
+}
+
+async function checkFilesystemCapacity(
+  root: OpenPrivateRoot,
+  requiredBytes: bigint,
+): Promise<void> {
+  try {
+    await assertRootStable(root);
+    const capacity = await statfs(root.canonicalRoot, { bigint: true });
+    if (capacity.bsize <= 0n || capacity.bavail < 0n) {
+      throw new ArtifactError("artifact-capacity-unavailable");
+    }
+    if (capacity.bavail * capacity.bsize < requiredBytes) {
+      throw new ArtifactError("artifact-capacity-insufficient");
+    }
+    await assertRootStable(root);
+  } catch (error) {
+    if (error instanceof ArtifactError) throw error;
+    throw new ArtifactError("artifact-capacity-unavailable");
+  }
 }
 
 async function streamIntoStaging(
@@ -373,6 +463,9 @@ async function publish(
   deadline: Deadline,
   beforePublish?: (destinationPath: string) => void | Promise<void>,
   afterRename?: (destinationPath: string) => void | Promise<void>,
+  afterHardLink?: (destinationPath: string) => void | Promise<void>,
+  afterStagingUnlink?: (destinationPath: string) => void | Promise<void>,
+  afterDirectorySync?: (destinationPath: string) => void | Promise<void>,
 ): Promise<void> {
   let published = false;
   try {
@@ -387,6 +480,8 @@ async function publish(
       throw new ArtifactError("artifact-publish-collision");
     }
     published = true;
+    if (afterHardLink !== undefined)
+      await deadline.race(Promise.resolve(afterHardLink(destination)));
     deadline.check();
     const linkedStat = await stagingHandle.stat();
     deadline.check();
@@ -402,6 +497,8 @@ async function publish(
     await assertRootStable(root);
     deadline.check();
     await unlink(stagingPath);
+    if (afterStagingUnlink !== undefined)
+      await deadline.race(Promise.resolve(afterStagingUnlink(destination)));
     deadline.check();
     if (afterRename !== undefined)
       await deadline.race(Promise.resolve(afterRename(destination)));
@@ -434,6 +531,8 @@ async function publish(
     );
     deadline.check();
     await root.handle.sync();
+    if (afterDirectorySync !== undefined)
+      await deadline.race(Promise.resolve(afterDirectorySync(destination)));
     deadline.check();
     await assertRootStable(root);
     deadline.check();
@@ -478,22 +577,51 @@ export async function internalAcquireArtifact(
     root = await openPrivateRoot(options.privateRoot);
     deadline.check();
     const destination = join(root.canonicalRoot, candidate.filename);
+    const cacheHit = await verifyCache(
+      root,
+      destination,
+      candidate,
+      deadline,
+      options.hooks?.afterCacheOpen,
+      options.hooks?.beforeCacheHash,
+      options.hooks?.afterCacheClose,
+    );
+    if (options.hooks?.afterCacheCheck !== undefined) {
+      await deadline.race(
+        Promise.resolve(options.hooks.afterCacheCheck(cacheHit)),
+      );
+    }
     if (
-      await verifyCache(
-        root,
-        destination,
-        candidate,
-        deadline,
-        options.hooks?.afterCacheOpen,
-        options.hooks?.beforeCacheHash,
-        options.hooks?.afterCacheClose,
-      )
+      options.enforceCapacity === true ||
+      options.capacityCheck !== undefined
     ) {
+      const requiredCapacity = cacheHit
+        ? CAPACITY_RESERVE_BYTES
+        : BigInt(candidate.byteLength) + CAPACITY_RESERVE_BYTES;
+      await deadline.race(
+        Promise.resolve(
+          (options.capacityCheck ?? checkFilesystemCapacity)(
+            root,
+            requiredCapacity,
+          ),
+        ),
+      );
+      if (options.hooks?.afterCapacityCheck !== undefined) {
+        await deadline.race(
+          Promise.resolve(options.hooks.afterCapacityCheck(cacheHit)),
+        );
+      }
+    }
+    if (cacheHit) {
       return internalIssueArtifact({ canonicalPath: destination, candidate });
     }
 
     deadline.check();
-    const staging = await openStagingFile(root, candidate.filename);
+    const staging = await openStagingFile(
+      root,
+      candidate.filename,
+      options.sessionNonce,
+    );
     try {
       deadline.check();
       if (options.hooks?.afterStagingOpen !== undefined) {
@@ -537,6 +665,9 @@ export async function internalAcquireArtifact(
         deadline,
         options.hooks?.beforePublish,
         options.hooks?.afterRename,
+        options.hooks?.afterHardLink,
+        options.hooks?.afterStagingUnlink,
+        options.hooks?.afterDirectorySync,
       );
       return internalIssueArtifact({ canonicalPath: destination, candidate });
     } finally {
@@ -559,35 +690,155 @@ export async function acquirePinnedArtifact(
     timeoutMs: options?.timeoutMs,
     signal: options?.signal,
     candidate: PINNED_MODEL_CANDIDATE,
-    byteSource: pinnedHttpsByteSource,
+    byteSource: internalPinnedHttpsByteSource,
   });
 }
 
-async function pinnedHttpsByteSource({
-  candidate,
-  signal,
-}: ArtifactByteSourceContext): Promise<AsyncIterable<Uint8Array>> {
+export interface InternalSourceResponse {
+  readonly statusCode: number;
+  readonly invalidHeaders?: boolean;
+  readonly location?: string;
+  readonly contentLength?: string;
+  readonly contentEncoding?: string;
+  readonly contentRange?: string;
+  readonly body: AsyncIterable<Uint8Array>;
+  discard(): void;
+}
+
+export type InternalSourceTransport = (
+  url: URL,
+  signal: AbortSignal,
+) => Promise<InternalSourceResponse>;
+
+export function internalPinnedHttpsTransport(
+  url: URL,
+  signal: AbortSignal,
+): Promise<InternalSourceResponse> {
+  return new Promise((resolve, reject) => {
+    const request = httpsRequest(
+      url,
+      {
+        method: "GET",
+        headers: {
+          Accept: SOURCE_ACCEPT,
+          Host: url.host,
+          "User-Agent": SOURCE_USER_AGENT,
+        },
+        setDefaultHeaders: false,
+        signal,
+      },
+      (response) => {
+        let invalidHeaders = false;
+        const scalar = (name: string): string | undefined => {
+          const values = response.headersDistinct[name];
+          if (values === undefined) return undefined;
+          if (values.length !== 1) {
+            invalidHeaders = true;
+            return undefined;
+          }
+          return values[0];
+        };
+        resolve({
+          statusCode: response.statusCode ?? 0,
+          location: scalar("location"),
+          contentLength: scalar("content-length"),
+          contentEncoding: scalar("content-encoding"),
+          contentRange: scalar("content-range"),
+          get invalidHeaders() {
+            return invalidHeaders;
+          },
+          body: response,
+          discard: () => response.destroy(),
+        });
+      },
+    );
+    request.once("error", reject);
+    request.end();
+  });
+}
+
+function validRedirectTarget(url: URL): boolean {
+  return (
+    url.protocol === "https:" &&
+    url.port === "" &&
+    url.username === "" &&
+    url.password === "" &&
+    url.hash === "" &&
+    ALLOWED_REDIRECT_HOSTS.has(url.hostname)
+  );
+}
+
+export async function internalPinnedHttpsByteSource(
+  { candidate, signal }: ArtifactByteSourceContext,
+  transport: InternalSourceTransport = internalPinnedHttpsTransport,
+): Promise<AsyncIterable<Uint8Array>> {
   try {
-    const response = await fetch(candidate.sourceUrl, {
-      method: "GET",
-      redirect: "follow",
-      signal,
-    });
-    if (!response.ok || response.body === null) {
+    if (candidate.sourceUrl !== PINNED_MODEL_CANDIDATE.sourceUrl) {
       throw new ArtifactError("artifact-source-failed");
     }
-    if (new URL(response.url).protocol !== "https:") {
+    let current = new URL(candidate.sourceUrl);
+    if (current.origin !== "https://huggingface.co" || current.hash !== "") {
       throw new ArtifactError("artifact-source-failed");
     }
-    const declaredLength = response.headers.get("content-length");
-    if (
-      declaredLength !== null &&
-      (!/^\d+$/.test(declaredLength) ||
-        Number(declaredLength) !== candidate.byteLength)
-    ) {
-      throw new ArtifactError("artifact-size-mismatch");
+    const visited = new Set<string>();
+    for (let redirectCount = 0; ; redirectCount += 1) {
+      if (visited.has(current.href)) {
+        throw new ArtifactError("artifact-source-failed");
+      }
+      visited.add(current.href);
+      const response = await transport(current, signal);
+      if (response.invalidHeaders === true) {
+        response.discard();
+        throw new ArtifactError("artifact-source-failed");
+      }
+      if (REDIRECT_STATUSES.has(response.statusCode)) {
+        response.discard();
+        if (redirectCount >= MAX_REDIRECTS) {
+          throw new ArtifactError("artifact-source-failed");
+        }
+        const location = response.location;
+        if (location === undefined) {
+          throw new ArtifactError("artifact-source-failed");
+        }
+        let next: URL;
+        try {
+          next = new URL(location, current);
+        } catch {
+          throw new ArtifactError("artifact-source-failed");
+        }
+        if (!validRedirectTarget(next) || visited.has(next.href)) {
+          throw new ArtifactError("artifact-source-failed");
+        }
+        current = next;
+        continue;
+      }
+      if (response.statusCode !== 200) {
+        response.discard();
+        throw new ArtifactError("artifact-source-failed");
+      }
+      const contentEncoding = response.contentEncoding;
+      if (
+        contentEncoding !== undefined &&
+        contentEncoding.toLowerCase() !== "identity"
+      ) {
+        response.discard();
+        throw new ArtifactError("artifact-source-failed");
+      }
+      if (response.contentRange !== undefined) {
+        response.discard();
+        throw new ArtifactError("artifact-source-failed");
+      }
+      const declaredLength = response.contentLength;
+      if (
+        declaredLength !== undefined &&
+        (!/^\d+$/.test(declaredLength) ||
+          Number(declaredLength) !== candidate.byteLength)
+      ) {
+        response.discard();
+        throw new ArtifactError("artifact-size-mismatch");
+      }
+      return response.body;
     }
-    return response.body;
   } catch (error) {
     if (error instanceof ArtifactError) throw error;
     throw new ArtifactError("artifact-source-failed");

@@ -12,6 +12,10 @@
     "./executor-bridge": {
       "types": "./dist/executor-bridge.d.ts",
       "import": "./dist/executor-bridge.js"
+    },
+    "./contained": {
+      "types": "./dist/contained.d.ts",
+      "import": "./dist/contained.js"
     }
   },
   "files": [
