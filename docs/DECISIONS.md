@@ -64,3 +64,13 @@ validates a known package/export fingerprint, imports the audited file URL from 
 clean temporary working directory, strips Node/QVAC loader overrides, and treats
 every missing, unsafe, or unsupported layout as unknown. Isolation contains crashes
 and deadlines; it is not a sandbox for hostile project code.
+
+## D-013 — Git review is the V1 trust root
+
+Atlas can validate report mechanics, consent, privacy, provenance shape, and profile
+matching, but it cannot infer that two reports came from independent physical
+sources. `sourceKey` and production-profile admission are therefore maintainer
+decisions, never contributor evidence. The production allowlist remains empty until
+the public repository protects this metadata with named code ownership, required
+fresh approval, and branch protection. CI is defense in depth and does not turn an
+unreviewed metadata edit into trusted evidence.

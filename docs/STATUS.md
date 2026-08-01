@@ -9,7 +9,7 @@ Updated: 2026-07-31
 - The protected release line is `main`; current milestone integration occurs on `integration`.
 - The second implementation wave is integrated on `integration` through commit
   `eeb12fc`.
-- The complete workspace passes lint, typecheck, 87 package tests, five runtime
+- The complete workspace passes lint, typecheck, 97 package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -24,8 +24,11 @@ M1 — Local probe and registry vertical slice.
 
 - ATLAS-009: the consented fixture-driven probe/report pipeline is integrated.
 - ATLAS-010: the validated catalog and static evidence registry are integrated.
-- ATLAS-011: contribution admission, pull-request, and CI workflows are active.
+- ATLAS-011: contribution admission, pull-request, and read-only CI workflows are
+  integrated.
 - ATLAS-012: independent adversarial reviews of the integrated boundaries are active.
+- ATLAS-012A/B: the first review's SDK-child handoff and catalog filesystem/path
+  findings are in isolated remediation branches.
 - ATLAS-015: the exact project-local SDK resolver and opaque child-bootstrap grant
   are integrated; no production user command consumes the grant yet.
 - ATLAS-016: real executor binding is queued after the adversarial findings are
@@ -51,3 +54,7 @@ until a hash-verified real lifecycle succeeds.
 - Real launch evidence requires volunteer physical devices; CI runners are not GPU compatibility evidence.
 - QVAC SDK 0.16.0 has a multi-gigabyte native dependency footprint, so Atlas must
   resolve an existing project-local SDK and never silently install it.
+- Source independence and production-profile approval are human trust decisions,
+  not properties CI can derive from contributor JSON. The production allowlist is
+  empty, and release remains blocked until the eventual host repository enforces
+  maintainer ownership and protected review for that metadata.
