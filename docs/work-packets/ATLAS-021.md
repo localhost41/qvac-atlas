@@ -34,7 +34,8 @@ ATLAS-021 is serialized into four reviewable commits:
    retains fixture mode unchanged.
 4. **ATLAS-021D — independent adversarial acceptance**
    Reviews consent, containment, recovery, privacy, non-claim behavior, and the
-   complete unchanged regression corpus before root integration.
+   complete unchanged regression corpus after serialized root integration and
+   before any activation decision.
 
 Root is the only lockfile owner and release captain. No implementation worker may
 merge, enable real mode, download the real artifact, install QVAC, edit a production
@@ -305,5 +306,27 @@ holds the canonical resolver handle through Doctor, contained acquisition,
 capability-to-grant conversion, and direct executor settlement. Output publication
 uses a same-directory synced `0600` staging inode, no-clobber hard link, identity
 and link-count validation, identity-guarded cleanup, and one immutable normalized
-path for confirmation and write. ATLAS-021D and ATLAS-013 remain required before
-any release-gate change.
+path for confirmation and write. ATLAS-021D is now accepted; ATLAS-013 remains
+required before any release-gate change.
+
+## ATLAS-021D acceptance record
+
+Accepted on integration commit `51765a1` after independent architecture and
+operations review. The added synthetic whole-path test starts at the private true
+dispatcher seam, forwards the exact cwd, output argument, and owned abort signal
+into the actual enabled real CLI, then uses the default real probe pipeline and
+transactional output implementation. Only the coordinator that would touch QVAC,
+the model, and the network is replaced with deterministic evidence.
+
+The test proves exact disclosure and five-prompt ordering, one continuous project
+and signal binding, draft/final preview ordering, candidate non-claim evaluation,
+privacy validation, exact preview-to-file byte equality, owner-only `0600` output,
+and no staging residue. Separate shipped-bin tests retain the lazy-import proof and
+show that direct, symlinked, and macOS-alias launches cannot bypass the literal
+false gate. The frozen offline lock, dist-absent typecheck, full workspace suite,
+contribution audit, deterministic catalog, and clean-diff gates pass with zero
+genuine reports, zero claims, and an empty production profile allowlist.
+
+This synthetic acceptance does not replace ATLAS-013. Real mode remains disabled;
+no QVAC SDK, model bytes, network acquisition, genuine report, profile admission,
+publication, or external message was used to obtain this verdict.

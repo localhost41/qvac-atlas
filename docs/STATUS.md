@@ -71,6 +71,10 @@ M1 — Local probe and registry vertical slice.
   output publication and SIGINT settlement are synthetic-tested. The shipped main
   passes a literal false gate before TTY, cwd, signal, prompt, real import, model,
   network, or QVAC effects; fixture behavior and claim admission remain unchanged.
+- ATLAS-021D: independent architecture, quality, and operations reviews accept the
+  dormant composition. A synthetic whole-path test now traverses the private true
+  seam through the actual consent pipeline and `0600` output transaction while
+  substituting only the QVAC-touching coordinator. Shipped activation remains false.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
@@ -78,10 +82,11 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-ATLAS-021D is the next serialized packet: independent activation, containment,
-privacy, UX, and reproducibility acceptance. Production claim admission and
-user-facing real execution stay disabled until a hash-verified ATLAS-013 lifecycle
-and privacy review succeed.
+ATLAS-021D is accepted. The next serialized gate is a bounded ATLAS-013 physical-run
+packet and, on a suitable consenting macOS host, a hash-verified lifecycle and
+privacy review. Production claim admission and user-facing real execution stay
+disabled until that physical gate succeeds and a separate activation decision is
+reviewed.
 
 ## Known risks
 
