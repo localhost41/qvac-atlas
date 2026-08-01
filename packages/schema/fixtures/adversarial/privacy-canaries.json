@@ -70,6 +70,11 @@
     "expected_rule": "stable-identifier"
   },
   {
+    "name": "hyphen-delimited UUID",
+    "value": "device-123e4567-e89b-12d3-a456-426614174000-value",
+    "expected_rule": "stable-identifier"
+  },
+  {
     "name": "credential-bearing URL",
     "value": "https://fixture-user:fixture-password@example.invalid/resource",
     "expected_rule": "credential-url"
