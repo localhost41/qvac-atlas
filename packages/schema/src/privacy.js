@@ -126,9 +126,17 @@ function hasHighEntropySecret(value, pointer) {
   return candidates.some((candidate) => shannonEntropy(candidate) >= 4.25);
 }
 
+function normalizeAssignmentName(rawName) {
+  return rawName
+    .replace(/^_+/u, "")
+    .replace(/([A-Z]+)([A-Z][a-z])/gu, "$1_$2")
+    .replace(/([a-z0-9])([A-Z])/gu, "$1_$2")
+    .toUpperCase();
+}
+
 function hasSensitiveAssignment(value) {
   for (const match of value.matchAll(ASSIGNMENT_CANDIDATE)) {
-    const name = match[1].replace(/^_+/u, "").toUpperCase();
+    const name = normalizeAssignmentName(match[1]);
     // This deliberate fixture-safe negation is exact; prefixed or suffixed forms
     // still expose a TOKEN segment and remain sensitive.
     if (name === "NOT_TOKEN") continue;

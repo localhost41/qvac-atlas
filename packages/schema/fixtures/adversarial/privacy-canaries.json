@@ -413,5 +413,120 @@
     "name": "compact plural shell-history assignment",
     "value": "SHELLHISTORIES=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case private key assignment",
+    "value": "privateKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case access key assignment",
+    "value": "accessKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural access key assignment",
+    "value": "accessKeys=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case secret key assignment",
+    "value": "secretKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case secret access key assignment",
+    "value": "secretAccessKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case API key assignment",
+    "value": "apiKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural API key assignment",
+    "value": "apiKeys=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case home directory assignment",
+    "value": "homeDirectory=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural home directory assignment",
+    "value": "homeDirectories=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case IP address assignment",
+    "value": "ipAddress=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural IP address assignment",
+    "value": "ipAddresses=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case MAC address assignment",
+    "value": "macAddress=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural MAC address assignment",
+    "value": "macAddresses=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case machine ID assignment",
+    "value": "machineId=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural machine ID assignment",
+    "value": "machineIds=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case serial number assignment",
+    "value": "serialNumber=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural serial number assignment",
+    "value": "serialNumbers=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case process list assignment",
+    "value": "processList=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural process list assignment",
+    "value": "processLists=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case full log assignment",
+    "value": "fullLog=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural full log assignment",
+    "value": "fullLogs=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case shell history assignment",
+    "value": "shellHistory=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case plural shell history assignment",
+    "value": "shellHistories=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
