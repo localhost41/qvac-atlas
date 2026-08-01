@@ -49,6 +49,9 @@ const CONTENT_RULES = [
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
+const COMPACT_SENSITIVE_KEY =
+  /(?:SECRETACCESSKEY|SECRETKEY|PRIVATEKEY|ACCESSKEY|APIKEY)/gu;
+const SAFE_KEY_WORD = /^KEY(?:BOARDS?|STONES?|WORDS?|NOTES?)$/u;
 const COMPACT_ASSIGNMENT_SEGMENTS = new Map([
   ["ACCESSKEY", "ACCESS_KEY"],
   ["ACCESSKEYS", "ACCESS_KEYS"],
@@ -176,14 +179,16 @@ function assignmentNameVariants(rawName) {
 function isSensitiveAssignmentName(name) {
   const rawSegments = name.split("_").filter(Boolean);
   // A recognized compact key family may have an ordinary namespace prefix
-  // inside the same segment (for example AWSSECRETACCESSKEY). Match only at
-  // the segment end so KEYBOARD and KEYSTONE supersets remain safe.
-  if (
-    rawSegments.some((segment) =>
-      /(?:ACCESS|API|PRIVATE|SECRET(?:ACCESS)?)KEYS?$/u.test(segment),
-    )
-  )
-    return true;
+  // or suffix inside the same segment (for example
+  // AWSSECRETACCESSKEYBACKUP). Ordinary KEYBOARD/KEYSTONE/KEYWORD/KEYNOTE
+  // compounds remain safe only when that word is the complete match tail.
+  for (const segment of rawSegments) {
+    for (const match of segment.matchAll(COMPACT_SENSITIVE_KEY)) {
+      const tail = segment.slice(match.index + match[0].length);
+      if (SAFE_KEY_WORD.test(`KEY${tail}`)) continue;
+      return true;
+    }
+  }
   const segments = rawSegments
     .flatMap((segment) =>
       (COMPACT_ASSIGNMENT_SEGMENTS.get(segment) ?? segment).split("_"),
@@ -203,8 +208,16 @@ function isSensitiveAssignmentName(name) {
   for (let index = 0; index < policySegments.length; index += 1) {
     if (!SENSITIVE_KEY_PREFIXES.has(policySegments[index])) continue;
     // Namespace and version segments are allowed between a sensitive prefix
-    // and KEY. Requiring adjacency let API2KEY and apiV2Key bypass policy.
-    if (policySegments.slice(index + 1).includes("KEY")) return true;
+    // and a KEY-bearing suffix. Requiring adjacency let API2KEY and apiV2Key
+    // bypass policy; requiring an exact KEY let API2KEYBACKUP bypass it.
+    if (
+      policySegments
+        .slice(index + 1)
+        .some(
+          (segment) => segment.startsWith("KEY") && !SAFE_KEY_WORD.test(segment),
+        )
+    )
+      return true;
   }
   return false;
 }
