@@ -112,12 +112,12 @@ Aggregate registry derivation may additionally return `reproduced-success` or
 
 The rules are deliberately conservative:
 
-| Evidence | Observation | Requested-device claim | Actual-device evidence |
-|---|---|---|---|
-| Standard workload completed; requested device directly observed | success | observed-success | observed-success |
-| Standard workload completed; a different device directly observed | fallback | unknown | observed-success |
-| Standard workload on an exact QVAC version produced a defined runtime failure | failure | observed-failure | none |
-| Missing QVAC, skipped work, unknown result, unobserved backend, or nonstandard profile | inconclusive | unknown | none |
+| Evidence                                                                               | Observation  | Requested-device claim | Actual-device evidence |
+| -------------------------------------------------------------------------------------- | ------------ | ---------------------- | ---------------------- |
+| Standard workload completed; requested device directly observed                        | success      | observed-success       | observed-success       |
+| Standard workload completed; a different device directly observed                      | fallback     | unknown                | observed-success       |
+| Standard workload on an exact QVAC version produced a defined runtime failure          | failure      | observed-failure       | none                   |
+| Missing QVAC, skipped work, unknown result, unobserved backend, or nonstandard profile | inconclusive | unknown                | none                   |
 
 Doctor success alone is never sufficient. A completed GPU request observed on CPU
 is useful fallback evidence but not GPU success.
