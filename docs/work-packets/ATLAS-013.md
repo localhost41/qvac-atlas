@@ -122,8 +122,9 @@ failure cleanup; it does not replace the contained artifact checks.
 Inside the consented artifact transaction, a valid cache hit still requires at
 least 512 MiB (536,870,912 bytes) free on its volume. A cache miss requires at least
 923,275,904 bytes: the 386,404,992-byte artifact plus that 512 MiB reserve. Both the
-10 GiB preflight and the applicable contained check must pass. The approximately
-1 GiB available on the development host recorded in `docs/STATUS.md` is not enough.
+10 GiB preflight and the applicable contained check must pass. Capacity is a
+ceremony-time gate, not a durable host property; the operator must recheck it
+immediately before the event and record only the bounded result.
 
 The operator may inspect capacity locally, but when the check is reached the
 evidence log records only `capacity_gate: passed|failed`. It must not record mount

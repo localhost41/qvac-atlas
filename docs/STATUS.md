@@ -80,8 +80,9 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: the bounded macOS physical-validation protocol is specified in
   `docs/work-packets/ATLAS-013.md`. Execution remains capacity- and
-  human-approval-gated: this host has about 1 GiB free, while the protocol requires
-  at least 10 GiB of headroom on every relevant volume. No physical run has occurred.
+  human-approval-gated: the protocol requires at least 10 GiB of headroom on every
+  relevant volume, and capacity must be rechecked immediately before any ceremony.
+  No physical run has occurred.
 - ATLAS-023: candidate metadata now truthfully records implemented, contained,
   dormant consent while retaining runtime-unverified status, candidate version,
   claim ineligibility, and the empty production allowlist.
