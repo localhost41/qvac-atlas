@@ -1,6 +1,6 @@
 # ATLAS-027 — CLI truth and zero-effect help
 
-Status: in progress
+Status: completed
 
 ## Scope
 

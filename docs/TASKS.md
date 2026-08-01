@@ -40,12 +40,12 @@ Updated: 2026-08-01
 | ATLAS-024  | admission worker    | Sol              | completed        | ATLAS-011, ATLAS-012B           | Base-revision append-only genuine-report enforcement in local audit and CI, with adversarial tests          |
 | ATLAS-025  | site worker         | Terra            | completed        | ATLAS-010, ATLAS-012C           | Accessible aggregate claim-state rendering and complete public state-matrix tests                           |
 | ATLAS-026  | docs worker         | Terra            | completed        | ATLAS-011                       | Fixture-only submission status, incident/removal guidance, and automated contributor-doc checks             |
-| ATLAS-027  | release captain     | Sol              | in progress      | ATLAS-021D                      | Truthful zero-effect CLI help, removal of dead scaffold surfaces, and implementation-status copy cleanup    |
-| ATLAS-028  | privacy worker      | Sol              | in progress      | ATLAS-012C, ATLAS-021B          | IPv6, UUID, version-field, IPv4, and redaction-count privacy hardening with end-to-end rejection tests      |
-| ATLAS-029  | claim worker        | Sol              | in progress      | ATLAS-012C, ATLAS-025           | Preserve failed fallback observation without misattributing failure to the requested device                 |
-| ATLAS-030  | catalog worker      | Sol              | in progress      | ATLAS-024, ATLAS-026            | Trusted active/superseded/withdrawn evidence lifecycle that excludes retired reports from current claims    |
-| ATLAS-031  | operations worker   | Terra            | in progress      | ATLAS-021D, ATLAS-026           | Exact Node-22 toolchain, one-command local readiness, activation checklist, and incident/admission runbooks |
-| ATLAS-032  | quality worker      | Sol              | in progress      | ATLAS-024                       | History-wide append-only proof that rejects intermediate mutation, deletion, or type/mode drift             |
+| ATLAS-027  | release captain     | Sol              | completed        | ATLAS-021D                      | Truthful zero-effect CLI help, removal of dead scaffold surfaces, and implementation-status copy cleanup    |
+| ATLAS-028  | privacy worker      | Sol              | completed        | ATLAS-012C, ATLAS-021B          | IPv6, UUID, version-field, IPv4, and redaction-count privacy hardening with end-to-end rejection tests      |
+| ATLAS-029  | claim worker        | Sol              | completed        | ATLAS-012C, ATLAS-025           | Preserve failed fallback observation without misattributing failure to the requested device                 |
+| ATLAS-030  | catalog worker      | Sol              | completed        | ATLAS-024, ATLAS-026            | Trusted active/superseded/withdrawn evidence lifecycle that excludes retired reports from current claims    |
+| ATLAS-031  | operations worker   | Terra            | completed        | ATLAS-021D, ATLAS-026           | Exact Node-22 toolchain, one-command local readiness, activation checklist, and incident/admission runbooks |
+| ATLAS-032  | quality worker      | Sol              | completed        | ATLAS-024                       | History-wide append-only proof that rejects intermediate mutation, deletion, or type/mode drift             |
 
 ## Queue rules
 

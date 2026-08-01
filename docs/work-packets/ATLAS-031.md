@@ -1,6 +1,6 @@
 # ATLAS-031 — Local readiness and activation controls
 
-Status: in progress
+Status: completed
 
 ## Scope
 

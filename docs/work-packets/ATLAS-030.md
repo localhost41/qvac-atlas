@@ -1,6 +1,6 @@
 # ATLAS-030 — Trusted evidence lifecycle
 
-Status: in progress
+Status: completed
 
 ## Scope
 

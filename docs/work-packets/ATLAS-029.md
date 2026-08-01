@@ -1,6 +1,6 @@
 # ATLAS-029 — Requested-device failure attribution
 
-Status: in progress
+Status: completed
 
 ## Scope
 

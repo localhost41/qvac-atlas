@@ -1,6 +1,6 @@
 # ATLAS-028 — Privacy scanner and redaction integrity
 
-Status: in progress
+Status: completed
 
 ## Scope
 

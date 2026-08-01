@@ -1,6 +1,6 @@
 # ATLAS-032 — History-wide append-only proof
 
-Status: in progress
+Status: completed
 
 ## Scope
 

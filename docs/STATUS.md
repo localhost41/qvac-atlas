@@ -92,6 +92,29 @@ M1 — Local probe and registry vertical slice.
   cover observed, reproduced, fallback, mixed, failure, unknown, and fixture states.
 - ATLAS-026: contributor entry points state that genuine submissions are closed and
   link tested privacy, exact-target removal, withdrawal, and incident guidance.
+- ATLAS-027: the CLI exposes truthful zero-effect help, rejects malformed real and
+  fixture grammar before TTY or cwd access, and retains a literal-false real gate.
+  Dead fixture scaffold surfaces and stale implementation-status claims are gone.
+- ATLAS-028: publishability and catalog admission now reject bounded IPv6 and UUID
+  identifiers, contributor-controlled version entropy, and ambiguous dotted quads
+  without echoing suspect values. Genuine report assembly carries the platform
+  collector's bounded redaction counts instead of replacing them with zeros.
+- ATLAS-029: a failed workload on a directly observed device different from the
+  requested device remains a failure observation but cannot become a failure or
+  mixed claim about the requested device. The static state matrix proves the
+  requested, observed, observation, and claim fields stay distinct.
+- ATLAS-030: trusted registry metadata now has exact active, superseded, and
+  withdrawn lifecycle states with opaque source keys and direct same-source
+  replacement integrity. Retired evidence remains validated and append-only but is
+  absent from current reports, counts, claims, serialized output, and static routes.
+- ATLAS-031: every workspace manifest enforces Node 22, and `pnpm ready:local`
+  repeats current-tree audit, full checks, deterministic regeneration, and
+  cleanliness checks without claiming exact history or external release gates.
+  Activation, first-report admission, and exceptional remediation gates are
+  explicit and remain human-controlled.
+- ATLAS-032: exact contribution auditing traverses each relevant introduced Git
+  edge and rejects intermediate report mutation, deletion, type, or mode drift even
+  when the final endpoint restores the trusted blob. Traversal is exact and bounded.
 
 ## Next integration gate
 
