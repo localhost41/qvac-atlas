@@ -2,6 +2,7 @@
 import generatedCatalog from "../../generated/catalog.json";
 import CatalogList from "../../components/CatalogList.astro";
 import Base from "../../layouts/Base.astro";
+import { sitePath } from "../../site-path.js";
 import type { CatalogData } from "../../types/catalog.js";
 
 const catalog = generatedCatalog as unknown as CatalogData;
@@ -10,7 +11,7 @@ const fixtures = catalog.fixtures.map((entry) => ({
   claim: entry.claim,
   facets: { ...entry.facets, claimState: "not-a-claim" as const },
   fixture: true,
-  links: [{ href: `/reports/${entry.slug}/`, label: entry.reportId }],
+  links: [{ href: sitePath(`/reports/${entry.slug}/`), label: entry.reportId }],
   reportCount: 1,
   reportObservations: [entry.claim.observation],
   sourceCount: null,

@@ -1,6 +1,7 @@
 ---
 import generatedCatalog from "../../generated/catalog.json";
 import Base from "../../layouts/Base.astro";
+import { sitePath } from "../../site-path.js";
 import type { CatalogData, CatalogReport } from "../../types/catalog.js";
 
 export function getStaticPaths() {
@@ -23,7 +24,7 @@ const report = entry.report;
 <Base
   title={`${fixture ? "Fixture" : "Evidence"} ${entry.reportId} — QVAC Atlas`}
 >
-  <a class="back" href={fixture ? "/fixtures/" : "/"}
+  <a class="back" href={sitePath(fixture ? "/fixtures/" : "/")}
     >← Back to {fixture ? "fixture lab" : "registry"}</a
   >
   <article class="report-detail">
@@ -31,10 +32,10 @@ const report = entry.report;
     <h1>Exact report detail</h1>
     {
       fixture && (
-        <aside class="warning">
-          <strong>Not a compatibility claim.</strong> This report has fixture
-          provenance and cannot contribute to observed, reproduced, failure, or
-          mixed claims.
+        <aside class="warning" aria-labelledby="fixture-warning-title">
+          <strong id="fixture-warning-title">Not a compatibility claim.</strong>
+          This report has fixture provenance and cannot contribute to observed,
+          reproduced, failure, or mixed claims.
         </aside>
       )
     }

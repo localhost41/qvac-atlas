@@ -4,6 +4,10 @@
 > allowlist is empty and shipped real mode is disabled. This page documents the
 > future reviewed shape; it is not an invitation to submit fixture output.
 
+For the current safe path, use the
+[five-minute fixture-only walkthrough](five-minute-fixture-walkthrough.md). Its
+submission step deliberately stops without publishing anything.
+
 ## What publication means
 
 An Atlas report contains allowlisted hardware and software details rather than a

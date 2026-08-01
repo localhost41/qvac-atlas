@@ -21,6 +21,7 @@ import {
   serializeCatalog,
 } from "../../../packages/catalog/src/index.js";
 import { withReportId } from "../../../packages/schema/src/index.js";
+import "./deployment.cases.js";
 
 const run = promisify(execFile);
 const siteRoot = fileURLToPath(new URL("../", import.meta.url));

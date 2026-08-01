@@ -28,6 +28,7 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--text);
+  overflow-wrap: break-word;
 }
 
 a {
@@ -325,6 +326,40 @@ pre {
 
 [hidden] {
   display: none !important;
+}
+
+@media (max-width: 40rem) {
+  .site-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-block: 1rem;
+  }
+
+  nav {
+    flex-wrap: wrap;
+  }
+
+  main {
+    padding-block: 2rem 3rem;
+  }
+
+  .filters,
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .result-card,
+  .detail-summary {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

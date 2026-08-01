@@ -5,6 +5,7 @@ import type {
   ClaimState,
   ObservationState,
 } from "../types/catalog.js";
+import { sitePath } from "../site-path.js";
 
 interface Props {
   entries: CatalogCardEntry[];
@@ -214,4 +215,4 @@ function limitation(entry: CatalogCardEntry): string {
   </ul>
 </section>
 
-<script is:inline src="/catalog-filter.js" defer></script>
+<script is:inline src={sitePath("/catalog-filter.js")} defer></script>

@@ -2,6 +2,7 @@
 import generatedCatalog from "../generated/catalog.json";
 import CatalogList from "../components/CatalogList.astro";
 import Base from "../layouts/Base.astro";
+import { sitePath } from "../site-path.js";
 import type {
   ActualDeviceClaim,
   CatalogData,
@@ -57,7 +58,7 @@ const claims = catalog.claims.map((entry) => {
       const slug = slugs.get(reportId);
       return slug === undefined
         ? []
-        : [{ href: `/reports/${slug}/`, label: reportId }];
+        : [{ href: sitePath(`/reports/${slug}/`), label: reportId }];
     }),
     reportCount: entry.reportIds.length,
     reportObservations,
