@@ -55,4 +55,6 @@ generation, or assigning a production profile to fixture evidence.
 If private data reaches a public branch or pull request, stop review. Treat the data
 as disclosed, rotate affected credentials, remove the public artifact, and follow
 the host's Git-history remediation procedure. A later deletion commit does not make
-the original object private.
+the original object private. The complete stop-publish, public-surface removal,
+minimal sanitized incident-record, and re-audit sequence is in
+[`privacy-removal-incidents.md`](privacy-removal-incidents.md).

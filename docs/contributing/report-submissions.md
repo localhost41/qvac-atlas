@@ -1,5 +1,9 @@
 # Report submission guide
 
+> **Genuine report submissions are currently closed.** The production profile
+> allowlist is empty and shipped real mode is disabled. This page documents the
+> future reviewed shape; it is not an invitation to submit fixture output.
+
 ## What publication means
 
 An Atlas report contains allowlisted hardware and software details rather than a
@@ -50,3 +54,7 @@ a profile merely to make a report pass.
 Once the maintainer metadata commit is present, the audit reconciles the report
 directory and registry in both directions, validates every report, rebuilds the
 catalog, and requires byte-identical generated output before merge.
+
+For fingerprint decisions, exact-target local cleanup, withdrawal/supersession
+limits, and incident response, see
+[`privacy-removal-incidents.md`](privacy-removal-incidents.md).

@@ -4,10 +4,17 @@ QVAC Atlas accepts code and documentation contributions. Hardware compatibility
 evidence follows a stricter, human-reviewed path because accepted JSON becomes
 public Git history and can influence compatibility claims.
 
-## Submit a report
+> **Genuine report submissions are closed.** The production profile allowlist is
+> empty and the shipped CLI keeps real mode disabled. Do not submit fixture output
+> as hardware evidence. Code, documentation, and fixture-only test contributions
+> remain open.
+
+## Future genuine report workflow — currently closed
 
 Atlas never uploads a report or opens a pull request. You make the publication
 decision by reviewing your local JSON and manually creating a Git contribution.
+The steps below document the future workflow; do not use them until maintainers
+explicitly announce that genuine submissions are open.
 
 1. Generate and preview the report locally with the Atlas probe.
 2. Verify both consent fields are `true`. Reconsider submission if the hardware and
@@ -31,9 +38,19 @@ recommendation, or production profile. See
 [`docs/contributing/report-submissions.md`](docs/contributing/report-submissions.md)
 for privacy and review details.
 
-## Verify locally
+Before keeping or sharing a hardware fingerprint, read the
+[`privacy, removal, and incident guidance`](docs/contributing/privacy-removal-incidents.md).
+It also explains exact-target cleanup for a never-submitted local report and model
+cache, public withdrawal/supersession limits, and maintainer incident response.
 
-Use Node 22 and the pinned pnpm version:
+## Installation and verification prerequisites
+
+Use Node major 22 and pnpm exactly `11.10.0`, matching the root `packageManager`
+pin. Ensure the checkout has enough space for workspace dependencies and test
+output. Code, documentation, schema, catalog, site, and fixture-only test
+contributions require neither QVAC nor a model artifact. Atlas does not install
+QVAC; do not add it to this workspace or enable real mode for these contribution
+types.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -57,3 +74,6 @@ rules and JSON locations without echoing suspect values.
 - Maintainers follow
   [`docs/contributing/maintainer-admission.md`](docs/contributing/maintainer-admission.md)
   before merging report data.
+- Credential/privacy incidents follow the stop-publish and sanitized-record process
+  in
+  [`docs/contributing/privacy-removal-incidents.md`](docs/contributing/privacy-removal-incidents.md).

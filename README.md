@@ -28,9 +28,22 @@ current fixture registry as hardware compatibility evidence.
 
 See [`docs/PROJECT.md`](docs/PROJECT.md) for the immutable V1 boundary and [`docs/STATUS.md`](docs/STATUS.md) for the current verified state.
 
+## Genuine report submissions are closed
+
+The production profile allowlist is empty and the shipped CLI keeps real mode
+disabled, so genuine hardware report submissions are not currently accepted. Do
+not submit fixture output as compatibility evidence. Code, documentation, and
+fixture-only test contributions remain open.
+
+Atlas never uploads a report or opens a pull request. Before installing contributor
+dependencies or keeping any future local report/model cache, read the
+[`privacy, removal, and incident guidance`](docs/contributing/privacy-removal-incidents.md).
+
 ## Verify the repository
 
-Use Node 22 and the pinned pnpm version:
+Use Node major 22 and pnpm `11.10.0`, as pinned by `packageManager`. Code,
+documentation, site, schema, catalog, and fixture-only test work does not require
+QVAC or the candidate model. Atlas does not install QVAC.
 
 ```bash
 pnpm install --frozen-lockfile
