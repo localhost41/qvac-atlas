@@ -443,6 +443,49 @@ test("cleanup timeout after a primary failure degrades to schema-valid unknown e
   await validateAsFixtureReport(events);
 });
 
+test("overall timeout after a complete lifecycle is schema-valid inconclusive evidence", async (t) => {
+  const source = happySdk.replace(
+    "clearInterval(guard)\n  state = 'closed'",
+    "void guard\n  state = 'closed'",
+  );
+  const project = await makeProject(source);
+  t.after(() => rm(project.root, { recursive: true, force: true }));
+  const { events } = await runSynthetic(project, {
+    limits: fastLimits({ overallMs: 100 }),
+  });
+  assert.deepEqual(
+    events
+      .filter((event) => event.type === "phase")
+      .map(({ name, status }) => [name, status]),
+    [
+      ["qvac-import", "passed"],
+      ["worker-start", "passed"],
+      ["model-load", "passed"],
+      ["inference", "passed"],
+      ["clean-shutdown", "passed"],
+    ],
+  );
+  assert.deepEqual(events.at(-2), {
+    type: "termination",
+    kind: "timeout",
+    exit_code: null,
+    signal: null,
+    last_completed_phase: "clean-shutdown",
+  });
+  assert.deepEqual(events.at(-1), {
+    type: "result",
+    workload_status: "unknown",
+    completion_observed: false,
+    failure: {
+      category: "unknown",
+      phase: "clean-shutdown",
+      code: "TIMEOUT_AFTER_LIFECYCLE",
+      sanitized_excerpt: null,
+    },
+  });
+  await validateAsFixtureReport(events);
+});
+
 test("stdout and stderr are drained but never exposed", async (t) => {
   const noisy = `process.stdout.write('stdout-private-canary'.repeat(8192)); process.stderr.write('stderr-private-canary'.repeat(8192));\n${happySdk}`;
   const project = await makeProject(noisy);

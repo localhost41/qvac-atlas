@@ -566,19 +566,8 @@ export class ExecutorSupervisor {
       };
     } else if (this.#override === "timeout") {
       const phase = this.#timeoutPhase ?? "qvac-import";
-      result = !this.#timeoutAfterFailure
+      result = this.#timeoutAfterFailure
         ? {
-            type: "result",
-            workload_status: "failed",
-            completion_observed: false,
-            failure: {
-              category: "timeout",
-              phase,
-              code: timeoutCode(phase),
-              sanitized_excerpt: null,
-            },
-          }
-        : {
             type: "result",
             workload_status: "unknown",
             completion_observed: false,
@@ -588,7 +577,30 @@ export class ExecutorSupervisor {
               code: "CLEANUP_TIMEOUT_AFTER_FAILURE",
               sanitized_excerpt: null,
             },
-          };
+          }
+        : allPassed
+          ? {
+              type: "result",
+              workload_status: "unknown",
+              completion_observed: false,
+              failure: {
+                category: "unknown",
+                phase: "clean-shutdown",
+                code: "TIMEOUT_AFTER_LIFECYCLE",
+                sanitized_excerpt: null,
+              },
+            }
+          : {
+              type: "result",
+              workload_status: "failed",
+              completion_observed: false,
+              failure: {
+                category: "timeout",
+                phase,
+                code: timeoutCode(phase),
+                sanitized_excerpt: null,
+              },
+            };
     } else if (this.#override === "protocol") {
       result = {
         type: "result",

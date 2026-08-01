@@ -84,6 +84,10 @@ If cleanup times out after an earlier lifecycle failure, V1 cannot represent bot
 failures as one defined failure claim. Atlas retains the first failure phase and
 the real timeout termination but downgrades the result to fixed unknown evidence
 with `CLEANUP_TIMEOUT_AFTER_FAILURE`.
+Likewise, if all five phases pass but the Node root remains alive until the outer
+deadline, Atlas retains the timeout termination and the fully passed lifecycle but
+records fixed inconclusive `TIMEOUT_AFTER_LIFECYCLE` evidence. It does not relabel
+the already-passed shutdown phase as a defined timeout failure.
 
 Default deadlines are 180 seconds overall; 15 seconds for bootstrap/import; 10
 seconds for heartbeat; 120 seconds for model load; 30 seconds for inference; and
