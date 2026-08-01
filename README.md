@@ -15,7 +15,27 @@ Atlas is not a replacement for `qvac doctor`. It uses official QVAC diagnostics 
 
 ## Project status
 
-Day 1 feasibility and contract work is in progress. The repository is not yet ready for external use or publication.
+The fixture-driven vertical slice is implemented: consent ordering, report
+validation, a fail-closed project-local SDK resolver, deterministic Git admission,
+and the static registry all pass the workspace gate. The CLI deliberately exposes
+only synthetic scenarios today.
+
+Real QVAC execution, model download, production-profile admission, genuine claims,
+publishing, and deployment remain disabled. A real lifecycle needs an existing
+project-local QVAC SDK, enough disk for its multi-gigabyte dependency graph and the
+386,404,992-byte pinned model, then explicit human review. Do not describe the
+current fixture registry as hardware compatibility evidence.
 
 See [`docs/PROJECT.md`](docs/PROJECT.md) for the immutable V1 boundary and [`docs/STATUS.md`](docs/STATUS.md) for the current verified state.
 
+## Verify the repository
+
+Use Node 22 and the pinned pnpm version:
+
+```bash
+pnpm install --frozen-lockfile
+node scripts/validate-contribution.mjs
+pnpm check
+node scripts/build-catalog.mjs
+git diff --exit-code -- apps/site/src/generated/catalog.json
+```

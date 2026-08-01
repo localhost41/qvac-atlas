@@ -1,6 +1,6 @@
 # V1 contract
 
-Status: **provisional until the Day 2 technical-truth gate**.
+Status: **versioned V1 contract; fixture foundation implemented, production gated**.
 
 ## Product boundary
 
@@ -58,7 +58,9 @@ All runtime phases have deadlines. Failure finalization retains only structured 
 
 ## Report principles
 
-- JSON Schema is normative; language types are generated.
+- JSON Schema is normative. Runtime schema and semantic validation is mandatory;
+  provisional handwritten TypeScript assembly types remain until ATLAS-017 replaces
+  them with schema-derived types and drift checks.
 - Reports have separate schema, probe, QVAC, and profile versions.
 - Unknown and skipped are explicit; absence is not interpreted as failure.
 - Canonical JSON is deterministic across supported operating systems.
@@ -72,11 +74,16 @@ Collection is allowlist-first. Never collect environment values, tokens, cookies
 
 The hardware/OS combination may itself be identifying. Publication therefore requires an explicit preview and separate consent.
 
-## Day 2 unresolved feasibility questions
+## Resolved feasibility boundary
 
-1. Which current small QVAC model is appropriate, licensed, stable, and acceptably sized?
-2. Can public QVAC APIs directly expose the actual inference backend?
-3. Which public API boundary reliably proves worker startup?
-4. What is the supported Node/QVAC version matrix for V1?
-5. What model-download consent and cache behavior can be implemented without mutating user configuration?
-
+- V1 targets Node 22 and exact project-local `@qvac/sdk` 0.16.0 only.
+- The source-verified candidate is SmolLM2 360M Instruct Q8, pinned by revision,
+  386,404,992-byte size, SHA-256, and Apache-2.0 license. It is not claim-eligible
+  until a local hash-verified lifecycle succeeds.
+- Published QVAC 0.16.0 directly reports only actual `cpu|gpu` device class for LLM
+  completion, not Metal, CUDA, Vulkan, OpenCL, or another exact backend name.
+- `heartbeat()` is the worker-start boundary; terminal nonempty completion plus
+  `stats.backendDevice` is the inference/device observation boundary.
+- Atlas never installs QVAC. Any future model download requires a separate size,
+  license, destination, and cache disclosure plus explicit consent and local hash
+  verification. No such production downloader is currently enabled.

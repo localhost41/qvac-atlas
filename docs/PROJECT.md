@@ -12,7 +12,8 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 
 ## V1 user journey
 
-1. A contributor runs `npx qvac-atlas probe`.
+1. A contributor runs the installed `qvac-atlas probe` from an explicit project
+   containing the supported QVAC SDK.
 2. Atlas explains what it will collect and obtains explicit consent.
 3. Atlas runs official checks and one pinned QVAC workload in an isolated child process.
 4. Atlas creates a local, sanitized, schema-valid JSON report and previews it.
@@ -24,7 +25,9 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 
 - Versioned report schema and deterministic validator.
 - Allowlist-based hardware and QVAC collection.
-- Official Doctor adapter and conditional bundle verification adapter.
+- Official Doctor adapter with strict allowlist normalization; bundle verification
+  is explicitly skipped for the local V1 probe because there is no deployment
+  bundle and the official verifier may execute project configuration.
 - Isolated worker startup and one standardized small-LLM lifecycle profile.
 - Requested and directly observed backend recorded separately.
 - Local preview and JSON output with no automatic upload.
@@ -46,11 +49,12 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 
 ## Launch gates
 
-- A fresh install can generate a valid local report with one command.
+- A fresh Atlas install against an already-present, exact supported project-local
+  QVAC installation can generate a valid local report through one interactive
+  command; Atlas itself never installs QVAC.
 - A crashing or hanging QVAC child cannot kill or indefinitely hang the parent.
 - No known secret, identity, hostname, or local path leaks into a report.
 - Claim-producing fields are derived, not contributor-authored.
 - Actual backend is shown only when directly observed.
 - The site builds only from validated Git data.
 - Genuine reports populate the launch registry; fixtures are visibly fixtures.
-
