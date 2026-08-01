@@ -5,23 +5,23 @@ const FORBIDDEN_KEY =
 
 const CONTENT_RULES = [
   ["private-key", /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/],
-  ["bearer-token", /\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i],
-  ["jwt", /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/],
+  ["bearer-token", /(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i],
+  ["jwt", /eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/],
   [
     "known-token",
-    /\b(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})\b/,
+    /(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})/,
   ],
-  ["credential-url", /\b[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@/i],
-  ["email", /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i],
-  ["windows-user-path", /\b[A-Za-z]:\\Users\\[^\\\s]+/i],
-  ["posix-user-path", /(?:^|[\s"'])\/(?:Users|home)\/[^/\s"']+/],
-  ["windows-absolute-path", /(?:^|[\s"'(=])[A-Za-z]:[\\/][^\s"'<>]+/],
-  ["windows-unc-path", /(?:^|[\s"'(=])\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
+  ["credential-url", /[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@/i],
+  ["email", /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i],
+  ["windows-user-path", /[A-Za-z]:\\Users\\[^\\\s]+/i],
+  ["posix-user-path", /\/(?:Users|home)\/[^/\s"']+/],
+  ["windows-absolute-path", /(?:^|[\s"'(=_])[A-Za-z]:[\\/][^\s"'<>]+/],
+  ["windows-unc-path", /(?:^|[\s"'(=_])\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
   [
     "posix-absolute-path",
-    /(?:^|[\s"'(=:])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^\s"'<>]*)?/,
+    /(?:^|[\s"'(=:_])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^\s"'<>]*)?/,
   ],
-  ["mac-address", /\b(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}\b/i],
+  ["mac-address", /(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}/i],
   [
     "stable-identifier",
     /(?<![0-9a-f])[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}(?![0-9a-f])/i,
@@ -32,7 +32,7 @@ const CONTENT_RULES = [
   ],
   [
     "sensitive-assignment",
-    /\b(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)\s*=\s*\S+/i,
+    /(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)\s*=\s*\S+/i,
   ],
 ];
 

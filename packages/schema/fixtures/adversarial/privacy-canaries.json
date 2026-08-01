@@ -5,13 +5,33 @@
     "expected_rule": "bearer-token"
   },
   {
+    "name": "underscore-delimited bearer credential",
+    "value": "_Bearer AAAAAAAA_",
+    "expected_rule": "bearer-token"
+  },
+  {
     "name": "JWT-shaped value",
     "value": "eyJmaXh0dXJlIjoxMjN9.eyJub3RfYSI6InNlY3JldCJ9.c2lnbmF0dXJlX2ZpeHR1cmU",
     "expected_rule": "jwt"
   },
   {
+    "name": "underscore-delimited JWT-shaped value",
+    "value": "_eyJAAAAAAAA.BBBBBBBB.CCCCCCCC_",
+    "expected_rule": "jwt"
+  },
+  {
+    "name": "underscore-delimited known token",
+    "value": "_AKIAIOSFODNN7EXAMPLE_",
+    "expected_rule": "known-token"
+  },
+  {
     "name": "POSIX home path",
     "value": "failed at /Users/atlas-fixture/project/model.gguf",
+    "expected_rule": "posix-user-path"
+  },
+  {
+    "name": "underscore-delimited POSIX home path",
+    "value": "prefix_/Users/private/model.gguf",
     "expected_rule": "posix-user-path"
   },
   {
@@ -20,13 +40,28 @@
     "expected_rule": "windows-user-path"
   },
   {
+    "name": "underscore-delimited Windows home path",
+    "value": "prefix_C:\\Users\\private\\model.gguf",
+    "expected_rule": "windows-user-path"
+  },
+  {
     "name": "email address",
     "value": "contact atlas-fixture@example.invalid",
     "expected_rule": "email"
   },
   {
+    "name": "underscore-delimited email address",
+    "value": "_owner@example.invalid_",
+    "expected_rule": "email"
+  },
+  {
     "name": "MAC address",
     "value": "adapter 02:00:5e:10:00:00",
+    "expected_rule": "mac-address"
+  },
+  {
+    "name": "underscore-delimited MAC address",
+    "value": "_AA:BB:CC:DD:EE:FF_",
     "expected_rule": "mac-address"
   },
   {
@@ -80,8 +115,18 @@
     "expected_rule": "credential-url"
   },
   {
+    "name": "underscore-delimited credential-bearing URL",
+    "value": "_https://user:password@localhost/resource_",
+    "expected_rule": "credential-url"
+  },
+  {
     "name": "sensitive assignment",
     "value": "API_KEY=atlas_fixture_value",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "underscore-delimited sensitive assignment",
+    "value": "_TOKEN=secretvalue_",
     "expected_rule": "sensitive-assignment"
   }
 ]
