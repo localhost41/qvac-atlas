@@ -2,3 +2,8 @@ packages:
   - apps/*
   - packages/*
 
+# Astro requires esbuild's platform binary to build the static scaffold. Sharp is
+# optional for this project and remains explicitly disallowed.
+allowBuilds:
+  esbuild: true
+  sharp: false

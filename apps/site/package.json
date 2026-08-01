@@ -1,0 +1,21 @@
+{
+  "name": "@qvac-atlas/site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "QVAC Atlas static registry scaffold",
+  "type": "module",
+  "scripts": {
+    "build": "astro build",
+    "lint": "prettier --plugin=prettier-plugin-astro --check \"src/**/*.{astro,ts}\" \"test/**/*.ts\" package.json tsconfig.json astro.config.mjs",
+    "test": "tsx --test test/**/*.test.ts",
+    "typecheck": "astro check"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/node": "^24.3.0",
+    "astro": "^5.13.7",
+    "prettier-plugin-astro": "^0.14.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
