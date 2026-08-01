@@ -3,6 +3,9 @@
 This is the execution map, not a feature wish list. `docs/TASKS.md` owns the live
 task state and `docs/STATUS.md` owns verified truth.
 
+`docs/RELEASE-CHECKLIST.md` owns the final transition from fixture-only development
+to a public release candidate.
+
 | Build day | Outcome | Exit gate |
 |---|---|---|
 | 1 | Charter, repository control plane, scaffolds | Scope and non-goals committed |
