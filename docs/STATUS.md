@@ -22,9 +22,13 @@ M1 — Local probe and registry vertical slice.
 
 ## Active work
 
-- ATLAS-008: safe project-local QVAC SDK discovery and import policy is in progress.
-- ATLAS-009–011: the next implementation wave is queued for probe, registry, and
-  contribution workflow.
+- ATLAS-008: safe project-local QVAC SDK discovery and import policy is complete.
+- ATLAS-009: fixture-driven probe/report pipeline is active on
+  `feat/ATLAS-009-probe`.
+- ATLAS-010: validated catalog and static registry UI is active on
+  `feat/ATLAS-010-registry`.
+- ATLAS-015: binding the fail-closed resolver to the real executor is queued after
+  the probe adapter boundary lands.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
   4.8 GiB before safety margin.

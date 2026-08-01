@@ -11,13 +11,14 @@ Updated: 2026-07-31
 | ATLAS-005 | root | Sol | completed | ATLAS-002–004 | First-wave integration and NARROW technical-truth verdict |
 | ATLAS-006 | review worker | Terra | completed | ATLAS-004 | Independent scaffold review and Astro telemetry correction |
 | ATLAS-007 | review worker | Terra | completed | ATLAS-002 | Official Doctor and bundle-verification adapter research |
-| ATLAS-008 | runtime worker | Sol | in progress | ATLAS-002 | Safe project-local QVAC SDK resolution and version boundary |
-| ATLAS-009 | CLI worker | Sol | pending | ATLAS-003, ATLAS-008 | Consent, collection, Doctor adapter, isolated runner, preview, and local report write |
-| ATLAS-010 | registry worker | Terra | pending | ATLAS-003 | Validated catalog builder and evidence-driven static registry UI |
+| ATLAS-008 | runtime worker | Sol | completed | ATLAS-002 | Safe project-local QVAC SDK resolution and version boundary |
+| ATLAS-009 | CLI worker | Sol | in progress | ATLAS-003, ATLAS-008 | Consent, collection, Doctor adapter, isolated runner, preview, and local report write |
+| ATLAS-010 | registry worker | Terra | in progress | ATLAS-003 | Validated catalog builder and evidence-driven static registry UI |
 | ATLAS-011 | contribution worker | Terra | pending | ATLAS-003, ATLAS-010 | Report admission, PR template, CI validation, and trusted source metadata |
 | ATLAS-012 | security reviewer | Sol | pending | ATLAS-009–011 | Adversarial integration, privacy, process, and claim review |
 | ATLAS-013 | real-device gate | root + volunteer | pending capacity | ATLAS-009 | Hash-verified Node 22/macOS QVAC lifecycle run |
 | ATLAS-014 | Windows gate | volunteer | pending hardware | ATLAS-009 | Real Windows process containment and lifecycle validation |
+| ATLAS-015 | resolver worker | Sol | pending | ATLAS-008, ATLAS-009 | Fail-closed SDK resolver and real executor binding |
 
 ## Queue rules
 

@@ -55,3 +55,12 @@ remains disabled until a real hash-verified QVAC lifecycle succeeds.
 Atlas has no product telemetry, and project tooling must not emit vendor telemetry
 during local or CI use. Astro commands run with `ASTRO_TELEMETRY_DISABLED=1`
 through a cross-platform wrapper.
+
+## D-012 — Execute only an audited project-local SDK
+
+Atlas never declares or installs QVAC. V1 accepts only a directly declared,
+physical, path-contained `@qvac/sdk` 0.16.0 under an explicit project root. It
+validates a known package/export fingerprint, imports the audited file URL from a
+clean temporary working directory, strips Node/QVAC loader overrides, and treats
+every missing, unsafe, or unsupported layout as unknown. Isolation contains crashes
+and deadlines; it is not a sandbox for hostile project code.
