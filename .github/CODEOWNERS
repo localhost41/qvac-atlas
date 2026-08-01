@@ -1,0 +1,29 @@
+# QVAC Atlas ownership preparation
+#
+# HUMAN GATE: these three tokens are intentionally unresolved placeholders.
+# Replace each token with a valid GitHub user or team before public bootstrap,
+# then require GitHub's CODEOWNERS error endpoint to report zero errors.
+# Their presence proves local structure only; it does not establish trust.
+
+* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED
+
+# Repository trust and security controls require independent review.
+/.github/CODEOWNERS @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/.github/workflows/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/.github/branch-protection.json @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/SECURITY.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/scripts/verify-host-protection.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+
+# Claim admission and source-independence metadata are maintainer-owned.
+/registry/catalog.json @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/profiles/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/reports/v1/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/packages/catalog/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/packages/schema/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/scripts/validate-contribution.mjs @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/docs/contributing/maintainer-admission.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+
+# Release and dependency policy changes require release/security review.
+/docs/RELEASE-PROCESS.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/docs/contributing/dependency-updates.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/docs/operations/public-host-bootstrap.md @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
