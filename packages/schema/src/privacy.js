@@ -50,8 +50,8 @@ const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
 const COMPACT_SENSITIVE_KEY =
-  /(?:SECRETACCESSKEY|SECRETKEY|PRIVATEKEY|ACCESSKEY|APIKEY)/gu;
-const SAFE_KEY_WORD = /^KEY(?:BOARDS?|STONES?|WORDS?|NOTES?)$/u;
+  /(?:SECRET(?:V(?:ERSION)?\d*|\d+)?(?:ACCESS(?:V(?:ERSION)?\d*|\d+)?)?KEY|PRIVATE(?:V(?:ERSION)?\d*|\d+)?KEY|ACCESS(?:V(?:ERSION)?\d*|\d+)?KEY|API(?:V(?:ERSION)?\d*|\d+)?KEY)/gu;
+const SAFE_KEY_WORD_PREFIX = /^KEY(?:BOARD|STONE|WORD|NOTE)/u;
 const COMPACT_ASSIGNMENT_SEGMENTS = new Map([
   ["ACCESSKEY", "ACCESS_KEY"],
   ["ACCESSKEYS", "ACCESS_KEYS"],
@@ -170,9 +170,10 @@ function assignmentNameVariants(rawName) {
     .replace(/([A-Z]+)([A-Z][a-z])/gu, "$1_$2")
     .replace(/([a-z0-9])([A-Z])/gu, "$1_$2");
   return new Set(
-    [compact, simpleCamel, acronymCamel].map((candidate) =>
-      addNumericBoundaries(candidate).toUpperCase(),
-    ),
+    [compact, simpleCamel, acronymCamel].flatMap((candidate) => {
+      const upper = candidate.toUpperCase();
+      return [upper, addNumericBoundaries(upper)];
+    }),
   );
 }
 
@@ -185,7 +186,7 @@ function isSensitiveAssignmentName(name) {
   for (const segment of rawSegments) {
     for (const match of segment.matchAll(COMPACT_SENSITIVE_KEY)) {
       const tail = segment.slice(match.index + match[0].length);
-      if (SAFE_KEY_WORD.test(`KEY${tail}`)) continue;
+      if (SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`)) continue;
       return true;
     }
   }
@@ -214,7 +215,9 @@ function isSensitiveAssignmentName(name) {
       policySegments
         .slice(index + 1)
         .some(
-          (segment) => segment.startsWith("KEY") && !SAFE_KEY_WORD.test(segment),
+          (segment) =>
+            segment.startsWith("KEY") &&
+            !SAFE_KEY_WORD_PREFIX.test(segment),
         )
     )
       return true;

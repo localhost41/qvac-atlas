@@ -698,5 +698,40 @@
     "name": "suffixed numeric-infix API key assignment",
     "value": "API2KEYBACKUP=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "uppercase version-joined API key assignment",
+    "value": "APIV2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "suffixed uppercase version-joined API key assignment",
+    "value": "APIV2KEYBACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "uppercase version-joined access key assignment",
+    "value": "ACCESSV2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "uppercase version-joined private key assignment",
+    "value": "PRIVATEV2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "uppercase version-word API key assignment",
+    "value": "APIVERSION2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-case compact version API key assignment",
+    "value": "APIv2keyBackup=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "sensitive key after safe compact key word",
+    "value": "PRIVATEKEYBOARDAPIKEYBACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
