@@ -277,6 +277,15 @@ function hasCompactSensitiveKey(segment) {
   return false;
 }
 
+function isSensitiveKeySegment(segment) {
+  if (segment.startsWith("KEY"))
+    return !SAFE_KEY_WORD_PREFIX.test(segment);
+  const singular = segment.endsWith("KEYS") ? segment.slice(0, -1) : segment;
+  if (!singular.endsWith("KEY")) return false;
+  const bridge = singular.slice(0, -3);
+  return !SAFE_KEY_ENDING_STEMS.some((stem) => bridge.endsWith(stem));
+}
+
 function isSensitiveAssignmentName(name) {
   const rawSegments = name.split("_").filter(Boolean);
   // A recognized compact key family may have an ordinary namespace prefix
@@ -314,11 +323,7 @@ function isSensitiveAssignmentName(name) {
     if (
       policySegments
         .slice(index + 1)
-        .some(
-          (segment) =>
-            segment.startsWith("KEY") &&
-            !SAFE_KEY_WORD_PREFIX.test(segment),
-        )
+        .some(isSensitiveKeySegment)
     )
       return true;
   }

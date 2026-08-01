@@ -788,5 +788,20 @@
     "name": "secret keynote followed by backup key assignment",
     "value": "SECRET_KEYNOTE_BACKUP_KEY=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard followed by compact backup key assignment",
+    "value": "SECRET_KEYBOARD_BACKUPKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keystone followed by compact recovery key assignment",
+    "value": "SECRET_KEYSTONE_RECOVERYKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keynote followed by compact backup key assignment",
+    "value": "SECRET_KEYNOTE_BACKUPKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
