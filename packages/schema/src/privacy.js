@@ -48,15 +48,6 @@ const CONTENT_RULES = [
 // the first value character so findings can never reflect the assigned value.
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_])([A-Za-z0-9_]{1,1024})[ \t]*=[ \t]*\S/gi;
-const SENSITIVE_ASSIGNMENT_SEGMENTS = new Set([
-  "APIKEY",
-  "AUTHORIZATION",
-  "CREDENTIAL",
-  "CREDENTIALS",
-  "PASSWORD",
-  "SECRET",
-  "TOKEN",
-]);
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
 
 const EXACT_ENTROPY_EXEMPT_PATHS = new Set([
@@ -107,8 +98,10 @@ function hasSensitiveAssignment(value) {
     if (name === "NOT_TOKEN") continue;
     const segments = name.split("_").filter(Boolean);
     if (
-      segments.some((segment) => SENSITIVE_ASSIGNMENT_SEGMENTS.has(segment)) ||
-      /(?:API_?KEY|AUTHORIZATION|PASSWORD|SECRET|TOKEN)$/u.test(name)
+      FORBIDDEN_KEY.test(name) ||
+      /(?:API_?KEY|AUTHORIZATION|COOKIE|CREDENTIALS?|PASSWORD|SECRET|TOKEN)$/u.test(
+        name,
+      )
     )
       return true;
     for (let index = 0; index + 1 < segments.length; index += 1) {

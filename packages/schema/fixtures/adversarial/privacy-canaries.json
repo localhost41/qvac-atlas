@@ -228,5 +228,85 @@
     "name": "AWS access-key identifier assignment",
     "value": "AWS_ACCESS_KEY_ID=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "cookie assignment",
+    "value": "COOKIE=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "session cookie assignment",
+    "value": "SESSION_COOKIE=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "username assignment",
+    "value": "USERNAME=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "home directory assignment",
+    "value": "HOME_DIRECTORY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "hostname assignment",
+    "value": "HOSTNAME=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "email assignment",
+    "value": "EMAIL=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "network identifier assignment",
+    "value": "IP_ADDRESS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "machine identifier assignment",
+    "value": "MACHINE_ID=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "serial number assignment",
+    "value": "SERIAL_NUMBER=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "wireless identifier assignment",
+    "value": "SSID=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "shell history assignment",
+    "value": "SHELL_HISTORY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "full log assignment",
+    "value": "FULL_LOG=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "process list assignment",
+    "value": "PROCESS_LIST=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "prompt assignment",
+    "value": "PROMPT=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "raw output assignment",
+    "value": "OUTPUT=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "organization assignment",
+    "value": "ORGANIZATION=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
