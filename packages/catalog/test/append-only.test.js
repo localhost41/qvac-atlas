@@ -206,3 +206,117 @@ test("an unrelated base is rejected instead of being guessed", async (t) => {
     /trusted base is not an ancestor of the target/,
   );
 });
+
+test("an intermediate modification cannot be hidden by restoring the target", async (t) => {
+  const root = await repository(t);
+  const baseRevision = await git(root, "rev-parse", "HEAD");
+  await write(root, REPORT_A, '{"report":"temporary tamper"}\n');
+  await commit(root, "tamper accepted report");
+  await write(root, REPORT_A, '{"report":"a"}\n');
+  const targetRevision = await commit(root, "restore accepted report");
+
+  await rejectsWithoutPath(
+    assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+    /trusted genuine report changed within introduced history/,
+  );
+});
+
+test("an intermediate deletion cannot be hidden by restoring the target", async (t) => {
+  const root = await repository(t);
+  const baseRevision = await git(root, "rev-parse", "HEAD");
+  await unlink(join(root, REPORT_A));
+  await commit(root, "temporarily delete accepted report");
+  await write(root, REPORT_A, '{"report":"a"}\n');
+  const targetRevision = await commit(root, "restore accepted report");
+
+  await rejectsWithoutPath(
+    assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+    /trusted genuine report changed within introduced history/,
+  );
+});
+
+test(
+  "intermediate mode or type drift cannot be hidden by restoration",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    await t.test("executable mode", async (t) => {
+      const root = await repository(t);
+      const baseRevision = await git(root, "rev-parse", "HEAD");
+      await chmod(join(root, REPORT_A), 0o755);
+      await commit(root, "temporarily change accepted report mode");
+      await chmod(join(root, REPORT_A), 0o644);
+      const targetRevision = await commit(root, "restore accepted report mode");
+
+      await rejectsWithoutPath(
+        assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+        /genuine report is not a non-executable regular file|trusted genuine report changed within introduced history/,
+      );
+    });
+
+    await t.test("symbolic link", async (t) => {
+      const root = await repository(t);
+      const baseRevision = await git(root, "rev-parse", "HEAD");
+      await unlink(join(root, REPORT_A));
+      await symlink("elsewhere.json", join(root, REPORT_A));
+      await commit(root, "temporarily change accepted report type");
+      await unlink(join(root, REPORT_A));
+      await write(root, REPORT_A, '{"report":"a"}\n');
+      const targetRevision = await commit(root, "restore accepted report type");
+
+      await rejectsWithoutPath(
+        assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+        /genuine report is not a non-executable regular file|trusted genuine report changed within introduced history/,
+      );
+    });
+  },
+);
+
+test("a topic fork predating a base report is checked at the merge edge", async (t) => {
+  const root = await repository(t, { withReport: false });
+  const forkRevision = await git(root, "rev-parse", "HEAD");
+  await git(root, "branch", "topic", forkRevision);
+
+  await write(root, REPORT_A, '{"report":"a"}\n');
+  const baseRevision = await commit(root, "accept report on base");
+
+  await git(root, "checkout", "--quiet", "topic");
+  await write(root, REPORT_B, '{"report":"b"}\n');
+  await commit(root, "add topic report before seeing base report");
+  await git(
+    root,
+    "merge",
+    "--quiet",
+    "--no-ff",
+    "--no-gpg-sign",
+    "-m",
+    "merge trusted base",
+    baseRevision,
+  );
+  const targetRevision = await git(root, "rev-parse", "HEAD");
+
+  assert.deepEqual(
+    await assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+    { additions: 1, preserved: 1 },
+  );
+});
+
+test("the introduced history traversal has a finite commit bound", async (t) => {
+  const root = await repository(t);
+  const baseRevision = await git(root, "rev-parse", "HEAD");
+  for (let index = 0; index < 257; index += 1) {
+    await git(
+      root,
+      "commit",
+      "--quiet",
+      "--allow-empty",
+      "--no-gpg-sign",
+      "-m",
+      `empty ${index}`,
+    );
+  }
+  const targetRevision = await git(root, "rev-parse", "HEAD");
+  await rejectsWithoutPath(
+    assertAppendOnlyReports({ root, baseRevision, targetRevision }),
+    /introduced Git history exceeds the audit bound/,
+  );
+});

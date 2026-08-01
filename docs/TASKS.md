@@ -45,7 +45,7 @@ Updated: 2026-08-01
 | ATLAS-029  | claim worker        | Sol              | in progress      | ATLAS-012C, ATLAS-025           | Preserve failed fallback observation without misattributing failure to the requested device                 |
 | ATLAS-030  | catalog worker      | Sol              | in progress      | ATLAS-024, ATLAS-026            | Trusted active/superseded/withdrawn evidence lifecycle that excludes retired reports from current claims    |
 | ATLAS-031  | operations worker   | Terra            | in progress      | ATLAS-021D, ATLAS-026           | Exact Node-22 toolchain, one-command local readiness, activation checklist, and incident/admission runbooks |
-| ATLAS-032  | quality worker      | Sol              | queued           | ATLAS-024                       | History-wide append-only proof that rejects intermediate mutation, deletion, or type/mode drift             |
+| ATLAS-032  | quality worker      | Sol              | in progress      | ATLAS-024                       | History-wide append-only proof that rejects intermediate mutation, deletion, or type/mode drift             |
 
 ## Queue rules
 

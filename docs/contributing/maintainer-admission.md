@@ -47,11 +47,16 @@ node scripts/validate-contribution.mjs --base <40-hex-base> --target <40-hex-tar
 Both revisions must be explicit, nonzero, locally available commit IDs. The base
 must be an ancestor of the checked-out target. CI rejects a modified, deleted,
 renamed, type-changed, or mode-changed pre-existing genuine report and permits only
-new canonical `reports/v1/sha256-<64 lowercase hex>.json` regular files. It never
-guesses a branch, merge base, or fallback ref. Pull requests use the exact event
-base SHA; pushes use the exact nonzero `before` SHA. Missing history, an all-zero
-push base, an unrelated revision, or a target other than checked-out `HEAD` fails
-closed.
+new canonical `reports/v1/sha256-<64 lowercase hex>.json` regular files. Every
+introduced parent-child edge is checked when its parent contains a report already
+trusted at the base, so modifying or deleting that report and restoring it at the
+target still fails. A topic branch forked before a later base report is not treated
+as if it already contained that report; the eventual merge edge from the trusted
+base is checked instead. Traversal is finite and fails closed when its bound is
+exceeded. The audit never guesses a branch, merge base, or fallback ref. Pull
+requests use the exact event base SHA; pushes use the exact nonzero `before` SHA.
+Missing history, an all-zero push base, an unrelated revision, or a target other
+than checked-out `HEAD` fails closed.
 
 Running `node scripts/validate-contribution.mjs` without revision arguments remains
 useful before a commit: it validates the current report tree, registry mapping,
@@ -68,7 +73,7 @@ The audit enforces all of these simultaneously:
 - every report appears exactly once as a genuine registry source;
 - every genuine registry source maps to one existing report;
 - every genuine report already present at the trusted base remains byte- and
-  mode-identical at the target;
+  mode-identical throughout relevant introduced history and at the target;
 - report ID, schema, semantics, privacy, consent, provenance, and trusted profile
   match all pass;
 - the deterministic catalog equals the checked-in generated file;

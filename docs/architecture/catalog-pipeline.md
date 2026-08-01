@@ -77,6 +77,13 @@ Duplicate report IDs or report paths fail the build. Corrections therefore requi
 a new report identity and future trusted supersession metadata rather than silently
 replacing evidence.
 
+Exact history admission checks every introduced parent-child edge for reports
+already trusted at the explicit base. A target that restores the base blob after an
+intermediate modification, deletion, type change, or mode change still fails. A
+topic fork older than a newly accepted base report is not expected to contain that
+report until the merge edge introduces it. Traversal is bounded and never guesses
+refs or merge bases.
+
 ## Determinism and rendering
 
 The builder sorts configured paths, report IDs, compatibility groups, evidence
