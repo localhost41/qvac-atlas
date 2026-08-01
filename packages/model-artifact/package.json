@@ -1,0 +1,29 @@
+{
+  "name": "@qvac-atlas/model-artifact",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dormant private acquisition boundary for the pinned Atlas model artifact",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.{js,mjs}\" package.json tsconfig.json",
+    "test": "pnpm build && node --test test/**/*.test.js",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  }
+}
