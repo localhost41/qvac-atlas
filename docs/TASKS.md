@@ -36,6 +36,7 @@ Updated: 2026-08-01
 | ATLAS-021C | CLI worker          | Sol              | completed        | ATLAS-021B                      | Concrete cwd resolver/Doctor/artifact/executor wiring behind a hardcoded false release gate                |
 | ATLAS-021D | quality workers     | Sol + Terra      | completed        | ATLAS-021C                      | Independent activation, containment, privacy, UX, and reproducibility acceptance                           |
 | ATLAS-022  | quality worker      | Terra            | completed        | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
+| ATLAS-023  | metadata worker     | Terra            | in progress      | ATLAS-021D                      | Replace stale unimplemented-consent candidate prose without changing status, version, eligibility, or pins |
 
 ## Queue rules
 
