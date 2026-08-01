@@ -7,28 +7,41 @@ Updated: 2026-07-31
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- Three isolated implementation worktrees are active for runtime feasibility, schema/privacy, and workspace scaffolding.
+- The first implementation wave is integrated on `integration` through commit
+  `d3513c9`.
+- The complete workspace passes lint, typecheck, 27 package tests, five runtime
+  isolation tests, static build, strict schema compilation, and a frozen-lockfile
+  install.
 - No external repository, package, deployment, upload, or Discord message has been created.
-- Day 1 implementation has not yet passed the technical-truth gate.
+- The technical-truth verdict is **NARROW**: published QVAC SDK 0.16.0 directly
+  exposes actual `cpu|gpu` device class, but not Metal/CUDA/Vulkan backend name.
 
 ## Active milestone
 
-M0 — Charter and technical feasibility.
+M1 — Local probe and registry vertical slice.
 
 ## Active work
 
-- ATLAS-001: completed the repository control plane.
-- ATLAS-002: runtime/model/backend feasibility is in progress on `feat/ATLAS-002-runtime`.
-- ATLAS-003: report/privacy contract is in progress on `feat/ATLAS-003-schema`.
-- ATLAS-004: workspace/CI skeleton is in progress on `feat/ATLAS-004-scaffold`.
+- ATLAS-008: safe project-local QVAC SDK discovery and import policy is in progress.
+- ATLAS-009–011: the next implementation wave is queued for probe, registry, and
+  contribution workflow.
+- ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
+  about 1 GiB free while the QVAC dependency graph plus model requires more than
+  4.8 GiB before safety margin.
 
 ## Next integration gate
 
-The release captain will integrate the first worker wave, run the complete repository checks, and record whether the Day 2 feasibility questions are answered or still explicitly unknown.
+The release captain will bind the selected SmolLM2 profile, implement a complete
+fixture-driven probe-to-site path, and keep production claim admission disabled
+until a hash-verified real lifecycle succeeds.
 
 ## Known risks
 
-- Actual backend selection may not be exposed reliably by public QVAC APIs.
-- The standardized model may be too large, insufficiently licensed, or unstable across QVAC versions.
-- Windows process-tree cleanup needs early real validation.
+- Exact graphics backend name is not public evidence; UI/schema must say only CPU
+  or GPU device class.
+- The standardized model is a 386,404,992-byte Apache-2.0 artifact; download and
+  cache behavior still need real validation.
+- Windows process-tree cleanup needs a Job Object or equivalent verified design.
 - Real launch evidence requires volunteer physical devices; CI runners are not GPU compatibility evidence.
+- QVAC SDK 0.16.0 has a multi-gigabyte native dependency footprint, so Atlas must
+  resolve an existing project-local SDK and never silently install it.

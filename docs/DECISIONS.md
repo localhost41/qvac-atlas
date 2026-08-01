@@ -28,3 +28,30 @@ Scope, current state, tasks, decisions, verification, and handoffs must be durab
 
 Workers use isolated worktrees and never merge their own changes. A Sol release captain integrates only after task acceptance checks pass.
 
+## D-008 — QVAC 0.16 evidence is device class, not backend name
+
+Atlas V1 records requested `auto|cpu|gpu` separately from directly observed
+`cpu|gpu`. It never converts generic GPU evidence into Metal, CUDA, Vulkan, or
+OpenCL. Initial runtime support is Node 22 and exact QVAC SDK 0.16.0 until a real
+version/runtime matrix expands it.
+
+## D-009 — Official tools do not authorize installation or config execution
+
+Doctor may run only through an already-resolvable project-local `@qvac/cli`
+entrypoint. Atlas never falls back to PATH, global tools, `npx`, or package
+installation. Raw Doctor JSON is not report-safe and must be normalized through an
+allowlist. Bundle verification is an explicit V1 skip because a local probe has no
+contributor deployment bundle and the verifier may load project configuration.
+
+## D-010 — Production claims remain gated after source feasibility
+
+The SmolLM2 360M Q8 artifact is the provisional V1 workload candidate: Apache-2.0,
+386,404,992 bytes, immutable revision, and pinned SHA-256. Source and metadata
+verification permit implementation to proceed, but the production profile allowlist
+remains disabled until a real hash-verified QVAC lifecycle succeeds.
+
+## D-011 — Tool telemetry is disabled
+
+Atlas has no product telemetry, and project tooling must not emit vendor telemetry
+during local or CI use. Astro commands run with `ASTRO_TELEMETRY_DISABLED=1`
+through a cross-platform wrapper.
