@@ -278,12 +278,18 @@ function hasCompactSensitiveKey(segment) {
 }
 
 function isSensitiveKeySegment(segment) {
-  if (segment.startsWith("KEY"))
-    return !SAFE_KEY_WORD_PREFIX.test(segment);
-  const singular = segment.endsWith("KEYS") ? segment.slice(0, -1) : segment;
-  if (!singular.endsWith("KEY")) return false;
-  const bridge = singular.slice(0, -3);
-  return !SAFE_KEY_ENDING_STEMS.some((stem) => bridge.endsWith(stem));
+  let keyIndex = segment.indexOf("KEY");
+  while (keyIndex !== -1) {
+    const bridge = segment.slice(0, keyIndex);
+    const safePrefixWord =
+      keyIndex === 0 && SAFE_KEY_WORD_PREFIX.test(segment);
+    const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
+      bridge.endsWith(stem),
+    );
+    if (!safePrefixWord && !ordinaryKeyWord) return true;
+    keyIndex = segment.indexOf("KEY", keyIndex + 3);
+  }
+  return false;
 }
 
 function isSensitiveAssignmentName(name) {

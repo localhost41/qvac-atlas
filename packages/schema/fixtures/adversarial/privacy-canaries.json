@@ -803,5 +803,60 @@
     "name": "secret keynote followed by compact backup key assignment",
     "value": "SECRET_KEYNOTE_BACKUPKEY=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard joined to a second key assignment",
+    "value": "SECRET_KEYBOARDKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard joined to plural second keys assignment",
+    "value": "SECRET_KEYBOARDKEYS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keystone joined to a second key assignment",
+    "value": "SECRET_KEYSTONEKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyword joined to a second key assignment",
+    "value": "SECRET_KEYWORDKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keynote joined to a second key assignment",
+    "value": "SECRET_KEYNOTEKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "private keyboard joined to a second key assignment",
+    "value": "PRIVATE_KEYBOARDKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "API keyboard joined to a second key assignment",
+    "value": "API_KEYBOARDKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keystone followed by suffixed recovery key assignment",
+    "value": "SECRET_KEYSTONE_RECOVERYKEYPATH=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyword followed by suffixed license key assignment",
+    "value": "SECRET_KEYWORD_LICENSEKEYPATH=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keynote followed by valued backup key assignment",
+    "value": "SECRET_KEYNOTE_BACKUPKEYVALUE=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard followed by backup key backup assignment",
+    "value": "SECRET_KEYBOARD_BACKUPKEYBACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
