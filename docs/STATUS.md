@@ -1,15 +1,15 @@
 # Current status
 
-Updated: 2026-07-31
+Updated: 2026-08-01
 
 ## Verified state
 
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- The dormant-executor wave is integrated on `integration` through commit
-  `9d6d0ca` (with its canonical workspace lock at `332a7d4`).
-- The complete workspace passes lint, typecheck, 146 package tests, five runtime
+- The dormant executor, hostile-protocol matrix, and private-artifact foundation
+  are integrated on `integration` through commit `2253dca`.
+- The complete workspace passes lint, typecheck, 254 package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -39,27 +39,31 @@ M1 — Local probe and registry vertical slice.
   download is blocked for a production grant.
 - ATLAS-017: schema-derived TypeScript report types and full-schema drift checks
   are integrated.
-- ATLAS-019: dormant Atlas-private artifact acquisition and validation is active.
-- ATLAS-022: the expanded hostile executor-protocol matrix is active.
+- ATLAS-019: dormant Atlas-private artifact acquisition and validation is
+  integrated, with explicit consent capability, exact pinned HTTPS source,
+  descriptor rehashing, and atomic no-clobber publication. It remains absent from
+  the executor, probe, CLI, and claim pipeline.
+- ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
   4.8 GiB before safety margin.
 
 ## Next integration gate
 
-The release captain will integrate private, consent-capability-gated artifact
-staging and the expanded executor protocol matrix. Only then may a separate packet
-bind a verified canonical local artifact to the isolated child. Production claim
-admission and user-facing real execution stay disabled until a hash-verified real
-lifecycle succeeds.
+ATLAS-020 may now bind a consumed verified-artifact capability to the isolated
+child through a separate dormant bridge. It must use only the canonical local path,
+verify the SDK-reported loaded path, preserve process containment, and remain absent
+from the probe and CLI. Production claim admission and user-facing real execution
+stay disabled until a hash-verified real lifecycle succeeds.
 
 ## Known risks
 
 - Exact graphics backend name is not public evidence; UI/schema must say only CPU
   or GPU device class.
-- The standardized model is a 386,404,992-byte Apache-2.0 artifact; Atlas-private
-  acquisition and cache behavior still need implementation and real validation.
-  QVAC-managed registry downloading is not an accepted production path.
+- The standardized model is a 386,404,992-byte Apache-2.0 artifact. Atlas-private
+  acquisition and cache behavior are implemented against synthetic byte sources
+  but still need real validation. QVAC-managed registry downloading is not an
+  accepted production path.
 - QVAC passes a model path to its native addon after verification; a private,
   quiescent Atlas directory narrows but cannot cryptographically eliminate the
   verify-to-open interval.

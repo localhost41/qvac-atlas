@@ -1,6 +1,6 @@
 # Task board
 
-Updated: 2026-07-31
+Updated: 2026-08-01
 
 | Task       | Owner               | Model            | Status           | Depends on                      | Deliverable                                                                                                |
 | ---------- | ------------------- | ---------------- | ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -28,10 +28,10 @@ Updated: 2026-07-31
 | ATLAS-016C | quality worker      | Sol              | completed        | ATLAS-016A                      | Independent terminal-state, containment, privacy, and schema-validity audit of the dormant executor        |
 | ATLAS-017  | schema worker       | Sol              | completed        | ATLAS-003, ATLAS-012            | Replace provisional handwritten report types with schema-derived types and drift checks                    |
 | ATLAS-018  | release captain     | Sol + human      | pending          | ATLAS-011, ATLAS-012            | Configure and verify protected maintainer ownership for profile and source-independence metadata           |
-| ATLAS-019  | artifact worker     | Sol              | in progress      | ATLAS-016B                      | Dormant consent-capability and private artifact acquisition/validation package; no probe or CLI wiring     |
+| ATLAS-019  | artifact worker     | Sol              | completed        | ATLAS-016B                      | Dormant consent-capability and private artifact acquisition/validation package; no probe or CLI wiring     |
 | ATLAS-020  | executor worker     | Sol              | pending          | ATLAS-019                       | Bind a consumed verified local-artifact grant to the isolated child, loaded-path check, and post-run hash  |
 | ATLAS-021  | probe/CLI worker    | Sol              | pending          | ATLAS-020                       | Real-mode consent sequence and report pipeline, still claim-ineligible until ATLAS-013                     |
-| ATLAS-022  | quality worker      | Terra            | in progress      | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
+| ATLAS-022  | quality worker      | Terra            | completed        | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
 
 ## Queue rules
 
