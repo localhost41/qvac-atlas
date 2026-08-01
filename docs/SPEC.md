@@ -91,5 +91,6 @@ The hardware/OS combination may itself be identifying. Publication therefore req
   into an opaque single-use executor grant. Only exact frozen path/size/hash/type
   material crosses a private parent-to-child IPC bootstrap; the supervised child
   fully verifies it before local-path load, confirms QVAC reports that exact local
-  model, and fully verifies it again after unload and close. This bridge is not
-  wired to probe, CLI, reports, profiles, downloads, or claims.
+  model, and fully verifies it again after unload and close. This bridge is wired
+  only to the CLI-private hardcoded-false composition, not the public probe API,
+  reports, profiles, enabled downloads, or claims.

@@ -5,7 +5,7 @@
   "description": "QVAC Atlas fixture-driven CLI shell",
   "type": "module",
   "bin": {
-    "qvac-atlas": "./dist/index.js"
+    "qvac-atlas": "./dist/bin.js"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",

@@ -33,9 +33,10 @@ M1 — Local probe and registry vertical slice.
   are integrated; no production user command consumes the grant yet.
 - ATLAS-016: the real-executor architecture is complete.
 - ATLAS-016A/C: the dormant synthetic-SDK executor/supervisor and independent
-  adversarial review are integrated. The executor is not imported by the probe or
-  CLI; its synthetic issuer remains private, and its public grant wrapper accepts
-  only a consumed capability for the exact pinned verified artifact.
+  adversarial review are integrated. The executor is absent from the public probe
+  API and imported only by the CLI-private hardcoded-false composition; its
+  synthetic issuer remains private, and its public grant wrapper accepts only a
+  consumed capability for the exact pinned verified artifact.
 - ATLAS-016B: tag-scoped model artifact/cache/hash research is integrated. Its
   verdict permits only Atlas-managed private staging; SDK-managed `registry://`
   download is blocked for a production grant.
@@ -44,7 +45,8 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-019: dormant Atlas-private artifact acquisition and validation is
   integrated, with explicit consent capability, exact pinned HTTPS source,
   descriptor rehashing, and atomic no-clobber publication. It remains absent from
-  the probe, CLI, and claim pipeline.
+  the public probe API and claim pipeline and is reachable only behind the
+  CLI-private hardcoded-false composition.
 - ATLAS-020: the dormant verified-artifact executor bridge is complete. It binds
   one exact pinned capability to an opaque single-use grant, sends only exact
   material through a second supervised private bootstrap, verifies before local

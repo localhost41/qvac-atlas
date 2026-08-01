@@ -9,7 +9,8 @@ uploader, profile approval, or claim-producing path.
 `@qvac-atlas/qvac-executor` depends at runtime on the project-local SDK resolver
 and the narrow model-artifact executor bridge. It implements the probe package's
 `RunnerExecutor` shape without importing probe at runtime. Probe is used only by
-synthetic integration tests. Neither probe nor CLI depends on the executor.
+synthetic integration tests. The public probe API does not depend on the executor;
+only the CLI-private, hardcoded-false composition imports it.
 
 `ProjectLocalQvacExecutor` stores the resolver handle and model grant in JavaScript
 private fields. The model grant is backed by private weak collections, is
@@ -23,12 +24,12 @@ path, size, digest, and `llamacpp-completion` engine bound into the grant. The p
 is fully verified before local load and after close, and QVAC's loaded-model info
 must confirm the same ID, type, non-delegated status, and exact path.
 
-This is an intentional stop boundary. A later activation and consent flow must
-display the candidate's Apache-2.0 license, exact 386,404,992-byte size, immutable
-source and destination, obtain explicit interactive consent, and recompute the
-pinned SHA-256 from local bytes before it can authorize real execution. The
-checked-in candidate remains claim-ineligible, and no public command can issue
-acquisition consent.
+This is an intentional stop boundary. The dormant activation flow displays the
+candidate's Apache-2.0 license, exact 386,404,992-byte size, immutable source and
+destination, obtains explicit interactive consent, and recomputes the pinned
+SHA-256 from local bytes before it can authorize real execution. Its shipped gate
+is hardcoded false. The checked-in candidate remains claim-ineligible, and no
+enabled public command can issue acquisition consent.
 
 ## Launch and containment
 
