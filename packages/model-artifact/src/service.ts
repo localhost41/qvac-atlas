@@ -554,7 +554,11 @@ export async function acquirePinnedArtifact(
   options: AcquirePinnedArtifactOptions,
 ): Promise<VerifiedArtifactCapability> {
   return internalAcquireArtifact({
-    ...options,
+    privateRoot: options?.privateRoot,
+    consent: options?.consent,
+    timeoutMs: options?.timeoutMs,
+    signal: options?.signal,
+    candidate: PINNED_MODEL_CANDIDATE,
     byteSource: pinnedHttpsByteSource,
   });
 }

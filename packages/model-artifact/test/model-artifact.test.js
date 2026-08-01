@@ -35,8 +35,10 @@ import {
 const temporaryDirectories = [];
 const originalFetch = globalThis.fetch;
 let networkCalls = 0;
-globalThis.fetch = async () => {
+const networkUrls = [];
+globalThis.fetch = async (input) => {
   networkCalls += 1;
+  networkUrls.push(String(input));
   throw new Error("network-disabled-in-acceptance-tests");
 };
 
@@ -224,6 +226,47 @@ test("refuses forged consent before filesystem or byte-source effects", async ()
   );
   assert.equal(networkCalls, 0);
   await assert.rejects(lstat(root), { code: "ENOENT" });
+});
+
+test("public acquisition ignores hostile candidate, source, and hook extras", async () => {
+  const { root } = await testPaths();
+  let hostileSourceCalled = false;
+  let hostileHookCalled = false;
+  const issued = internalIssueConsent({
+    candidateId: PINNED_MODEL_CANDIDATE.id,
+    privateRoot: root,
+  });
+  const beforeCalls = networkCalls;
+  await assertCode(
+    acquirePinnedArtifact({
+      privateRoot: root,
+      consent: issued,
+      timeoutMs: 2_000,
+      candidate: {
+        ...PINNED_MODEL_CANDIDATE,
+        sourceUrl: "https://hostile.invalid/private-model",
+        byteLength: 1,
+        sha256: "0".repeat(64),
+      },
+      byteSource: () => {
+        hostileSourceCalled = true;
+        return sourceOf(Buffer.from("x"))({
+          signal: new AbortController().signal,
+        });
+      },
+      hooks: {
+        afterStagingOpen: () => {
+          hostileHookCalled = true;
+        },
+      },
+    }),
+    "artifact-source-failed",
+  );
+  assert.equal(hostileSourceCalled, false);
+  assert.equal(hostileHookCalled, false);
+  assert.equal(networkCalls, beforeCalls + 1);
+  assert.equal(networkUrls.at(-1), PINNED_MODEL_CANDIDATE.sourceUrl);
+  assert.deepEqual(await partials(root), []);
 });
 
 test("acquires atomically with private modes and returns only an opaque capability", async () => {
