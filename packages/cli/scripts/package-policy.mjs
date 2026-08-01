@@ -22,7 +22,7 @@ export const PACKAGE_FILES = Object.freeze([
 ]);
 
 export const BUNDLED_RUNTIME_PACKAGES = new Map([
-  ["ajv", "8.17.1"],
+  ["ajv", "8.18.0"],
   ["ajv-formats", "3.0.1"],
   ["fast-deep-equal", "3.1.3"],
   ["fast-uri", "3.1.4"],

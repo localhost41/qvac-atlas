@@ -22,6 +22,12 @@ function protectedHost() {
       required_status_checks: {
         strict: true,
         contexts: ["Validate workspace and contribution data"],
+        checks: [
+          {
+            context: "Validate workspace and contribution data",
+            app_id: 15368,
+          },
+        ],
       },
       required_pull_request_reviews: {
         dismiss_stale_reviews: true,
@@ -39,8 +45,38 @@ function protectedHost() {
     },
     codeowners: { errors: [] },
     vulnerabilityReporting: { enabled: true },
+    pages: { build_type: "workflow" },
+    pagesEnvironment: {
+      protection_rules: [
+        {
+          type: "required_reviewers",
+          prevent_self_review: true,
+          reviewers: [
+            {
+              type: "User",
+              reviewer: { login: "independent-reviewer" },
+            },
+          ],
+        },
+      ],
+      deployment_branch_policy: {
+        protected_branches: true,
+        custom_branch_policies: false,
+      },
+    },
+    checkRuns: {
+      check_runs: [
+        {
+          name: "Validate workspace and contribution data",
+          status: "completed",
+          conclusion: "success",
+          app: { id: 15368 },
+        },
+      ],
+    },
     expectedBranch: "main",
     expectedHead: head,
+    deploymentReviewer: "independent-reviewer",
   };
 }
 
@@ -53,11 +89,14 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
       "main",
       "--expected-head",
       head,
+      "--deployment-reviewer",
+      "independent-reviewer",
     ]),
     {
       repository: "approved-owner/qvac-atlas",
       branch: "main",
       expectedHead: head,
+      deploymentReviewer: "independent-reviewer",
     },
   );
   assert.throws(() => parseHostArguments([]), /explicit GitHub/u);
@@ -70,6 +109,8 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
         "integration",
         "--expected-head",
         head,
+        "--deployment-reviewer",
+        "independent-reviewer",
       ]),
     /exactly main/u,
   );
@@ -82,6 +123,8 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
         "main",
         "--expected-head",
         "main",
+        "--deployment-reviewer",
+        "independent-reviewer",
       ]),
     /40 lowercase/u,
   );
@@ -114,6 +157,13 @@ test("weak or stale host controls fail every release boundary", () => {
   state.vulnerabilityReporting.enabled = false;
   state.protection.required_status_checks.strict = false;
   state.protection.required_status_checks.contexts = [];
+  state.protection.required_status_checks.checks[0].app_id = 1;
+  state.checkRuns.check_runs[0].conclusion = "failure";
+  state.pages.build_type = "legacy";
+  state.pagesEnvironment.protection_rules[0].prevent_self_review = false;
+  state.pagesEnvironment.protection_rules[0].reviewers = [];
+  state.pagesEnvironment.deployment_branch_policy.protected_branches = false;
+  state.pagesEnvironment.deployment_branch_policy.custom_branch_policies = true;
   state.protection.required_pull_request_reviews.dismiss_stale_reviews = false;
   state.protection.required_pull_request_reviews.require_code_owner_reviews = false;
   state.protection.required_pull_request_reviews.require_last_push_approval = false;
@@ -129,10 +179,13 @@ test("weak or stale host controls fail every release boundary", () => {
   state.protection.allow_deletions.enabled = true;
 
   const failures = repositoryProtectionFailures(state);
-  assert.equal(failures.length, 19);
+  assert.ok(failures.length >= 20);
   assert.match(failures.join("\n"), /CODEOWNERS/u);
   assert.match(failures.join("\n"), /latest push/u);
   assert.match(failures.join("\n"), /bypass/u);
+  assert.match(failures.join("\n"), /GitHub Actions app/u);
+  assert.match(failures.join("\n"), /Pages deployment reviewer/u);
+  assert.match(failures.join("\n"), /successful GitHub Actions/u);
 });
 
 test("host verifier source is read-only and absent from ordinary readiness", async () => {
@@ -142,5 +195,8 @@ test("host verifier source is read-only and absent from ordinary readiness", asy
   ]);
   assert.match(verifier, /"--method",\s*"GET"/u);
   assert.doesNotMatch(verifier, /"(?:POST|PUT|PATCH|DELETE)"/u);
+  assert.match(verifier, /environments\/github-pages/u);
+  assert.match(verifier, /commits\/\$\{encodedHead\}\/check-runs/u);
+  assert.match(verifier, /repos\/\$\{encodedRepository\}\/pages/u);
   assert.doesNotMatch(readiness, /verify-host-protection/u);
 });

@@ -366,15 +366,15 @@ test("static aggregate cards render the complete claim and observation state mat
     );
     assert.match(fallbackCard, /data-claim-state="unknown"/);
     assert.match(fallbackCard, /data-outcome="fallback"/);
-    assert.match(fallbackCard, /<dt>Requested device<\/dt> <dd>gpu<\/dd>/);
+    assert.match(fallbackCard, /<dt>Requested device<\/dt>\s*<dd>gpu<\/dd>/);
     assert.match(
       fallbackCard,
-      /<dt>Directly observed device<\/dt> <dd>cpu<\/dd>/,
+      /<dt>Directly observed device<\/dt>\s*<dd>cpu<\/dd>/,
     );
-    assert.match(fallbackCard, /badge-inconclusive"> Inconclusive/);
-    assert.match(fallbackCard, /badge-fallback"> Fallback/);
+    assert.match(fallbackCard, /badge-inconclusive">\s*Inconclusive/);
+    assert.match(fallbackCard, /badge-fallback">\s*Fallback/);
     assert.match(fallbackCard, /Actual-device evidence/);
-    assert.match(fallbackCard, /badge-observed-success"> Observed success/);
+    assert.match(fallbackCard, /badge-observed-success">\s*Observed success/);
     const failedFallbackStart = index.indexOf(
       'data-hardware="Failed fallback state CPU · M3 Pro Integrated"',
     );
@@ -387,13 +387,13 @@ test("static aggregate cards render the complete claim and observation state mat
     assert.match(failedFallbackCard, /data-outcome="failure"/);
     assert.match(
       failedFallbackCard,
-      /<dt>Requested device<\/dt> <dd>gpu<\/dd>/,
+      /<dt>Requested device<\/dt>\s*<dd>gpu<\/dd>/,
     );
     assert.match(
       failedFallbackCard,
-      /<dt>Directly observed device<\/dt> <dd>cpu<\/dd>/,
+      /<dt>Directly observed device<\/dt>\s*<dd>cpu<\/dd>/,
     );
-    assert.match(failedFallbackCard, /badge-failure"> Failure/);
+    assert.match(failedFallbackCard, /badge-failure">\s*Failure/);
     assert.doesNotMatch(failedFallbackCard, /Observed failure/);
     const markupOutsideQuotedAttributes = index.replace(/="[^"]*"/g, '=""');
     assert.doesNotMatch(

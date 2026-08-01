@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -21,6 +22,7 @@ import {
   PACKAGE_VERSION,
 } from "../packages/cli/scripts/package-policy.mjs";
 import { auditPackage } from "./package-audit-lib.mjs";
+import { auditAndPublishPackage } from "./package-local.mjs";
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(
@@ -62,8 +64,56 @@ test("bundled runtime dependencies have exact lockfile-backed notices", async ()
       `${name}@${version}`,
     );
   }
-  assert.equal(schemaManifest.dependencies.ajv, "8.17.1");
+  assert.equal(schemaManifest.dependencies.ajv, "8.18.0");
   assert.equal(schemaManifest.dependencies["ajv-formats"], "3.0.1");
+});
+
+test("package publication preserves trusted destinations and rejects failed audits", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "qvac-atlas-publication-"));
+  try {
+    const source = path.join(root, "candidate.tgz");
+    const destination = path.join(root, PACKAGE_FILENAME);
+    const trusted = Buffer.from("trusted-artifact", "utf8");
+    await writeFile(source, "candidate-artifact");
+    await writeFile(destination, trusted);
+
+    await assert.rejects(
+      auditAndPublishPackage(source, destination, async () => {
+        throw new Error("audit rejected candidate");
+      }),
+      /audit rejected candidate/u,
+    );
+    assert.deepEqual(await readFile(destination), trusted);
+
+    const accepted = async () => ({
+      filename: PACKAGE_FILENAME,
+      byteLength: 18,
+      sha256: "a".repeat(64),
+    });
+    await assert.rejects(
+      auditAndPublishPackage(source, destination, accepted),
+      /different bytes/u,
+    );
+    assert.deepEqual(await readFile(destination), trusted);
+
+    await rm(destination);
+    assert.equal(
+      (await auditAndPublishPackage(source, destination, accepted)).reused,
+      false,
+    );
+    assert.equal(
+      (await auditAndPublishPackage(source, destination, accepted)).reused,
+      true,
+    );
+    assert.equal(
+      (await readdir(root)).some((name) =>
+        name.startsWith(".atlas-package-publish-"),
+      ),
+      false,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test(

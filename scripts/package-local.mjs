@@ -1,17 +1,22 @@
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import {
   chmod,
   copyFile,
+  link,
+  lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   rm,
+  unlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   BUNDLE_FILENAMES,
@@ -102,6 +107,66 @@ async function releaseManifest() {
   };
 }
 
+async function existingArtifactBytes(destination) {
+  try {
+    const information = await lstat(destination);
+    if (!information.isFile() || information.isSymbolicLink()) {
+      throw new Error(
+        "Package destination is occupied by a non-regular artifact",
+      );
+    }
+    return await readFile(destination);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+export async function auditAndPublishPackage(
+  source,
+  destination,
+  audit = auditPackage,
+) {
+  const result = await audit(source);
+  const candidate = await readFile(source);
+  const existing = await existingArtifactBytes(destination);
+  if (existing !== null) {
+    if (!existing.equals(candidate)) {
+      throw new Error(
+        "Package destination already contains different bytes; preserved it unchanged",
+      );
+    }
+    return { ...result, reused: true };
+  }
+
+  const staging = path.join(
+    path.dirname(destination),
+    `.atlas-package-publish-${randomUUID()}`,
+  );
+  let handle;
+  try {
+    handle = await open(staging, "wx", 0o644);
+    await handle.writeFile(candidate);
+    await handle.sync();
+    await handle.close();
+    handle = undefined;
+    await link(staging, destination);
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(
+        "Package destination became occupied; preserved the existing artifact",
+      );
+    }
+    throw error;
+  } finally {
+    await handle?.close().catch(() => undefined);
+    await unlink(staging).catch((error) => {
+      if (error?.code !== "ENOENT") throw error;
+    });
+  }
+  return { ...result, reused: false };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (args[0] === "--") args.shift();
@@ -115,19 +180,22 @@ async function main() {
 
   const stagingRoot = await mkdtemp(path.join(tmpdir(), "qvac-atlas-package-"));
   try {
-    await copyReleaseFiles(stagingRoot);
+    const packageRoot = path.join(stagingRoot, "source");
+    const packedRoot = path.join(stagingRoot, "packed");
+    await mkdir(packageRoot, { recursive: true, mode: 0o755 });
+    await mkdir(packedRoot, { recursive: true, mode: 0o755 });
+    await copyReleaseFiles(packageRoot);
     await writeFile(
-      path.join(stagingRoot, "package.json"),
+      path.join(packageRoot, "package.json"),
       `${JSON.stringify(await releaseManifest(), null, 2)}\n`,
       { encoding: "utf8", mode: 0o644 },
     );
     const artifact = path.join(outputRoot, PACKAGE_FILENAME);
-    await rm(artifact, { force: true });
     const { stdout } = await execFileAsync(
       pnpm,
-      ["pack", "--json", "--pack-destination", outputRoot],
+      ["pack", "--json", "--pack-destination", packedRoot],
       {
-        cwd: stagingRoot,
+        cwd: packageRoot,
         encoding: "utf8",
         env: {
           ...process.env,
@@ -148,20 +216,28 @@ async function main() {
     ) {
       throw new Error("pnpm produced unexpected package metadata");
     }
-    const result = await auditPackage(artifact);
+    const result = await auditAndPublishPackage(
+      path.join(packedRoot, PACKAGE_FILENAME),
+      artifact,
+    );
     process.stdout.write(
-      `Local package written to ${artifact}\nsha256:${result.sha256}\n`,
+      `Local package ${result.reused ? "already matched" : "written to"} ${artifact}\nsha256:${result.sha256}\n`,
     );
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }
 }
 
-try {
-  await main();
-} catch (error) {
-  process.stderr.write(
-    `${error instanceof Error ? error.message : "Local package construction failed safely"}\n`,
-  );
-  process.exitCode = 1;
+const invokedUrl = process.argv[1]
+  ? pathToFileURL(path.resolve(process.argv[1])).href
+  : "";
+if (import.meta.url === invokedUrl) {
+  try {
+    await main();
+  } catch (error) {
+    process.stderr.write(
+      `${error instanceof Error ? error.message : "Local package construction failed safely"}\n`,
+    );
+    process.exitCode = 1;
+  }
 }

@@ -12,6 +12,9 @@ for local fixture evaluation and release review only.
   `pnpm package:local` at `.artifacts/qvac-atlas-0.1.0.tgz`.
 - Offline installation into a fresh non-workspace project with no runtime
   dependencies and no QVAC installation.
+- Audit-before-publish, atomic no-clobber local artifact construction and an exact
+  `ajv@8.18.0` validator pin with zero known production dependency advisories at
+  candidate review time.
 - Interactive synthetic fixture reports with disclosure, fingerprint
   acknowledgement, exact draft/final previews, publication-intent choice, local
   write confirmation, and no upload.

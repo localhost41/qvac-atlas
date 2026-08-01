@@ -1,6 +1,12 @@
 name: Workspace checks
 
 on:
+  workflow_dispatch:
+    inputs:
+      reviewed_commit:
+        description: Exact 40-hex fixture-only main commit for initial-baseline verification
+        required: true
+        type: string
   pull_request:
   push:
     branches:
@@ -28,6 +34,19 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Bind manual initial-baseline verification to the exact main commit
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+        run: |
+          if [[ ! "$REVIEWED_COMMIT" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "::error::Manual baseline verification requires an exact lowercase 40-hex commit."
+            exit 1
+          fi
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$REVIEWED_COMMIT" = "$GITHUB_SHA"
+          node scripts/validate-contribution.mjs
+          node scripts/validate-initial-baseline.mjs
       - name: Audit PR report history and registry admission
         if: github.event_name == 'pull_request'
         env:

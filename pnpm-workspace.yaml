@@ -4,6 +4,9 @@ packages:
 
 engineStrict: true
 
+overrides:
+  sharp: 0.35.3
+
 # Astro requires esbuild's platform binary to build the static scaffold. Sharp is
 # optional for this project and remains explicitly disallowed.
 allowBuilds:

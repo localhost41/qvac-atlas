@@ -14,6 +14,9 @@ hardware, privacy, and repository-trust gates below.
 - [ ] Exact base/target append-only history is separately proven by protected CI;
       the local readiness command is not treated as that proof.
 - [ ] The release commit has no unexplained generated or untracked files.
+- [ ] A fresh registry-backed `pnpm audit --json` reports zero known production,
+      development, and optional dependency advisories. The result is time-bound
+      release evidence, not a permanent safety claim.
 
 ## Probe and executor gate
 
@@ -107,6 +110,10 @@ hardware, privacy, and repository-trust gates below.
       immutable commit SHA; floating major tags are not accepted as release proof.
 - [ ] The protected release branch requires pull requests, current code-owner
       approval after the latest push, passing required checks, and no direct pushes.
+- [ ] The required workspace check is bound to the GitHub Actions app and succeeds
+      on the exact release commit. Pages uses workflow deployment, and its
+      protected environment prevents self-review, names an independent required
+      reviewer, and accepts only protected branches.
 - [ ] Maintainers, not contributors or report content, assign stable source
       independence keys.
 - [ ] A production profile change is reviewed separately from a report submission.

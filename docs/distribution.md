@@ -24,7 +24,10 @@ pnpm package:audit -- .artifacts/qvac-atlas-0.1.0.tgz
 The first command uses the repository-pinned pnpm version to rebuild four
 self-contained runtime entries, copy the two normative JSON Schemas, construct the
 tarball in a temporary staging directory, and audit the result. Repeating it from
-the same tree must produce the same SHA-256.
+the same tree must produce the same SHA-256. Audit completes before publication to
+the canonical local filename. An identical existing artifact is reused; different
+or concurrently created destination bytes are preserved and make the command fail
+closed instead of being overwritten.
 The artifact allowlist is exactly:
 
 ```text
@@ -42,8 +45,10 @@ package/schemas/claim.schema.json
 The audit rejects any other entry, symlink, runtime dependency, install hook,
 workspace reference, unresolved internal import, embedded repository/home path,
 missing third-party notice, missing shebang, or unsafe CLI mode. The build also
-fails if the code actually bundled from `node_modules` differs from the exact
-license inventory checked against the lockfile.
+reads each bundled dependency's installed manifest and fails if its actual version
+differs from the exact license inventory checked against the lockfile. The current
+validator pin is `ajv@8.18.0`; the known `$data` ReDoS advisory affecting the prior
+8.17.1 candidate is absent from the production dependency audit.
 
 ## Fresh offline installation
 

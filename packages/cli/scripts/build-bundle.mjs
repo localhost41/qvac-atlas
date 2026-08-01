@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,28 +31,38 @@ const entryPoints = {
   ),
 };
 
-function runtimePackageFromInput(input) {
+async function runtimePackageFromInput(input) {
   const normalized = input.replaceAll("\\", "/");
-  const pnpmMatch = normalized.match(
-    /\/node_modules\/\.pnpm\/((?:@[^/+]+\+)?[^/@]+)@([^/]+)\/node_modules\/((?:@[^/]+\/)?[^/]+)\//u,
+  const marker = "node_modules/";
+  const markerIndex = normalized.lastIndexOf(marker);
+  if (markerIndex < 0) return null;
+  const packageSegments = normalized
+    .slice(markerIndex + marker.length)
+    .split("/");
+  const name = packageSegments[0]?.startsWith("@")
+    ? packageSegments.slice(0, 2).join("/")
+    : packageSegments[0];
+  if (name === undefined || name.length === 0) return null;
+  const packageRoot = normalized.slice(
+    0,
+    markerIndex + marker.length + name.length,
   );
-  if (pnpmMatch !== null) {
-    return { name: pnpmMatch[3], version: pnpmMatch[2].split("_")[0] };
+  const manifest = JSON.parse(
+    await readFile(
+      path.resolve(repositoryRoot, packageRoot, "package.json"),
+      "utf8",
+    ),
+  );
+  if (manifest.name !== name || typeof manifest.version !== "string") {
+    throw new Error(`Bundled package manifest is invalid: ${name}`);
   }
-  const ordinaryMatch = normalized.match(
-    /\/node_modules\/((?:@[^/]+\/)?[^/]+)\//u,
-  );
-  if (ordinaryMatch === null) return null;
-  const expected = BUNDLED_RUNTIME_PACKAGES.get(ordinaryMatch[1]);
-  return expected === undefined
-    ? { name: ordinaryMatch[1], version: "unknown" }
-    : { name: ordinaryMatch[1], version: expected };
+  return { name: manifest.name, version: manifest.version };
 }
 
-function verifyRuntimeInventory(metafile) {
+async function verifyRuntimeInventory(metafile) {
   const actual = new Map();
   for (const input of Object.keys(metafile.inputs)) {
-    const dependency = runtimePackageFromInput(input);
+    const dependency = await runtimePackageFromInput(input);
     if (dependency !== null) actual.set(dependency.name, dependency.version);
   }
   const orderedActual = [...actual].sort(([left], [right]) =>
@@ -89,7 +99,7 @@ async function main() {
       target: "node22",
       treeShaking: true,
     });
-    verifyRuntimeInventory(result.metafile);
+    await verifyRuntimeInventory(result.metafile);
     for (const output of Object.values(result.metafile.outputs)) {
       for (const imported of output.imports) {
         if (imported.external && !imported.path.startsWith("node:")) {

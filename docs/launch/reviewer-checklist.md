@@ -48,8 +48,11 @@ Inspect `.github/workflows/site-release.yml` and require all of the following:
 - ordinary CI does not invoke the deployment workflow.
 
 The reviewer re-resolves every action commit against its documented upstream tag.
-The future host operator must configure required reviewers on the `github-pages`
-environment before ever selecting `deploy: true`.
+The host operator must configure GitHub Pages for workflow deployment and the
+`github-pages` environment for one named independent reviewer, self-review
+prevention, and protected-branch-only deployment before ever selecting
+`deploy: true`. The read-only host verifier must confirm those settings and a
+successful GitHub-Actions-bound workspace check on the exact release commit.
 
 ## Usability and evidence review
 

@@ -10,15 +10,15 @@ send an announcement.
 Record real people or valid GitHub teams in the private release record and replace
 the bounded repository placeholders before public bootstrap:
 
-| Responsibility | Repository placeholder | Required decision |
-| --- | --- | --- |
-| Primary code owner and release captain | `@PRIMARY_CODE_OWNER_HANDLE_REQUIRED` | Accept the exact release commit and coordinate gates. |
-| Evidence/admission owner | `@EVIDENCE_CODE_OWNER_HANDLE_REQUIRED` | Review profiles, genuine reports, and source-independence metadata. |
-| Security owner | `@SECURITY_CODE_OWNER_HANDLE_REQUIRED` | Receive private reports and approve security/incident readiness. |
-| Host operator | none; record privately | Create/configure the authorized public host and return verification evidence. |
-| Independent reviewer | none; record privately | Review the exact candidate after the latest change. |
-| Legal/license approver | none; record privately | Choose and approve the repository/package license. |
-| Registry publisher | none; record privately | Control package-registry identity and credentials. |
+| Responsibility                         | Repository placeholder                 | Required decision                                                             |
+| -------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| Primary code owner and release captain | `@PRIMARY_CODE_OWNER_HANDLE_REQUIRED`  | Accept the exact release commit and coordinate gates.                         |
+| Evidence/admission owner               | `@EVIDENCE_CODE_OWNER_HANDLE_REQUIRED` | Review profiles, genuine reports, and source-independence metadata.           |
+| Security owner                         | `@SECURITY_CODE_OWNER_HANDLE_REQUIRED` | Receive private reports and approve security/incident readiness.              |
+| Host operator                          | none; record privately                 | Create/configure the authorized public host and return verification evidence. |
+| Independent reviewer                   | none; record privately                 | Review the exact candidate after the latest change.                           |
+| Legal/license approver                 | none; record privately                 | Choose and approve the repository/package license.                            |
+| Registry publisher                     | none; record privately                 | Control package-registry identity and credentials.                            |
 
 One person may hold multiple operational roles only if the required independent
 review still comes from someone other than the author of the latest protected
@@ -42,8 +42,10 @@ requires an explicit reviewed update to this contract and its readiness tests.
 
 ## Candidate preparation
 
-1. Start from an exact reviewed commit with an empty production-profile allowlist,
-   no genuine reports or claims, and the real gate still false.
+1. For the initial fixture-only `0.1.0` release, start from an exact reviewed
+   commit with an empty production-profile allowlist, no genuine reports or
+   claims, and the real gate still false. A later release may contain only genuine
+   state admitted through the separately protected profile/report ceremony.
 2. Use Node 22 and pnpm `11.10.0`; run a fresh
    `pnpm install --frozen-lockfile` and `pnpm ready:local`.
 3. Build the deterministic local package artifact. Audit its exact filenames and
@@ -90,7 +92,8 @@ from approval of an earlier step.
    offline-install behavior.
 3. Authorize static-site deployment from the exact release commit. Verify the
    published origin, subpath behavior, fixture labeling, accessibility, and absence
-   of genuine claims.
+   of unexpected or unreviewed genuine claims. The initial `0.1.0` snapshot is
+   fixture-only.
 4. Create the signed or annotated `v0.1.0` release tag only from the accepted commit
    under the host's protected release procedure. Attach checksums and release notes;
    do not attach private review artifacts.
@@ -105,9 +108,9 @@ not satisfy or bypass those gates.
 ## Stop and rollback
 
 Stop release on any privacy finding, unpinned workflow action, CODEOWNERS error,
-protection mismatch, unexpected package file/dependency, generated drift, nonempty
-production claim, changed real gate, unexplained Git state, or failed independent
-review.
+protection mismatch, unexpected package file/dependency, generated drift,
+unexpected or unreviewed production profile/report/claim state, changed real gate,
+unexplained Git state, or failed independent review.
 
 Before announcement, prefer withholding or removing the newly published package or
 deployment through the owning host's documented process. After disclosure, treat

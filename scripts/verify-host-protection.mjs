@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REQUIRED_CONTEXT = "Validate workspace and contribution data";
+const GITHUB_ACTIONS_APP_ID = 15368;
 const PLACEHOLDER = /@[A-Z][A-Z0-9_]*_HANDLE_REQUIRED\b/gu;
 
 export function parseHostArguments(args) {
@@ -17,11 +18,16 @@ export function parseHostArguments(args) {
     const option = args[index];
     const value = args[index + 1];
     if (
-      !["--repository", "--branch", "--expected-head"].includes(option ?? "") ||
+      ![
+        "--repository",
+        "--branch",
+        "--expected-head",
+        "--deployment-reviewer",
+      ].includes(option ?? "") ||
       value === undefined
     ) {
       throw new Error(
-        "Usage: verify-host-protection.mjs --repository OWNER/REPO --branch main --expected-head <40 lowercase hex>",
+        "Usage: verify-host-protection.mjs --repository OWNER/REPO --branch main --expected-head <40 lowercase hex> --deployment-reviewer <GitHub login>",
       );
     }
     if (values.has(option)) throw new Error(`Duplicate option: ${option}`);
@@ -31,6 +37,7 @@ export function parseHostArguments(args) {
   const repository = values.get("--repository") ?? "";
   const branch = values.get("--branch") ?? "";
   const expectedHead = values.get("--expected-head") ?? "";
+  const deploymentReviewer = values.get("--deployment-reviewer") ?? "";
   if (
     !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/[A-Za-z0-9._-]{1,100}$/u.test(
       repository,
@@ -45,7 +52,11 @@ export function parseHostArguments(args) {
     throw new Error(
       "Expected head must be exactly 40 lowercase hexadecimal characters.",
     );
-  return { repository, branch, expectedHead };
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/u.test(deploymentReviewer))
+    throw new Error(
+      "Deployment reviewer must be one explicit GitHub user login.",
+    );
+  return { repository, branch, expectedHead, deploymentReviewer };
 }
 
 export function unresolvedCodeOwnerPlaceholders(codeowners) {
@@ -76,7 +87,12 @@ export function repositoryProtectionFailures({
   vulnerabilityReporting,
   expectedBranch,
   expectedHead,
+  deploymentReviewer,
+  pages,
+  pagesEnvironment,
+  checkRuns,
   requiredContext = REQUIRED_CONTEXT,
+  actionsAppId = GITHUB_ACTIONS_APP_ID,
 }) {
   const failures = [];
   if (repository?.visibility !== "public" || repository?.private !== false)
@@ -99,14 +115,58 @@ export function repositoryProtectionFailures({
   const statusChecks = protection?.required_status_checks;
   if (statusChecks?.strict !== true)
     failures.push("required status checks do not require an up-to-date branch");
-  const contexts = new Set([
-    ...(Array.isArray(statusChecks?.contexts) ? statusChecks.contexts : []),
-    ...(Array.isArray(statusChecks?.checks)
-      ? statusChecks.checks.map((check) => check?.context)
-      : []),
-  ]);
-  if (!contexts.has(requiredContext))
-    failures.push("required workspace status check is missing");
+  const checks = Array.isArray(statusChecks?.checks) ? statusChecks.checks : [];
+  if (
+    !checks.some(
+      (check) =>
+        check?.context === requiredContext && check?.app_id === actionsAppId,
+    )
+  )
+    failures.push(
+      "required workspace status check is not bound to the GitHub Actions app",
+    );
+
+  const completedChecks = Array.isArray(checkRuns?.check_runs)
+    ? checkRuns.check_runs
+    : [];
+  if (
+    !completedChecks.some(
+      (check) =>
+        check?.name === requiredContext &&
+        check?.status === "completed" &&
+        check?.conclusion === "success" &&
+        check?.app?.id === actionsAppId,
+    )
+  )
+    failures.push(
+      "reviewed commit lacks a successful GitHub Actions workspace check",
+    );
+
+  if (pages?.build_type !== "workflow")
+    failures.push("GitHub Pages is not configured for workflow deployment");
+  const environmentRules = Array.isArray(pagesEnvironment?.protection_rules)
+    ? pagesEnvironment.protection_rules
+    : [];
+  const reviewerRule = environmentRules.find(
+    (rule) => rule?.type === "required_reviewers",
+  );
+  if (reviewerRule?.prevent_self_review !== true)
+    failures.push("Pages deployment self-review is not prevented");
+  if (
+    !Array.isArray(reviewerRule?.reviewers) ||
+    !reviewerRule.reviewers.some(
+      (entry) =>
+        entry?.type === "User" &&
+        entry?.reviewer?.login?.toLowerCase() ===
+          deploymentReviewer?.toLowerCase(),
+    )
+  )
+    failures.push("required Pages deployment reviewer is missing");
+  if (
+    pagesEnvironment?.deployment_branch_policy?.protected_branches !== true ||
+    pagesEnvironment?.deployment_branch_policy?.custom_branch_policies !== false
+  )
+    failures.push("Pages deployments are not limited to protected branches");
 
   const reviews = protection?.required_pull_request_reviews;
   if (reviews === null || reviews === undefined)
@@ -176,6 +236,7 @@ export async function verifyHostProtection({
   repository,
   branch,
   expectedHead,
+  deploymentReviewer,
 }) {
   const codeownersText = await readFile(
     resolve(root, ".github/CODEOWNERS"),
@@ -194,18 +255,29 @@ export async function verifyHostProtection({
     .join("/");
   const encodedBranch = encodeURIComponent(branch);
   const encodedHead = encodeURIComponent(expectedHead);
-  const [repositoryState, branchState, protection, codeowners, vulnerability] =
-    await Promise.all([
-      githubGet(`repos/${encodedRepository}`),
-      githubGet(`repos/${encodedRepository}/branches/${encodedBranch}`),
-      githubGet(
-        `repos/${encodedRepository}/branches/${encodedBranch}/protection`,
-      ),
-      githubGet(
-        `repos/${encodedRepository}/codeowners/errors?ref=${encodedHead}`,
-      ),
-      githubGet(`repos/${encodedRepository}/private-vulnerability-reporting`),
-    ]);
+  const [
+    repositoryState,
+    branchState,
+    protection,
+    codeowners,
+    vulnerability,
+    pages,
+    pagesEnvironment,
+    checkRuns,
+  ] = await Promise.all([
+    githubGet(`repos/${encodedRepository}`),
+    githubGet(`repos/${encodedRepository}/branches/${encodedBranch}`),
+    githubGet(
+      `repos/${encodedRepository}/branches/${encodedBranch}/protection`,
+    ),
+    githubGet(
+      `repos/${encodedRepository}/codeowners/errors?ref=${encodedHead}`,
+    ),
+    githubGet(`repos/${encodedRepository}/private-vulnerability-reporting`),
+    githubGet(`repos/${encodedRepository}/pages`),
+    githubGet(`repos/${encodedRepository}/environments/github-pages`),
+    githubGet(`repos/${encodedRepository}/commits/${encodedHead}/check-runs`),
+  ]);
 
   const failures = repositoryProtectionFailures({
     repository: repositoryState,
@@ -215,20 +287,24 @@ export async function verifyHostProtection({
     vulnerabilityReporting: vulnerability,
     expectedBranch: branch,
     expectedHead,
+    deploymentReviewer,
+    pages,
+    pagesEnvironment,
+    checkRuns,
   });
   if (failures.length > 0) {
     throw new Error(
       `Public-host trust verification failed:\n- ${failures.join("\n- ")}`,
     );
   }
-  return { repository, branch, expectedHead };
+  return { repository, branch, expectedHead, deploymentReviewer };
 }
 
 async function main() {
   const options = parseHostArguments(process.argv.slice(2));
   const result = await verifyHostProtection(options);
   process.stdout.write(
-    `Public-host trust verified read-only for ${result.repository} ${result.branch} at ${result.expectedHead}.\n`,
+    `Public-host trust and Pages controls verified read-only for ${result.repository} ${result.branch} at ${result.expectedHead}.\n`,
   );
 }
 

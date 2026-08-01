@@ -12,9 +12,9 @@
     "typecheck": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
+    "@astrojs/check": "0.9.10",
     "@types/node": "^22.0.0",
-    "astro": "^5.13.7",
+    "astro": "7.1.6",
     "cross-env": "^10.0.0",
     "prettier-plugin-astro": "^0.14.1",
     "tsx": "^4.20.5",

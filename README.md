@@ -18,7 +18,9 @@ Atlas is not a replacement for `qvac doctor`. It uses official QVAC diagnostics 
 The fixture-driven vertical slice is implemented: consent ordering, report
 validation, a fail-closed project-local SDK resolver, deterministic Git admission,
 and the static registry all pass the workspace gate. The CLI deliberately exposes
-only synthetic scenarios today.
+only synthetic scenarios today. A deterministic, zero-runtime-dependency local
+`qvac-atlas@0.1.0` tarball can now be built and installed outside the monorepo for
+fixture-only evaluation; it is not published.
 
 Real QVAC execution, model download, production-profile admission, genuine claims,
 publishing, and deployment remain disabled. A real lifecycle needs an existing
@@ -59,3 +61,18 @@ the current tree, full workspace, deterministic catalog, generated diff, and
 repository cleanliness. It does not prove exact append-only history, physical
 hardware or privacy evidence, repository protection, activation, deployment, or
 release approval.
+
+## Build the local release candidate
+
+After the repository gate passes:
+
+```bash
+pnpm package:local
+pnpm package:audit -- .artifacts/qvac-atlas-0.1.0.tgz
+```
+
+The artifact is audited before atomic no-clobber publication to `.artifacts/` and
+installs offline with no runtime dependencies or QVAC installation. See
+[`docs/distribution.md`](docs/distribution.md) for the exact file allowlist and
+fresh-project smoke test. Package publication remains blocked on the legal,
+ownership, registry, and explicit external-release gates.

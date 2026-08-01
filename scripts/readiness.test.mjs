@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
+import { parse } from "yaml";
+
 const root = new URL("../", import.meta.url);
 const manifests = [
   "package.json",
@@ -29,6 +31,49 @@ async function text(path) {
 
 async function json(path) {
   return JSON.parse(await text(path));
+}
+
+function workflowUses(source, label) {
+  const values = [];
+  const visited = new WeakSet();
+  function visit(value) {
+    if (value === null || typeof value !== "object") return;
+    if (visited.has(value)) return;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "uses") {
+        assert.equal(typeof child, "string", `${label}: non-string uses`);
+        values.push(child);
+      }
+      visit(child);
+    }
+  }
+  visit(parse(source));
+  return values;
+}
+
+async function localActionSource(action, label) {
+  const relative = action.slice(2);
+  assert.match(
+    relative,
+    /^(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]+$/u,
+    label,
+  );
+  const candidates = /\.ya?ml$/u.test(relative)
+    ? [relative]
+    : [`${relative}/action.yml`, `${relative}/action.yaml`];
+  for (const candidate of candidates) {
+    try {
+      return [candidate, await text(candidate)];
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  assert.fail(`${label}: local action has no action.yml or action.yaml`);
 }
 
 test("workspace advertises and enforces the exact Node 22 major", async () => {
@@ -108,21 +153,48 @@ test("release controls pin every workflow and refuse unsupported real platforms"
     workflowNames
       .filter((name) => /\.ya?ml$/u.test(name))
       .sort()
-      .map(async (name) => [name, await text(`.github/workflows/${name}`)]),
+      .map(async (name) => [
+        name,
+        await text(`.github/workflows/${name}`),
+        true,
+      ]),
+  );
+  assert.deepEqual(
+    workflowUses(
+      'jobs: { hidden: { uses: "owner/action@0123456789abcdef0123456789abcdef01234567" } }',
+      "flow-mapping-canary",
+    ),
+    ["owner/action@0123456789abcdef0123456789abcdef01234567"],
   );
   let actionCount = 0;
-  for (const [name, workflow] of workflows) {
-    assert.match(workflow, /runs-on: ubuntu-24\.04/u, name);
-    const actions = [
-      ...workflow.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)/gmu),
-    ].map((match) => match[1]);
+  const pending = [...workflows];
+  const inspected = new Set();
+  while (pending.length > 0) {
+    const [name, workflow, isWorkflow] = pending.shift();
+    if (inspected.has(name)) continue;
+    inspected.add(name);
+    if (isWorkflow) assert.match(workflow, /runs-on: ubuntu-24\.04/u, name);
+    const actions = workflowUses(workflow, name);
     for (const action of actions) {
-      if (action.startsWith("./")) continue;
+      if (action.startsWith("./")) {
+        pending.push([
+          ...(await localActionSource(action, `${name}: ${action}`)),
+          false,
+        ]);
+        continue;
+      }
       actionCount += 1;
       assert.match(action, /^[^@\s]+@[a-f0-9]{40}$/u, `${name}: ${action}`);
     }
   }
   assert.ok(actionCount > 0);
+  const ci = workflows.find(([name]) => name === "ci.yml")?.[1] ?? "";
+  assert.match(ci, /^  workflow_dispatch:/mu);
+  assert.match(ci, /reviewed_commit:/u);
+  assert.match(ci, /test "\$REVIEWED_COMMIT" = "\$GITHUB_SHA"/u);
+  assert.match(ci, /test "\$GITHUB_REF" = 'refs\/heads\/main'/u);
+  assert.match(ci, /node scripts\/validate-initial-baseline\.mjs/u);
+  assert.match(ci, /BASE_SHA" == "0000000000000000000000000000000000000000"/u);
   assert.match(decisions, /V1 real execution is macOS arm64 only/u);
   assert.match(decisions, /before project canonicalization or resolution/u);
   assert.match(checklist, /first-production-report ceremony/u);
@@ -158,6 +230,8 @@ test("repository ownership is complete but placeholders remain launch-blocking",
     ["/packages/catalog/", 2],
     ["/packages/schema/", 2],
     ["/scripts/validate-contribution.mjs", 2],
+    ["/scripts/validate-site-release-catalog.mjs", 3],
+    ["/scripts/validate-initial-baseline.mjs", 3],
   ]);
   const placeholders = new Set([
     "@PRIMARY_CODE_OWNER_HANDLE_REQUIRED",
@@ -185,7 +259,12 @@ test("repository ownership is complete but placeholders remain launch-blocking",
   assert.match(bootstrap, /Ordinary\s+`pnpm ready:local` never runs it/iu);
   assert.deepEqual(protection.required_status_checks, {
     strict: true,
-    contexts: ["Validate workspace and contribution data"],
+    checks: [
+      {
+        context: "Validate workspace and contribution data",
+        app_id: 15368,
+      },
+    ],
   });
   assert.equal(
     protection.required_pull_request_reviews?.require_code_owner_reviews,
@@ -284,7 +363,8 @@ test("release metadata and package-content contract cannot drift", async () => {
     assert.match(builder, new RegExp(source.replaceAll("/", "\\/"), "u"));
   }
   assert.match(packer, /packages["'], ["']schema["'], ["']schemas/u);
-  assert.match(packer, /await auditPackage\(artifact\)/u);
+  assert.match(packer, /auditAndPublishPackage/u);
+  assert.doesNotMatch(packer, /await rm\(artifact/u);
 });
 
 test("launch preparation cannot activate production evidence or real execution", async () => {
