@@ -85,6 +85,13 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-023: candidate metadata now truthfully records implemented, contained,
   dormant consent while retaining runtime-unverified status, candidate version,
   claim ineligibility, and the empty production allowlist.
+- ATLAS-024: contribution CI now binds exact trusted base/target commits and
+  mechanically rejects every non-additive change to a pre-existing genuine report.
+- ATLAS-025: static aggregate cards separately expose requested-device claim,
+  observation, actual-device evidence, and source/report counts; synthetic builds
+  cover observed, reproduced, fallback, mixed, failure, unknown, and fixture states.
+- ATLAS-026: contributor entry points state that genuine submissions are closed and
+  link tested privacy, exact-target removal, withdrawal, and incident guidance.
 
 ## Next integration gate
 
