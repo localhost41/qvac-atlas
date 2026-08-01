@@ -37,8 +37,8 @@ Updated: 2026-08-01
 | ATLAS-021D | quality workers     | Sol + Terra      | completed        | ATLAS-021C                      | Independent activation, containment, privacy, UX, and reproducibility acceptance                           |
 | ATLAS-022  | quality worker      | Terra            | completed        | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
 | ATLAS-023  | metadata worker     | Terra            | completed        | ATLAS-021D                      | Replace stale unimplemented-consent candidate prose without changing status, version, eligibility, or pins |
-| ATLAS-024  | admission worker    | Sol              | in progress      | ATLAS-011, ATLAS-012B           | Base-revision append-only genuine-report enforcement in local audit and CI, with adversarial tests          |
-| ATLAS-025  | site worker         | Terra            | in progress      | ATLAS-010, ATLAS-012C           | Accessible aggregate claim-state rendering and complete public state-matrix tests                           |
+| ATLAS-024  | admission worker    | Sol              | in progress      | ATLAS-011, ATLAS-012B           | Base-revision append-only genuine-report enforcement in local audit and CI, with adversarial tests         |
+| ATLAS-025  | site worker         | Terra            | in progress      | ATLAS-010, ATLAS-012C           | Accessible aggregate claim-state rendering and complete public state-matrix tests                          |
 | ATLAS-026  | docs worker         | Terra            | in progress      | ATLAS-011                       | Fixture-only submission status, incident/removal guidance, and automated contributor-doc checks            |
 
 ## Queue rules
