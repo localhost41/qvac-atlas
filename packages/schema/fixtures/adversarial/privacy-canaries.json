@@ -773,5 +773,20 @@
     "name": "OpenAI-namespaced compact API backup key assignment",
     "value": "OPENAIAPIBACKUPKEY=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard followed by backup key assignment",
+    "value": "SECRET_KEYBOARD_BACKUP_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keystone followed by recovery key assignment",
+    "value": "SECRET_KEYSTONE_RECOVERY_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keynote followed by backup key assignment",
+    "value": "SECRET_KEYNOTE_BACKUP_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]

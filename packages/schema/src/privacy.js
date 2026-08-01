@@ -48,7 +48,7 @@ const CONTENT_RULES = [
 // the first value character so findings can never reflect the assigned value.
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
-const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
+const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE", "SECRET"]);
 const COMPACT_ADJACENT_SENSITIVE_KEY =
   /(?:SECRET(?:V(?:ERSION)?\d*|\d+)?(?:ACCESS(?:V(?:ERSION)?\d*|\d+)?)?KEY|PRIVATE(?:V(?:ERSION)?\d*|\d+)?KEY|ACCESS(?:V(?:ERSION)?\d*|\d+)?KEY|API(?:V(?:ERSION)?\d*|\d+)?KEY)/gu;
 const COMPACT_SENSITIVE_PREFIX = /(?:SECRET|PRIVATE|ACCESS|API)/gu;
