@@ -34,14 +34,24 @@ async function json(path) {
 }
 
 function assertCompleteOwnershipState(codeowners, placeholders) {
+  const owners = codeowners
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .flatMap((line) => line.split(/\s+/u).slice(1));
+  const placeholderPattern = /^@[A-Z][A-Z0-9_]*_HANDLE_REQUIRED$/u;
   const presentPlaceholders = new Set(
-    codeowners.match(/@[A-Z][A-Z0-9_]*_HANDLE_REQUIRED\b/gu) ?? [],
+    owners.filter((owner) => placeholderPattern.test(owner)),
+  );
+  const concreteOwners = owners.filter(
+    (owner) => !placeholderPattern.test(owner),
   );
   assert.ok(
-    presentPlaceholders.size === 0 ||
-      (presentPlaceholders.size === placeholders.size &&
+    (presentPlaceholders.size === 0 && concreteOwners.length > 0) ||
+      (concreteOwners.length === 0 &&
+        presentPlaceholders.size === placeholders.size &&
         [...placeholders].every((value) => presentPlaceholders.has(value))),
-    "CODEOWNERS must contain either every launch placeholder or none of them",
+    "CODEOWNERS must use either all-placeholder owners or concrete owners, never a mixture",
   );
 }
 
@@ -274,7 +284,19 @@ test("repository ownership supports only complete preparation or launch states",
         "* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED\n/reports/v1/ @evidence-owner\n/SECURITY.md @SECURITY_CODE_OWNER_HANDLE_REQUIRED\n",
         placeholders,
       ),
-    /either every launch placeholder or none/u,
+    /all-placeholder owners or concrete owners/u,
+  );
+  assert.throws(
+    () =>
+      assertCompleteOwnershipState(
+        `
+* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED
+/.github/ @PRIMARY_CODE_OWNER_HANDLE_REQUIRED @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+/reports/v1/ @real-primary @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+`,
+        placeholders,
+      ),
+    /all-placeholder owners or concrete owners/u,
   );
   assert.match(security, /launch-blocking placeholder/u);
   assert.match(release, /local preparation only/u);

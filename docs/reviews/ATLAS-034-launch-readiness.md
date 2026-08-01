@@ -84,8 +84,9 @@ deadlock, a placeholder-replacement CI contradiction, and package bytes that cou
 be replaced after audit. Remediation added exact host verification without admin
 bypass, newest-check enforcement, the GitHub Actions app binding, a documented
 fast-forward freeze, installed-manifest bundle verification, structural recursive
-workflow inspection, dual complete ownership states, an exact-SHA empty baseline
-workflow, and atomic audit-before-publication packaging.
+workflow inspection, mutually exclusive all-placeholder and all-concrete ownership
+states, an exact-SHA empty baseline workflow, and atomic audit-before-publication
+packaging.
 
 The same remediation also upgraded vulnerable AJV, Astro, and Sharp dependency
 paths. The full dependency audit, focused regression tests, complete readiness run,
