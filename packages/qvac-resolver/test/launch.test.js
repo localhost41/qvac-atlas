@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { fork } from "node:child_process";
-import { access, mkdir, realpath, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
@@ -42,6 +42,12 @@ const stubbornSendFailureRunnerPath = path.join(
   "test",
   "fixtures",
   "stubborn-send-failure-runner.mjs",
+);
+const rootExitSendFailureRunnerPath = path.join(
+  packageRoot,
+  "test",
+  "fixtures",
+  "root-exit-send-failure-runner.mjs",
 );
 
 function childMessage(child) {
@@ -333,12 +339,11 @@ async function expectFailedBootstrapCleanup({
   fixture,
   tempCwd,
   failureRunnerPath,
-  expectedSignals,
+  expectedSignal,
 }) {
   const resolution = await resolveProjectLocalSdk(fixture.root);
   assert.equal(resolution.status, "resolved");
   let supervisedChild;
-  const sentSignals = [];
   let exitObserved;
   let childExited = false;
 
@@ -350,11 +355,6 @@ async function expectFailedBootstrapCleanup({
         tempCwd,
         async beforeBootstrap(child) {
           supervisedChild = child;
-          const originalKill = child.kill.bind(child);
-          child.kill = (signal) => {
-            sentSignals.push(signal);
-            return originalKill(signal);
-          };
           const ready = childMessage(child);
           assert.deepEqual(await ready, { type: "ready-to-disconnect" });
           exitObserved = new Promise((resolve) =>
@@ -378,10 +378,9 @@ async function expectFailedBootstrapCleanup({
     },
   );
 
-  assert.deepEqual(sentSignals, expectedSignals);
   assert.equal(childExited, true);
   await exitObserved;
-  assert.notEqual(supervisedChild.signalCode, null);
+  assert.equal(supervisedChild.signalCode, expectedSignal);
   assert.equal(supervisedChild.exitCode, null);
 }
 
@@ -396,7 +395,7 @@ test("bootstrap send failure is terminated and reaped before rejection", async (
     fixture,
     tempCwd,
     failureRunnerPath: sendFailureRunnerPath,
-    expectedSignals: ["SIGTERM"],
+    expectedSignal: "SIGTERM",
   });
 });
 
@@ -416,7 +415,46 @@ test(
       fixture,
       tempCwd,
       failureRunnerPath: stubbornSendFailureRunnerPath,
-      expectedSignals: ["SIGTERM", "SIGKILL"],
+      expectedSignal: "SIGKILL",
     });
+  },
+);
+
+test(
+  "bootstrap cleanup sweeps descendants after the detached root exits",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const fixture = await createProject();
+    const tempCwd = await makeTemporaryDirectory("qvac-resolver-root-exit-");
+    t.after(() =>
+      Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+    );
+    const resolution = await resolveProjectLocalSdk(fixture.root);
+    assert.equal(resolution.status, "resolved");
+
+    await assert.rejects(
+      () =>
+        launchResolvedSdkChild({
+          handle: resolution.handle,
+          runnerPath: rootExitSendFailureRunnerPath,
+          tempCwd,
+          async beforeBootstrap(child) {
+            assert.deepEqual(await childMessage(child), {
+              type: "root-ready-to-exit",
+            });
+            await new Promise((resolve) => child.once("exit", resolve));
+          },
+        }),
+      (error) => {
+        assert.ok(error instanceof SdkChildLaunchError);
+        assert.equal(error.code, "qvac-child-launch-failed");
+        return true;
+      },
+    );
+    const pid = Number(
+      await readFile(path.join(tempCwd, "grandchild.pid"), "utf8"),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    assert.throws(() => process.kill(pid, 0));
   },
 );

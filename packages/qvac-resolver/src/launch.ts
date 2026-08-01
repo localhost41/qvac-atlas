@@ -110,6 +110,17 @@ async function requireCleanTemporaryCwd(tempCwd: string): Promise<string> {
 const BOOTSTRAP_TERM_GRACE_MS = 250;
 const BOOTSTRAP_KILL_SETTLE_MS = 2_000;
 
+function signalChildTree(child: ChildProcess, signal: NodeJS.Signals): void {
+  if (child.pid === undefined) return;
+  try {
+    if (process.platform === "win32") {
+      if (!hasExited(child)) child.kill(signal);
+    } else process.kill(-child.pid, signal);
+  } catch {
+    // A concurrent exit is settled by the observer below.
+  }
+}
+
 function hasExited(child: ChildProcess): boolean {
   return child.exitCode !== null || child.signalCode !== null;
 }
@@ -158,22 +169,15 @@ async function terminateFailedBootstrap(
   child: ChildProcess,
   settled: Promise<void>,
 ): Promise<void> {
-  if (!hasExited(child)) {
-    try {
-      child.kill("SIGTERM");
-    } catch {
-      // A concurrent exit is settled by the observer below.
-    }
-  }
-  if (await settlesWithin(settled, BOOTSTRAP_TERM_GRACE_MS)) return;
-
-  if (!hasExited(child)) {
-    try {
-      child.kill("SIGKILL");
-    } catch {
-      // A concurrent exit is settled by the observer below.
-    }
-  }
+  signalChildTree(child, "SIGTERM");
+  const rootSettledDuringGrace = await settlesWithin(
+    settled,
+    BOOTSTRAP_TERM_GRACE_MS,
+  );
+  // Sweep the detached group even when the root has already exited; the group
+  // may still contain a descendant that no longer has a discoverable parent.
+  signalChildTree(child, "SIGKILL");
+  if (rootSettledDuringGrace) return;
   if (!(await settlesWithin(settled, BOOTSTRAP_KILL_SETTLE_MS))) {
     throw new SdkChildLaunchError("qvac-child-launch-failed");
   }
@@ -201,6 +205,7 @@ export async function launchResolvedSdkChild(
 
     const child = fork(runnerPath, [], {
       cwd: tempCwd,
+      detached: process.platform !== "win32",
       env: createSanitizedChildEnvironment(options.sourceEnv),
       execArgv: [],
       serialization: "json",

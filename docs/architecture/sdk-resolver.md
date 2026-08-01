@@ -60,6 +60,11 @@ component must be a real directory, and the canonical cwd plus its ancestors mus
 contain no project manifest, QVAC config candidate, or default QVAC worker entry.
 Canonical parent aliases such as macOS `/var` to `/private/var` are permitted.
 
+On POSIX the child is created as the leader of a detached process group. Failed
+bootstrap cleanup targets that group rather than only the Node root and performs a
+final KILL sweep even after the root has exited, so an audited runner cannot leave a
+pre-bootstrap descendant behind. Windows remains a separate containment gate.
+
 The required `beforeBootstrap(child)` boundary runs after the sanitized child is
 spawned but before any SDK path is sent. The caller registers IPC, exit, error,
 stdio, deadline, and process-tree supervision there, so even an immediate child
