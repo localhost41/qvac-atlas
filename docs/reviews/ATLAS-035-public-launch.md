@@ -2,9 +2,9 @@
 
 Date: 2026-08-01
 
-Status: **local release candidate passed; initial independent review held one host
-control and one identity dependency; host-control remediation complete; external
-publication not started**
+Status: **local release candidate and host-control remediation passed independent
+review; external publication blocked on named identity/authentication values and
+has not started**
 
 ## Authorized scope
 
@@ -45,8 +45,9 @@ publication candidate.
 ## Verification completed
 
 - The main working copy completed an offline frozen install and `pnpm ready:local`.
-  All 471 tests passed with lint, build, typecheck, schema, privacy, containment,
-  claim, catalog, package, host-control, site, and disabled-real-mode checks.
+  All 471 package-source tests passed with lint, build, typecheck, schema, privacy,
+  containment, claim, catalog, package, host-control, site, and disabled-real-mode
+  checks.
 - Package construction and audit produced the exact size and SHA-256 above.
 - A separate `--no-local` clone of the exact package-source commit completed an
   offline frozen install, the full readiness suite, package recreation, audit, and
@@ -57,6 +58,10 @@ publication candidate.
   confirmed `localhost41/qvac-atlas` does not yet exist.
 - `npm whoami` failed with `ENEEDAUTH`; no npm credentials were exposed or stored
   in this record.
+- After host-control remediation, exact commit
+  `fd9d82d22eb3bb702183a310701791016e26aa83` completed a clean full readiness run
+  with all 472 tests passing. The new test is the hostile owner-as-reviewer case.
+  The canonical artifact remained 122,278 bytes with the exact SHA-256 above.
 
 ## Independent review and remediation
 
@@ -81,6 +86,18 @@ cannot receive code-owner approval. Once the separate reviewer login is supplied
 that account must be added as a co-owner on protected surfaces before candidate
 freeze. This identity-bound delta and the verifier remediation require bounded
 independent re-review on the new exact commit before fast-forward to `main`.
+
+Both independent reviewers returned **PASS** on the bounded remediation at exact
+commit `fd9d82d22eb3bb702183a310701791016e26aa83`. They reproduced mixed-case parser
+rejection, live repository-owner rejection, the pre-bootstrap guard, and 15/15
+focused host/readiness tests. They also confirmed the launch record is truthful,
+the worktree and delta are clean, no remote exists, GitHub and npm targets remain
+absent, and the remaining identity/authentication values still fail closed.
+
+Any documentation-only descendant that records this verdict must receive a final
+bounded delta check before it becomes the reviewed release head. The separate
+reviewer/co-owner identity remains a pre-freeze blocker, so `main` has not been
+fast-forwarded.
 
 ## Exact external blockers
 

@@ -114,3 +114,7 @@ mechanically enforced. The parser, verifier, bootstrap runbook, and regression
 tests now reject the repository owner as reviewer case-insensitively. The reviewer
 login is also required as a co-owner before freeze so owner-authored future pull
 requests do not deadlock under mandatory code-owner approval.
+
+Both independent bounded re-reviews passed on
+`fd9d82d22eb3bb702183a310701791016e26aa83`. A clean full readiness run then passed
+all 472 tests; the canonical artifact retained the exact checkpoint digest.

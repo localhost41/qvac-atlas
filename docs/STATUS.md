@@ -147,7 +147,9 @@ M1 — Local probe and registry vertical slice.
   deterministic recreation, audit, and clean-tree checks. Initial independent
   review found that Pages-reviewer independence was prose-only; the parser,
   verifier, runbook, and regression tests now reject the repository owner as
-  reviewer case-insensitively. Final candidate freeze still requires the separate
+  reviewer case-insensitively. Both independent bounded re-reviews passed, and the
+  clean remediated head passed all 472 tests while retaining the exact artifact
+  digest. Final candidate freeze still requires the separate
   reviewer's login so that account can also prevent CODEOWNERS deadlock. npm
   publication requires an authenticated publisher session, and the Discord
   destination has not been named.
