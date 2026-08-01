@@ -82,7 +82,9 @@ M1 — Local probe and registry vertical slice.
   `docs/work-packets/ATLAS-013.md`. Execution remains capacity- and
   human-approval-gated: the protocol requires at least 10 GiB of headroom on every
   relevant volume, and capacity must be rechecked immediately before any ceremony.
-  No physical run has occurred.
+  One private disposable run completed with the exact pinned model and clean
+  lifecycle; independent report/privacy review, production admission, and activation
+  remain pending.
 - ATLAS-023: candidate metadata now truthfully records implemented, contained,
   dormant consent while retaining runtime-unverified status, candidate version,
   claim ineligibility, and the empty production allowlist.

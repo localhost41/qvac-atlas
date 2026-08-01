@@ -1,6 +1,6 @@
 # ATLAS-013 — macOS physical-validation run packet
 
-Status: protocol defined; no physical run authorized or performed
+Status: protocol defined; one private disposable run completed; independent review pending
 
 This packet turns the dormant real path into a bounded, human-operated validation
 event. It does not activate or release that path. The release candidate checklist
