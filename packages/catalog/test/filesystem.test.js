@@ -19,7 +19,7 @@ async function fixture(name) {
 
 function config(sourcePath = "reports/fixtures/success.json") {
   return {
-    version: 1,
+    version: 2,
     productionProfiles: [],
     fixtureProfiles: [
       {
@@ -59,6 +59,33 @@ test("the checked-in generated catalog is a deterministic rebuild", async () => 
     "utf8",
   );
   assert.equal(serializeCatalog(rebuilt), checkedIn);
+});
+
+test("registry metadata requires exact lifecycle version and fixture isolation", async () => {
+  for (const mutate of [
+    (value) => {
+      value.version = 1;
+    },
+    (value) => {
+      value.sources[0].lifecycle = { state: "active" };
+    },
+    (value) => {
+      value.sources[0].unsupported = true;
+    },
+  ]) {
+    const root = await temporaryRegistry();
+    const value = config();
+    mutate(value);
+    await writeFile(
+      join(root, "registry/catalog.json"),
+      JSON.stringify(value),
+      "utf8",
+    );
+    await assert.rejects(
+      buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+      /configuration is unsupported|source metadata has an unsupported field/,
+    );
+  }
 });
 
 test("oversized JSON files fail before parsing", async () => {
@@ -151,10 +178,17 @@ test("genuine report filenames must map exactly to their report IDs", async () =
   await writeFile(
     join(root, "registry", "catalog.json"),
     JSON.stringify({
-      version: 1,
+      version: 2,
       productionProfiles: [],
       fixtureProfiles: [],
-      sources: [{ kind: "genuine", path: reportPath, sourceKey: "review:one" }],
+      sources: [
+        {
+          kind: "genuine",
+          lifecycle: { state: "active" },
+          path: reportPath,
+          sourceKey: `source:${"a".repeat(32)}`,
+        },
+      ],
     }),
     "utf8",
   );

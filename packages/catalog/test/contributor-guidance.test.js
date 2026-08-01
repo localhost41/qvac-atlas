@@ -37,6 +37,7 @@ test("contributor entry points state that genuine submissions are closed", async
     );
     assert.match(entryPoint, new RegExp(`\\(${guidancePath}\\)`));
   }
+  assert.equal(registry.version, 2);
   assert.deepEqual(registry.productionProfiles, []);
   assert.match(shippedMain, /\n\s*false,\n\s*\);/u);
 });
@@ -70,9 +71,20 @@ test("safety guide contains required decisions, cleanup, and incident controls",
   );
   assert.match(
     content,
-    /Neither supersession nor current-surface removal proves erasure from Git object history/i,
+    /Neither action proves erasure from Git object history/i,
   );
-  assert.match(content, /must supersede rather than mutate or delete/);
+  assert.match(content, /mark the old trusted metadata `superseded`/);
+  assert.match(content, /mark the entry `withdrawn`/);
+  assert.match(
+    content,
+    /remove it from current report pages, counts, and claims/,
+  );
+  assert.match(content, /not an ordinary withdrawal/);
+  assert.match(content, /Exact-history CI is intentionally expected to reject/);
+  assert.match(
+    content,
+    /Do not add or use a CI, metadata, environment, or command-line bypass/,
+  );
   assert.match(content, /Treat the value as disclosed/);
   assert.match(content, /Rotate or revoke affected credentials/);
   assert.match(content, /minimal sanitized incident record/);
@@ -87,6 +99,12 @@ test("safety guide contains required decisions, cleanup, and incident controls",
 
   assert.match(reportGuide, /\]\(privacy-removal-incidents\.md\)/);
   assert.match(maintainerGuide, /\]\(privacy-removal-incidents\.md\)/);
+  assert.match(maintainerGuide, /source:<32 lowercase hex>/);
+  assert.match(
+    maintainerGuide,
+    /must not be\s+derived from or contain a person's name/,
+  );
+  assert.match(maintainerGuide, /only active genuine evidence/);
 });
 
 test("contributor guidance contains no broad destructive command examples", async () => {

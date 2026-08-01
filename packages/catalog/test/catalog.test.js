@@ -6,6 +6,9 @@ import { buildCatalog, serializeCatalog } from "../src/index.js";
 
 const fixtureUrl = (name) =>
   new URL(`../../schema/fixtures/${name}`, import.meta.url);
+const SOURCE_A = `source:${"a".repeat(32)}`;
+const SOURCE_B = `source:${"b".repeat(32)}`;
+const SOURCE_C = `source:${"c".repeat(32)}`;
 
 async function fixture(name) {
   return JSON.parse(await readFile(fixtureUrl(name), "utf8"));
@@ -33,8 +36,20 @@ function asProbe(report, createdAt = report.created_at) {
   return withReportId(copy);
 }
 
-function source(report, sourceKey, path, kind = "genuine") {
-  return { kind, path, report, sourceKey };
+function source(
+  report,
+  sourceKey,
+  path,
+  kind = "genuine",
+  lifecycle = { state: "active" },
+) {
+  return {
+    kind,
+    ...(kind === "genuine" ? { lifecycle } : {}),
+    path,
+    report,
+    sourceKey,
+  };
 }
 
 function failedAfterBackend(success) {
@@ -156,8 +171,8 @@ test("two independent trusted sources produce reproduced success", async () => {
   const catalog = buildCatalog({
     productionProfiles: [profileOf(raw)],
     sources: [
-      source(first, "review:alice", "reports/v1/first.json"),
-      source(second, "review:bob", "reports/v1/second.json"),
+      source(first, SOURCE_A, "reports/v1/first.json"),
+      source(second, SOURCE_B, "reports/v1/second.json"),
     ],
   });
 
@@ -175,8 +190,8 @@ test("compatible success and failure evidence produce a mixed claim", async () =
   const catalog = buildCatalog({
     productionProfiles: [profileOf(raw)],
     sources: [
-      source(success, "review:alice", "reports/v1/success.json"),
-      source(failure, "review:bob", "reports/v1/failure.json"),
+      source(success, SOURCE_A, "reports/v1/success.json"),
+      source(failure, SOURCE_B, "reports/v1/failure.json"),
     ],
   });
 
@@ -193,9 +208,7 @@ test("a failed fallback remains an observation, not a requested-device failure c
 
   const catalog = buildCatalog({
     productionProfiles: [profileOf(raw)],
-    sources: [
-      source(failure, "review:failed-fallback", "reports/v1/failure.json"),
-    ],
+    sources: [source(failure, SOURCE_C, "reports/v1/failure.json")],
   });
 
   assert.equal(catalog.reports[0].claim.observation, "failure");
@@ -207,6 +220,206 @@ test("a failed fallback remains an observation, not a requested-device failure c
   assert.equal(catalog.claims[0].claim.claim, "unknown");
   assert.notEqual(catalog.claims[0].claim.claim, "observed-failure");
   assert.notEqual(catalog.claims[0].claim.claim, "mixed");
+});
+
+test("withdrawn and superseded evidence cannot influence current output", async () => {
+  const raw = await fixture("success.json");
+  const active = asProbe(raw, "2026-08-01T00:00:02.000Z");
+  const superseded = failedAfterBackend(
+    asProbe(raw, "2026-08-01T00:00:01.000Z"),
+  );
+  const withdrawn = asProbe(raw, "2026-08-01T00:00:03.000Z");
+  withdrawn.platform.cpu.model = "RETIRED_HARDWARE_CANARY";
+  const withdrawnWithId = withReportId(withdrawn);
+  const activePath = "reports/v1/active.json";
+  const supersededPath = "reports/v1/superseded.json";
+  const withdrawnPath = "reports/v1/withdrawn.json";
+  const sources = [
+    source(active, SOURCE_A, activePath),
+    source(superseded, SOURCE_A, supersededPath, "genuine", {
+      state: "superseded",
+      replacementPath: activePath,
+    }),
+    source(withdrawnWithId, SOURCE_C, withdrawnPath, "genuine", {
+      state: "withdrawn",
+    }),
+  ];
+
+  const catalog = buildCatalog({
+    productionProfiles: [profileOf(raw)],
+    sources,
+  });
+  assert.equal(catalog.reports.length, 1);
+  assert.equal(catalog.reports[0].reportId, active.report_id);
+  assert.equal(catalog.claims.length, 1);
+  assert.equal(catalog.claims[0].claim.claim, "observed-success");
+  assert.deepEqual(catalog.claims[0].reportIds, [active.report_id]);
+  assert.equal(catalog.claims[0].sourceCount, 1);
+
+  const serialized = serializeCatalog(catalog);
+  for (const retiredValue of [
+    superseded.report_id,
+    supersededPath,
+    withdrawnWithId.report_id,
+    withdrawnPath,
+    withdrawnWithId.platform.cpu.model,
+    SOURCE_C,
+  ]) {
+    assert.equal(serialized.includes(retiredValue), false);
+  }
+  assert.equal(
+    serialized,
+    serializeCatalog(
+      buildCatalog({
+        productionProfiles: [profileOf(raw)],
+        sources: [...sources].reverse(),
+      }),
+    ),
+  );
+});
+
+test("supersession requires one direct active same-source replacement", async () => {
+  const raw = await fixture("success.json");
+  const fixtureReport = await fixture("success.json");
+  const old = asProbe(raw, "2026-08-01T00:00:01.000Z");
+  const middle = asProbe(raw, "2026-08-01T00:00:02.000Z");
+  const active = asProbe(raw, "2026-08-01T00:00:03.000Z");
+  const profile = [profileOf(raw)];
+  const oldPath = "reports/v1/old.json";
+  const middlePath = "reports/v1/middle.json";
+  const activePath = "reports/v1/active.json";
+  const superseded = (replacementPath) =>
+    source(old, SOURCE_A, oldPath, "genuine", {
+      state: "superseded",
+      replacementPath,
+    });
+
+  for (const [sources, pattern] of [
+    [[superseded(oldPath)], /cannot replace itself/],
+    [[superseded("reports/v1/missing.json")], /replacement is missing/],
+    [
+      [
+        superseded("reports/fixtures/success.json"),
+        source(
+          fixtureReport,
+          "fixture:success",
+          "reports/fixtures/success.json",
+          "fixture",
+        ),
+      ],
+      /replacement is missing/,
+    ],
+    [
+      [superseded(activePath), source(active, SOURCE_B, activePath)],
+      /same sourceKey/,
+    ],
+    [
+      [
+        superseded(middlePath),
+        source(middle, SOURCE_A, middlePath, "genuine", {
+          state: "superseded",
+          replacementPath: activePath,
+        }),
+        source(active, SOURCE_A, activePath),
+      ],
+      /replacement must be active/,
+    ],
+    [
+      [
+        superseded(middlePath),
+        source(middle, SOURCE_A, middlePath, "genuine", {
+          state: "superseded",
+          replacementPath: oldPath,
+        }),
+      ],
+      /replacement must be active/,
+    ],
+    [
+      [
+        superseded(activePath),
+        source(active, SOURCE_A, activePath, "genuine", {
+          state: "withdrawn",
+        }),
+      ],
+      /replacement must be active/,
+    ],
+  ]) {
+    assert.throws(
+      () => buildCatalog({ productionProfiles: profile, sources }),
+      pattern,
+    );
+  }
+});
+
+test("lifecycle and opaque source metadata fail closed on unsupported shapes", async () => {
+  const raw = await fixture("success.json");
+  const report = asProbe(raw);
+  const profile = [profileOf(raw)];
+  const path = "reports/v1/report.json";
+
+  const withoutLifecycle = source(report, SOURCE_A, path);
+  delete withoutLifecycle.lifecycle;
+  assert.throws(
+    () =>
+      buildCatalog({
+        productionProfiles: profile,
+        sources: [withoutLifecycle],
+      }),
+    /unsupported field/,
+  );
+
+  for (const lifecycle of [
+    { state: "active", replacementPath: path },
+    { state: "withdrawn", reason: "private detail" },
+    { state: "unknown" },
+    { state: "superseded" },
+  ]) {
+    assert.throws(
+      () =>
+        buildCatalog({
+          productionProfiles: profile,
+          sources: [source(report, SOURCE_A, path, "genuine", lifecycle)],
+        }),
+      /lifecycle|replacement/,
+    );
+  }
+
+  for (const invalidSourceKey of [
+    "review:alice",
+    "source:pull-request-123",
+    "person@example.invalid",
+    `source:${"a".repeat(64)}`,
+    report.report_id,
+  ]) {
+    assert.throws(
+      () =>
+        buildCatalog({
+          productionProfiles: profile,
+          sources: [source(report, invalidSourceKey, path)],
+        }),
+      (error) => {
+        assert.match(error.message, /sourceKey is invalid/);
+        assert.equal(error.message.includes(invalidSourceKey), false);
+        return true;
+      },
+    );
+  }
+
+  const fixtureReport = await fixture("success.json");
+  const fixtureSource = source(
+    fixtureReport,
+    "fixture:success",
+    "reports/fixtures/success.json",
+    "fixture",
+  );
+  assert.throws(
+    () =>
+      buildCatalog({
+        fixtureProfiles: [fixtureProfileOf(fixtureReport)],
+        sources: [{ ...fixtureSource, lifecycle: { state: "withdrawn" } }],
+      }),
+    /unsupported field/,
+  );
 });
 
 test("catalog serialization is deterministic across input order", async () => {
@@ -242,7 +455,7 @@ test("reports without exactly one profile in the correct trust list are rejected
   assert.throws(
     () =>
       buildCatalog({
-        sources: [source(genuine, "review:one", "reports/v1/one.json")],
+        sources: [source(genuine, SOURCE_A, "reports/v1/one.json")],
       }),
     /genuine report must match exactly one trusted profile/,
   );
@@ -268,7 +481,7 @@ test("contributor-controlled markup remains inert catalog text", async () => {
   const adjusted = withReportId(report);
   const catalog = buildCatalog({
     productionProfiles: [profileOf(raw)],
-    sources: [source(adjusted, "review:canary", "reports/v1/canary.json")],
+    sources: [source(adjusted, SOURCE_C, "reports/v1/canary.json")],
   });
 
   assert.equal(

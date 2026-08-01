@@ -15,6 +15,13 @@ identity, or arbitrary metadata. The registry derives claims from validated
 evidence. Accepted corrections create a new report and supersession metadata in a
 trusted registry layer rather than modifying the original report.
 
+The registry metadata format is independently versioned. Version 2 marks every
+genuine source `active`, `superseded`, or `withdrawn`. Only active evidence can be
+presented or aggregated. A superseded report points directly to one active
+replacement from the same opaque source class; retired reports remain validated,
+mapped, tracked, and byte-identical in append-only Git history. Fixtures have no
+retirement lifecycle and cannot enter this state machine.
+
 The contract has four separate version dimensions:
 
 - `schema_version` controls the serialized contract.

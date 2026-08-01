@@ -10,6 +10,9 @@ import {
   serializeCatalog,
 } from "../src/index.js";
 
+const SOURCE_A = `source:${"a".repeat(32)}`;
+const SOURCE_B = `source:${"b".repeat(32)}`;
+
 async function schemaFixture(name = "success.json") {
   return JSON.parse(
     await readFile(
@@ -23,8 +26,9 @@ async function privacyCanaries() {
   return schemaFixture("adversarial/privacy-canaries.json");
 }
 
-function asProbe(report) {
+function asProbe(report, createdAt = report.created_at) {
   const copy = structuredClone(report);
+  copy.created_at = createdAt;
   copy.provenance = { kind: "probe", fixture_id: null };
   return withReportId(copy);
 }
@@ -52,6 +56,7 @@ async function writeJson(root, path, value) {
 
 async function repository({
   report,
+  reports = report === undefined ? [] : [report],
   sources = [],
   productionProfiles = [],
 } = {}) {
@@ -61,9 +66,10 @@ async function repository({
     recursive: true,
   });
   await writeFile(join(root, "reports", "v1", ".gitkeep"), "", "utf8");
-  if (report !== undefined) await writeJson(root, reportPath(report), report);
+  for (const retainedReport of reports)
+    await writeJson(root, reportPath(retainedReport), retainedReport);
   await writeJson(root, "registry/catalog.json", {
-    version: 1,
+    version: 2,
     productionProfiles,
     fixtureProfiles: [],
     sources,
@@ -84,7 +90,12 @@ async function writeGenerated(root) {
 }
 
 function metadata(report, path = reportPath(report)) {
-  return { kind: "genuine", path, sourceKey: "review:fixture-source" };
+  return {
+    kind: "genuine",
+    lifecycle: { state: "active" },
+    path,
+    sourceKey: SOURCE_A,
+  };
 }
 
 test("a canonical tracked report and its one trusted source pass the audit", async () => {
@@ -103,6 +114,46 @@ test("a canonical tracked report and its one trusted source pass the audit", asy
     untrackedPaths: [],
   });
   assert.deepEqual(result, { fixtureReports: 0, genuineReports: 1, claims: 1 });
+});
+
+test("retired reports remain mapped and tracked but leave current output", async () => {
+  const fixture = await schemaFixture();
+  const retired = asProbe(fixture, "2026-08-01T00:00:00.000Z");
+  const active = asProbe(fixture, "2026-08-01T00:00:01.000Z");
+  const retiredPath = reportPath(retired);
+  const activePath = reportPath(active);
+  const root = await repository({
+    reports: [retired, active],
+    sources: [
+      {
+        ...metadata(retired),
+        lifecycle: {
+          state: "superseded",
+          replacementPath: activePath,
+        },
+      },
+      metadata(active),
+    ],
+    productionProfiles: [productionProfile(active)],
+  });
+  await writeGenerated(root);
+
+  const result = await auditContributions({
+    root,
+    trackedPaths: new Set([retiredPath, activePath]),
+    untrackedPaths: [],
+  });
+  assert.deepEqual(result, {
+    fixtureReports: 0,
+    genuineReports: 2,
+    claims: 1,
+  });
+  const generated = await readFile(
+    join(root, "apps/site/src/generated/catalog.json"),
+    "utf8",
+  );
+  assert.equal(generated.includes(retired.report_id), false);
+  assert.equal(generated.includes(active.report_id), true);
 });
 
 test("a registry source without a report is rejected as orphaned", async () => {
@@ -138,10 +189,7 @@ test("duplicate registry entries for one report are rejected", async () => {
   const path = reportPath(report);
   const root = await repository({
     report,
-    sources: [
-      metadata(report),
-      { ...metadata(report), sourceKey: "review:other" },
-    ],
+    sources: [metadata(report), { ...metadata(report), sourceKey: SOURCE_B }],
     productionProfiles: [productionProfile(report)],
   });
 

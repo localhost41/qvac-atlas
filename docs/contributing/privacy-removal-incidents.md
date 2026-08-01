@@ -107,12 +107,17 @@ sensitive value or add new identity information to the request. For a credential
 privacy exposure, use a private security channel if the eventual repository host
 provides one and follow the incident process below.
 
-Maintainers must not silently edit an accepted report. A non-sensitive correction
-must supersede rather than mutate or delete the accepted evidence. A privacy
-withdrawal may require removing the report from current public surfaces under the
-incident process below. Neither supersession nor current-surface removal proves
-erasure from Git object history, forks, caches, mirrors, screenshots, or prior
-downloads. A deletion commit is not an erasure guarantee.
+Maintainers must not silently edit an accepted report. For an ordinary
+non-sensitive correction, they add the corrected report and mark the old trusted
+metadata `superseded` with a direct active same-source replacement. For an ordinary
+withdrawal that does not involve forbidden content, they mark the entry
+`withdrawn`. Both retain the old append-only report in Git but remove it from
+current report pages, counts, and claims. Neither action proves erasure from Git
+object history, forks, caches, mirrors, screenshots, or prior downloads.
+
+A secret, credential, private identifier, path, prompt, generated content, or
+other forbidden value is not an ordinary withdrawal. Retaining it in append-only
+Git would keep publishing it, so follow the exceptional incident process below.
 
 ## Maintainer credential or privacy incident response
 
@@ -130,7 +135,10 @@ forbidden material reaches review or a public surface:
 4. Follow the repository host's credential-removal and Git-history remediation
    procedure. History rewriting, force updates, and coordination with clones or
    mirrors require separate maintainer authority; deleting the current file is not
-   enough.
+   enough. Exact-history CI is intentionally expected to reject a deletion or
+   rewritten/unavailable base in an ordinary contribution. Do not add or use a CI,
+   metadata, environment, or command-line bypass; host-authority remediation and a
+   newly reviewed trust baseline are separate from normal admission.
 5. Preserve only a minimal sanitized incident record: a coarse time window,
    forbidden-data category, affected surface classes, rotation/revocation status,
    remediation status, and review outcome. Never preserve the exposed value, raw

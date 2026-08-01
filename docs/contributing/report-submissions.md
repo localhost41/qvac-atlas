@@ -42,10 +42,12 @@ before running the audit so Git can prove it is part of the proposed contributio
 ## Why the first audit may reject a valid report
 
 Every genuine report needs one trusted source entry in `registry/catalog.json`.
-That entry contains a maintainer-owned `sourceKey`, used only to decide whether
-reports are independent. It never comes from contributor JSON. Leave registry
-metadata and profile allowlists to maintainers; request maintainer review on the
-draft pull request.
+That entry starts with an active lifecycle and contains a maintainer-owned opaque
+`source:<32 lowercase hex>` key, used only to decide whether reports are
+independent. It never comes from contributor JSON and must not encode a name,
+account, email, organization, PR/report number, or hardware/device identifier.
+Leave lifecycle metadata, source keys, and profile allowlists to maintainers;
+request maintainer review on the draft pull request.
 
 A report must also match exactly one production profile already approved by the
 project. Profile admission is a separate release decision. Maintainers will not add

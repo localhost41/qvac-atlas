@@ -36,7 +36,7 @@ export async function readRegistryConfig({
     MAX_CONFIG_BYTES,
     "registry",
   );
-  if (config?.version !== 1 || !Array.isArray(config.sources)) {
+  if (config?.version !== 2 || !Array.isArray(config.sources)) {
     throw new Error(
       "Catalog admission failed: registry configuration is unsupported",
     );
@@ -86,11 +86,21 @@ export async function buildCatalogFromFiles({ root, configPath }) {
 
   const sources = [];
   const metadataSources = config.sources.map((metadata) => {
-    const metadataKeys = Object.keys(metadata).sort();
     if (
-      JSON.stringify(metadataKeys) !==
-      JSON.stringify(["kind", "path", "sourceKey"])
+      metadata === null ||
+      typeof metadata !== "object" ||
+      Array.isArray(metadata)
     ) {
+      throw new Error(
+        "Catalog admission failed: source metadata must be an object",
+      );
+    }
+    const metadataKeys = Object.keys(metadata).sort();
+    const expectedKeys =
+      metadata.kind === "genuine"
+        ? ["kind", "lifecycle", "path", "sourceKey"]
+        : ["kind", "path", "sourceKey"];
+    if (JSON.stringify(metadataKeys) !== JSON.stringify(expectedKeys)) {
       throw new Error(
         "Catalog admission failed: source metadata has an unsupported field",
       );
@@ -102,7 +112,7 @@ export async function buildCatalogFromFiles({ root, configPath }) {
     return { ...metadata, allowedDirectory };
   });
   for (const metadata of metadataSources.sort((left, right) =>
-    left.path.localeCompare(right.path),
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
   )) {
     const report = await readJson(
       root,
@@ -121,6 +131,7 @@ export async function buildCatalogFromFiles({ root, configPath }) {
     }
     sources.push({
       kind: metadata.kind,
+      ...(metadata.kind === "genuine" ? { lifecycle: metadata.lifecycle } : {}),
       path: metadata.path,
       report,
       sourceKey: metadata.sourceKey,

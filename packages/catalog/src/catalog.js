@@ -7,7 +7,8 @@ import {
   validatePublishableReport,
 } from "@qvac-atlas/schema";
 
-const SOURCE_KEY = /^[a-z0-9][a-z0-9:._/-]{0,127}$/;
+const GENUINE_SOURCE_KEY = /^source:[a-f0-9]{32}$/;
+const FIXTURE_SOURCE_KEY = /^fixture:[a-z0-9][a-z0-9._-]{0,79}$/;
 const PROFILE_ID = /^[a-z0-9][a-z0-9._-]{0,79}$/;
 const SEMVER =
   /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$/;
@@ -17,25 +18,80 @@ function fail(message) {
   throw new Error(`Catalog admission failed: ${message}`);
 }
 
+function compareText(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 function validateSource(source) {
   if (source === null || typeof source !== "object" || Array.isArray(source)) {
     fail("source metadata must be an object");
   }
   const keys = Object.keys(source).sort();
-  if (
-    canonicalize(keys) !== canonicalize(["kind", "path", "report", "sourceKey"])
-  ) {
+  const expectedKeys =
+    source.kind === "genuine"
+      ? ["kind", "lifecycle", "path", "report", "sourceKey"]
+      : ["kind", "path", "report", "sourceKey"];
+  if (canonicalize(keys) !== canonicalize(expectedKeys)) {
     fail("source metadata has an unsupported field");
   }
-  if (!SOURCE_KEY.test(source.sourceKey)) fail("sourceKey is invalid");
   if (!["fixture", "genuine"].includes(source.kind))
     fail("source kind is invalid");
+  if (
+    (source.kind === "genuine" && !GENUINE_SOURCE_KEY.test(source.sourceKey)) ||
+    (source.kind === "fixture" && !FIXTURE_SOURCE_KEY.test(source.sourceKey))
+  ) {
+    fail("sourceKey is invalid for its source kind");
+  }
   if (typeof source.path !== "string" || source.path.length === 0)
     fail("source path is invalid");
+
+  if (source.kind === "genuine") {
+    if (
+      source.lifecycle === null ||
+      typeof source.lifecycle !== "object" ||
+      Array.isArray(source.lifecycle)
+    ) {
+      fail("genuine source lifecycle must be an object");
+    }
+    const lifecycleKeys = Object.keys(source.lifecycle).sort();
+    const lifecycleExpected =
+      source.lifecycle.state === "superseded"
+        ? ["replacementPath", "state"]
+        : ["state"];
+    if (canonicalize(lifecycleKeys) !== canonicalize(lifecycleExpected))
+      fail("genuine source lifecycle has an unsupported field");
+    if (!["active", "superseded", "withdrawn"].includes(source.lifecycle.state))
+      fail("genuine source lifecycle state is invalid");
+    if (
+      source.lifecycle.state === "superseded" &&
+      (typeof source.lifecycle.replacementPath !== "string" ||
+        source.lifecycle.replacementPath.length === 0)
+    ) {
+      fail("superseded source replacement path is invalid");
+    }
+  }
 
   const expectedProvenance = source.kind === "fixture" ? "fixture" : "probe";
   if (source.report?.provenance?.kind !== expectedProvenance) {
     fail("trusted source kind does not match report provenance");
+  }
+}
+
+function validateLifecycle(genuineSources) {
+  const byPath = new Map(genuineSources.map((source) => [source.path, source]));
+  for (const source of [...genuineSources].sort((left, right) =>
+    compareText(left.path, right.path),
+  )) {
+    if (source.lifecycle.state !== "superseded") continue;
+    if (source.lifecycle.replacementPath === source.path)
+      fail("a superseded source cannot replace itself");
+    const replacement = byPath.get(source.lifecycle.replacementPath);
+    if (replacement === undefined)
+      fail("a superseded source replacement is missing");
+    if (replacement.lifecycle.state !== "active")
+      fail("a superseded source replacement must be active");
+    if (replacement.sourceKey !== source.sourceKey)
+      fail("a superseded source replacement must use the same sourceKey");
   }
 }
 
@@ -158,7 +214,7 @@ function aggregateEntries(entries, standardProfiles) {
         sourceCount: new Set(group.map(({ sourceKey }) => sourceKey)).size,
       };
     })
-    .sort((left, right) => left.claimId.localeCompare(right.claimId));
+    .sort((left, right) => compareText(left.claimId, right.claimId));
 }
 
 /**
@@ -207,11 +263,15 @@ export function buildCatalog({
 
   const genuineSources = admitted.filter(({ kind }) => kind === "genuine");
   const fixtureSources = admitted.filter(({ kind }) => kind === "fixture");
+  validateLifecycle(genuineSources);
   for (const source of genuineSources)
     admittedProfiles(source.report, productionProfiles, "genuine");
   for (const source of fixtureSources)
     admittedProfiles(source.report, fixtureProfiles, "fixture");
-  const reports = genuineSources
+  const activeGenuineSources = genuineSources.filter(
+    ({ lifecycle }) => lifecycle.state === "active",
+  );
+  const reports = activeGenuineSources
     .map((source) =>
       reportEntry(
         source,
@@ -224,7 +284,7 @@ export function buildCatalog({
         }),
       ),
     )
-    .sort((left, right) => left.reportId.localeCompare(right.reportId));
+    .sort((left, right) => compareText(left.reportId, right.reportId));
   const fixtures = fixtureSources
     .map((source) =>
       reportEntry(
@@ -238,11 +298,11 @@ export function buildCatalog({
         }),
       ),
     )
-    .sort((left, right) => left.reportId.localeCompare(right.reportId));
+    .sort((left, right) => compareText(left.reportId, right.reportId));
 
   return {
     catalogVersion: 1,
-    claims: aggregateEntries(genuineSources, productionProfiles),
+    claims: aggregateEntries(activeGenuineSources, productionProfiles),
     fixtures,
     reports,
   };

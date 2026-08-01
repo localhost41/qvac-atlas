@@ -25,6 +25,7 @@ import { withReportId } from "../../../packages/schema/src/index.js";
 const run = promisify(execFile);
 const siteRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const sourceKey = (character: string) => `source:${character.repeat(32)}`;
 
 function productionProfileOf(report: Record<string, any>) {
   return { ...report.profile, test_only: false };
@@ -79,8 +80,17 @@ function source(
   sourceKey: string,
   path: string,
   kind: "genuine" | "fixture" = "genuine",
+  lifecycle: { state: string; replacementPath?: string } = {
+    state: "active",
+  },
 ) {
-  return { kind, path, report, sourceKey };
+  return {
+    kind,
+    ...(kind === "genuine" ? { lifecycle } : {}),
+    path,
+    report,
+    sourceKey,
+  };
 }
 
 test("fixture pages are visibly segregated from compatibility claims", async () => {
@@ -199,6 +209,10 @@ test("static aggregate cards render the complete claim and observation state mat
       createdAt: "2026-08-01T06:00:00.000Z",
       nodeVersion: "21.7.0",
     });
+    const retired = asProbe(successFixture, {
+      cpuModel: "RETIRED_SITE_CANARY",
+      createdAt: "2026-08-01T07:00:00.000Z",
+    });
     const fixture = structuredClone(successFixture);
     fixture.profile = {
       ...fixture.profile,
@@ -214,35 +228,22 @@ test("static aggregate cards render the complete claim and observation state mat
         { ...productionProfileOf(fixtureReport), test_only: true },
       ],
       sources: [
-        source(observed, "review:observed", "reports/v1/observed.json"),
-        source(
-          reproducedOne,
-          "review:reproduced-one",
-          "reports/v1/reproduced-one.json",
-        ),
-        source(
-          reproducedTwo,
-          "review:reproduced-two",
-          "reports/v1/reproduced-two.json",
-        ),
-        source(fallback, "review:fallback", "reports/v1/fallback.json"),
-        source(
-          mixedSuccess,
-          "review:mixed-success",
-          "reports/v1/mixed-success.json",
-        ),
-        source(
-          mixedFailure,
-          "review:mixed-failure",
-          "reports/v1/mixed-failure.json",
-        ),
-        source(failure, "review:failure", "reports/v1/failure.json"),
+        source(observed, sourceKey("a"), "reports/v1/observed.json"),
+        source(reproducedOne, sourceKey("b"), "reports/v1/reproduced-one.json"),
+        source(reproducedTwo, sourceKey("c"), "reports/v1/reproduced-two.json"),
+        source(fallback, sourceKey("d"), "reports/v1/fallback.json"),
+        source(mixedSuccess, sourceKey("e"), "reports/v1/mixed-success.json"),
+        source(mixedFailure, sourceKey("f"), "reports/v1/mixed-failure.json"),
+        source(failure, sourceKey("1"), "reports/v1/failure.json"),
         source(
           failedFallback,
-          "review:failed-fallback",
+          sourceKey("4"),
           "reports/v1/failed-fallback.json",
         ),
-        source(unknown, "review:unknown", "reports/v1/unknown.json"),
+        source(unknown, sourceKey("2"), "reports/v1/unknown.json"),
+        source(retired, sourceKey("3"), "reports/v1/retired.json", "genuine", {
+          state: "withdrawn",
+        }),
         source(
           fixtureReport,
           "fixture:state-matrix",
@@ -263,6 +264,12 @@ test("static aggregate cards render the complete claim and observation state mat
       ],
     );
     assert.equal(catalog.fixtures.length, 1);
+    assert.equal(catalog.reports.length, 9);
+    assert.equal(serializeCatalog(catalog).includes(retired.report_id), false);
+    assert.equal(
+      serializeCatalog(catalog).includes("RETIRED_SITE_CANARY"),
+      false,
+    );
 
     await mkdir(temporarySite, { recursive: true });
     await symlink(
@@ -398,6 +405,17 @@ test("static aggregate cards render the complete claim and observation state mat
     assert.match(index, /&lt;script data-atlas-state-canary&gt;/);
     assert.doesNotMatch(index, /(?:src|href)="https?:\/\//i);
     assert.doesNotMatch(markupOutsideQuotedAttributes, /<script(?![^>]+src=)/i);
+    assert.doesNotMatch(index, /RETIRED_SITE_CANARY/);
+    await assert.rejects(
+      readFile(
+        join(
+          temporarySite,
+          `dist/reports/${retired.report_id.slice(7)}/index.html`,
+        ),
+        "utf8",
+      ),
+      { code: "ENOENT" },
+    );
 
     assert.match(fixtureIndex, /Not a compatibility claim/);
     assert.match(fixtureIndex, /not-a-claim/);
@@ -429,7 +447,7 @@ test("hostile report markup stays inert through file catalog generation and stat
     const report = withReportId(fixture);
     const sourcePath = "reports/fixtures/hostile-markup.json";
     const registry = {
-      version: 1,
+      version: 2,
       productionProfiles: [],
       fixtureProfiles: [
         {

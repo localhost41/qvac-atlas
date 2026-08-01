@@ -20,19 +20,46 @@ Treat every report pull request as publication of permanent, untrusted data.
    ```json
    {
      "kind": "genuine",
+     "lifecycle": { "state": "active" },
      "path": "reports/v1/sha256-<64 lowercase hex>.json",
-     "sourceKey": "<maintainer-controlled stable source class>"
+     "sourceKey": "source:<32 lowercase hex>"
    }
    ```
 
-   A `sourceKey` must be stable across repeated reports from the same underlying
-   source. Never use a PR number or report ID as proof of independence, and never
-   copy a contributor-authored key from report content or discussion.
+   A genuine `sourceKey` is a repository-scoped opaque 128-bit token. It must be
+   stable across repeated reports from the same underlying source, but must not be
+   derived from or contain a person's name, username, email, organization, PR
+   number, report ID, hardware/device ID, or contributor-authored value.
 
 6. Rebuild the catalog and inspect the exact generated diff. Verify that the badge,
    requested/observed device, compatibility key grouping, source count, report
    detail, and limitations follow the structured evidence.
 7. Require CI success and a final human review before merge.
+
+## Ordinary correction and withdrawal
+
+Never edit or delete an accepted report through the ordinary workflow. A reviewed
+non-sensitive correction adds a new canonical report and active metadata entry,
+then changes the old entry to:
+
+```json
+{
+  "state": "superseded",
+  "replacementPath": "reports/v1/sha256-<replacement report hex>.json"
+}
+```
+
+The replacement must be an existing active genuine report with exactly the same
+opaque `sourceKey`. A normal withdrawal changes only the old lifecycle to
+`{"state":"withdrawn"}`. Both states remove retired evidence from current pages,
+counts, and claims while retaining and validating its append-only report file.
+They do not erase public Git history.
+
+Do not use ordinary withdrawal for a secret, credential, private identifier, or
+other forbidden content. That report must not be retained as ordinary validated
+evidence; stop publication and use the exceptional host-authority incident process.
+There is no CI flag or metadata value that permits report deletion or history
+mutation.
 
 ## Append-only history proof
 
@@ -74,6 +101,9 @@ The audit enforces all of these simultaneously:
 - every genuine registry source maps to one existing report;
 - every genuine report already present at the trusted base remains byte- and
   mode-identical throughout relevant introduced history and at the target;
+- every genuine source has one exact lifecycle, and only active genuine evidence
+  enters current pages, counts, and claims;
+- every superseded source points directly to an active same-source replacement;
 - report ID, schema, semantics, privacy, consent, provenance, and trusted profile
   match all pass;
 - the deterministic catalog equals the checked-in generated file;

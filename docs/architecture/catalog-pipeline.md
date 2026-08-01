@@ -13,8 +13,8 @@ registry/catalog.json (trusted source metadata and profile allowlists)
   -> static Astro pages
 ```
 
-`sourceKey`, source classification, and profile admission live in
-`registry/catalog.json`; they are never accepted from a report. Genuine report
+Registry metadata version 2 owns `sourceKey`, source classification, genuine-source
+lifecycle, and profile admission; none is accepted from a report. Genuine report
 paths use the cross-platform form `reports/v1/sha256-<64 lowercase hex>.json`,
 which must map exactly to the validated `sha256:<same hex>` report ID. Fixtures are
 confined to `reports/fixtures/` or the schema package's fixture corpus. Source paths
@@ -74,8 +74,40 @@ clearly marked fixture lab. They exercise the complete validation and rendering
 path without becoming public compatibility evidence.
 
 Duplicate report IDs or report paths fail the build. Corrections therefore require
-a new report identity and future trusted supersession metadata rather than silently
+a new report identity and trusted supersession metadata rather than silently
 replacing evidence.
+
+## Genuine evidence lifecycle
+
+Every genuine source has exactly one trusted lifecycle object:
+
+- `{"state":"active"}` includes the report in current report pages and claim
+  aggregation.
+- `{"state":"superseded","replacementPath":"reports/v1/sha256-….json"}`
+  retires a corrected report in favor of one directly named active genuine report.
+- `{"state":"withdrawn"}` delists ordinary withdrawn evidence without deleting its
+  append-only report.
+
+A replacement must exist, be active, and use the same opaque source-independence
+key. Self-reference, cross-source replacement, chains, cycles, dangling targets,
+unknown states, extra fields, and fixture lifecycle fields fail closed. All retained
+genuine reports, including retired reports, still pass the complete report,
+profile, path, tracking, and append-only admission gates.
+
+Genuine source independence uses only `source:<32 lowercase hex>`, an opaque
+repository-scoped 128-bit token assigned by maintainers. It must not encode or be
+derived from a name, account, email, organization, PR/report number, or
+hardware/device identifier. Fixture keys remain separately namespaced under
+`fixture:` and cannot satisfy the genuine key contract.
+
+Only active genuine sources cross the presentation boundary; generated output has
+no retirement collection. It never republishes a retired report's hardware, report
+JSON, source path, or report ID. A source key shared with an active replacement
+appears only on that active evidence, never as a retirement record. Retired reports
+are absent from static detail routes, compatibility groups, report counts, source
+counts, and claims. The trusted Git metadata remains the audit record.
+
+## Exact append-only history
 
 Exact history admission checks every introduced parent-child edge for reports
 already trusted at the explicit base. A target that restores the base blob after an
