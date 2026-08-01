@@ -52,6 +52,7 @@ Updated: 2026-08-01
 | ATLAS-034B | governance worker   | Sol xhigh        | completed locally | ATLAS-034                       | Repository ownership, security, release, and public-host bootstrap controls                                  |
 | ATLAS-034C | launch worker       | Sol xhigh        | completed locally | ATLAS-034                       | Deployable static site, contributor walkthrough, private-beta kit, and unsent launch materials               |
 | ATLAS-034D | quality workers     | Sol xhigh        | completed         | ATLAS-034A–034C                 | Integrated community-launch candidate and independent acceptance report                                      |
+| ATLAS-035  | release captain     | Sol xhigh + human| in progress       | ATLAS-034                       | Authorized fixture-only public launch: license, ownership, host, npm, Pages, release, and announcements       |
 
 ## Queue rules
 

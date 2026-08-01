@@ -138,14 +138,20 @@ M1 — Local probe and registry vertical slice.
   known advisories. Repository controls, public-host verification, reviewer
   handoff, private-beta, rollback, release, and unsent announcement materials are
   present. No remote, package, deployment, report, or message was published.
+- ATLAS-035: the project owner authorized the fixture-only community launch,
+  selected Apache-2.0, and named `@localhost41` for the primary, evidence, and
+  security owner roles. Launch execution is in progress. A different GitHub
+  account is still required for the independent Pages approval, and npm
+  publication requires an authenticated publisher session.
 
 ## Next integration gate
 
-The local ATLAS-034 candidate is ready to freeze onto `main`. Community launch then
-requires human license selection, named GitHub owners, an independent reviewer,
-explicit authority to create and protect the public host, npm publisher authority,
-and separate deployment, release, and announcement approvals. Each exact action and
-acceptance check is recorded in `docs/reviews/ATLAS-034-launch-readiness.md` and
+ATLAS-035 is executing the authorized fixture-only launch. Before public-host
+bootstrap, the release captain must produce and independently review a new exact
+Apache-2.0 candidate. Host creation then requires the GitHub login of a Pages
+reviewer other than `@localhost41`; npm publication requires an authenticated
+publisher session. Each exact action and acceptance check is recorded in
+`docs/reviews/ATLAS-034-launch-readiness.md` and
 `docs/operations/public-host-bootstrap.md`.
 
 At the project owner's direction, this launch path skips a new physical ceremony.
