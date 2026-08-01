@@ -23,11 +23,12 @@ path, size, digest, and `llamacpp-completion` engine bound into the grant. The p
 is fully verified before local load and after close, and QVAC's loaded-model info
 must confirm the same ID, type, non-delegated status, and exact path.
 
-This is an intentional stop boundary. A later issuer must display the candidate's
-Apache-2.0 license, exact 386,404,992-byte size, immutable source and destination,
-obtain explicit interactive consent, and recompute the pinned SHA-256 from local
-bytes before it can authorize real execution. The checked-in candidate remains
-claim-ineligible, and no public command can issue acquisition consent.
+This is an intentional stop boundary. A later activation and consent flow must
+display the candidate's Apache-2.0 license, exact 386,404,992-byte size, immutable
+source and destination, obtain explicit interactive consent, and recompute the
+pinned SHA-256 from local bytes before it can authorize real execution. The
+checked-in candidate remains claim-ineligible, and no public command can issue
+acquisition consent.
 
 ## Launch and containment
 

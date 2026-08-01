@@ -7,9 +7,10 @@ Updated: 2026-08-01
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- The dormant executor, hostile-protocol matrix, and private-artifact foundation
-  are integrated on `integration` through commit `2253dca`.
-- The complete workspace passes lint, typecheck, all package tests, five runtime
+- The dormant executor, hostile-protocol matrix, private-artifact foundation, and
+  verified-artifact executor bridge are integrated on `integration` through commit
+  `275cf3d`.
+- The complete workspace passes lint, typecheck, 286 package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -33,7 +34,8 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-016: the real-executor architecture is complete.
 - ATLAS-016A/C: the dormant synthetic-SDK executor/supervisor and independent
   adversarial review are integrated. The executor is not imported by the probe or
-  CLI and has no production grant issuer.
+  CLI; its synthetic issuer remains private, and its public grant wrapper accepts
+  only a consumed capability for the exact pinned verified artifact.
 - ATLAS-016B: tag-scoped model artifact/cache/hash research is integrated. Its
   verdict permits only Atlas-managed private staging; SDK-managed `registry://`
   download is blocked for a production grant.
