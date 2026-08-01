@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./executor-bridge": {
+      "types": "./dist/executor-bridge.d.ts",
+      "import": "./dist/executor-bridge.js"
     }
   },
   "files": [

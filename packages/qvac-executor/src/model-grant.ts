@@ -1,17 +1,24 @@
-const TEST_GRANT_TOKEN = Symbol("qvac-atlas-test-model-grant");
-const issuedGrants = new WeakSet<QvacModelExecutionGrant>();
-const consumedGrants = new WeakSet<QvacModelExecutionGrant>();
-let issueSyntheticGrant: (() => QvacModelExecutionGrant) | undefined;
+import {
+  consumePinnedArtifactForExecutor,
+  type ArtifactExecutionMaterial,
+} from "@qvac-atlas/model-artifact/executor-bridge";
+import type { VerifiedArtifactCapability } from "@qvac-atlas/model-artifact";
 
-/**
- * A deliberately opaque proof that a caller authorized the pinned workload.
- * ATLAS-016A has no production issuer: only the internal synthetic-test entry
- * point can create one.
- */
+const GRANT_TOKEN = Symbol("qvac-atlas-model-execution-grant");
+const issuedGrants = new WeakMap<
+  QvacModelExecutionGrant,
+  ArtifactExecutionMaterial
+>();
+const consumedGrants = new WeakSet<QvacModelExecutionGrant>();
+let issueGrant:
+  | ((material: ArtifactExecutionMaterial) => QvacModelExecutionGrant)
+  | undefined;
+
+/** Opaque, non-serializable and single-use proof for one verified artifact. */
 export class QvacModelExecutionGrant {
-  private constructor(token: symbol) {
-    if (token !== TEST_GRANT_TOKEN) throw new TypeError("invalid-model-grant");
-    issuedGrants.add(this);
+  private constructor(token: symbol, material: ArtifactExecutionMaterial) {
+    if (token !== GRANT_TOKEN) throw new TypeError("invalid-model-grant");
+    issuedGrants.set(this, material);
     Object.freeze(this);
   }
 
@@ -20,20 +27,40 @@ export class QvacModelExecutionGrant {
   }
 
   static {
-    issueSyntheticGrant = () => new QvacModelExecutionGrant(TEST_GRANT_TOKEN);
+    issueGrant = (material) =>
+      new QvacModelExecutionGrant(GRANT_TOKEN, material);
   }
 }
 
-export function internalIssueSyntheticModelGrant(): QvacModelExecutionGrant {
-  if (issueSyntheticGrant === undefined)
-    throw new TypeError("grant-issuer-unavailable");
-  return issueSyntheticGrant();
+/** Consume a verified pinned artifact immediately into an opaque executor grant. */
+export function createQvacModelExecutionGrant(
+  capability: VerifiedArtifactCapability,
+): QvacModelExecutionGrant {
+  const material = consumePinnedArtifactForExecutor(capability);
+  if (issueGrant === undefined) throw new TypeError("grant-issuer-unavailable");
+  return issueGrant(material);
+}
+
+export function internalIssueSyntheticModelGrant(
+  material: ArtifactExecutionMaterial,
+): QvacModelExecutionGrant {
+  if (issueGrant === undefined) throw new TypeError("grant-issuer-unavailable");
+  return issueGrant(
+    Object.freeze({
+      canonicalPath: material.canonicalPath,
+      byteLength: material.byteLength,
+      sha256: material.sha256,
+      engine: material.engine,
+    }),
+  );
 }
 
 export function internalConsumeIssuedModelGrant(
   value: QvacModelExecutionGrant,
-): boolean {
-  if (!issuedGrants.has(value) || consumedGrants.has(value)) return false;
+): ArtifactExecutionMaterial | undefined {
+  if (consumedGrants.has(value)) return undefined;
+  const material = issuedGrants.get(value);
+  if (material === undefined) return undefined;
   consumedGrants.add(value);
-  return true;
+  return material;
 }

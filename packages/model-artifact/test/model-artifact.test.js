@@ -29,8 +29,13 @@ import {
   internalAcquireArtifact,
   internalConsumeArtifact,
   internalInspectArtifact,
+  internalIssueArtifact,
   internalIssueConsent,
 } from "../dist/internal.js";
+import {
+  consumePinnedArtifactForExecutor,
+  validateArtifactExecutionMaterial,
+} from "../dist/executor-bridge.js";
 
 const temporaryDirectories = [];
 const originalFetch = globalThis.fetch;
@@ -267,11 +272,11 @@ test("public acquisition ignores hostile candidate, source, and hook extras", as
   assert.equal(hostileHookCalled, false);
   assert.equal(networkCalls, beforeCalls + 1);
   assert.equal(networkUrls.at(-1), PINNED_MODEL_CANDIDATE.sourceUrl);
-  assert.deepEqual(await partials(root), []);
   assert.equal(
     (await readdir(root)).includes("hostile-private-model.gguf"),
     false,
   );
+  assert.deepEqual(await partials(root), []);
 });
 
 test("acquires atomically with private modes and returns only an opaque capability", async () => {
@@ -704,12 +709,69 @@ test("all source failures remain fixed and path-free", async () => {
   );
 });
 
-test("remains dormant, package-private, and network-free under acceptance", async () => {
+test("executor bridge is exact, pinned, single-use, and descriptor-safe", async () => {
+  const { root } = await testPaths();
+  await mkdir(root, { mode: 0o700 });
+  const target = join(root, PINNED_MODEL_CANDIDATE.filename);
+  const bytes = Buffer.from("tiny bridge artifact");
+  await writeFile(target, bytes, { mode: 0o600 });
+  const materialCandidate = Object.freeze({
+    ...PINNED_MODEL_CANDIDATE,
+    byteLength: bytes.byteLength,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  });
+
+  const nonPinned = internalIssueArtifact({
+    canonicalPath: await realpath(target),
+    candidate: materialCandidate,
+  });
+  assert.throws(
+    () => consumePinnedArtifactForExecutor(nonPinned),
+    (error) => error?.code === "artifact-execution-capability-invalid",
+  );
+  assert.throws(
+    () => consumePinnedArtifactForExecutor(nonPinned),
+    (error) => error?.code === "artifact-execution-capability-invalid",
+  );
+
+  const pinned = internalIssueArtifact({
+    canonicalPath: await realpath(target),
+    candidate: PINNED_MODEL_CANDIDATE,
+  });
+  const forged = Object.create(Object.getPrototypeOf(pinned));
+  assert.throws(
+    () => consumePinnedArtifactForExecutor(forged),
+    (error) => error?.code === "artifact-execution-capability-invalid",
+  );
+  const execution = consumePinnedArtifactForExecutor(pinned);
+  assert.equal(Object.isFrozen(execution), true);
+  assert.deepEqual(Object.keys(execution).sort(), [
+    "byteLength",
+    "canonicalPath",
+    "engine",
+    "sha256",
+  ]);
+  assert.throws(
+    () => consumePinnedArtifactForExecutor(pinned),
+    (error) => error?.code === "artifact-execution-capability-invalid",
+  );
+  await assert.rejects(
+    validateArtifactExecutionMaterial(execution),
+    (error) => error?.code === "artifact-execution-validation-failed",
+  );
+});
+
+test("remains dormant with one narrow executor dependency and no real network", async () => {
+  const beforeCalls = networkCalls;
   const { readFile: read } = await import("node:fs/promises");
   const packageManifest = JSON.parse(
     await read(new URL("../package.json", import.meta.url), "utf8"),
   );
-  assert.deepEqual(Object.keys(packageManifest.exports), ["."]);
+  assert.deepEqual(Object.keys(packageManifest.exports).sort(), [
+    ".",
+    "./executor-bridge",
+  ]);
+  assert.equal("./internal" in packageManifest.exports, false);
   const publicApi = await import("../dist/index.js");
   assert.equal(
     Object.keys(publicApi).some(
@@ -717,16 +779,29 @@ test("remains dormant, package-private, and network-free under acceptance", asyn
     ),
     false,
   );
+  const bridgeApi = await import("../dist/executor-bridge.js");
+  assert.deepEqual(Object.keys(bridgeApi).sort(), [
+    "consumePinnedArtifactForExecutor",
+    "validateArtifactExecutionMaterial",
+  ]);
   for (const relative of [
     "../../cli/package.json",
     "../../probe/package.json",
     "../../catalog/package.json",
     "../../schema/package.json",
-    "../../qvac-executor/package.json",
   ]) {
     const manifest = await read(new URL(relative, import.meta.url), "utf8");
     assert.equal(manifest.includes("@qvac-atlas/model-artifact"), false);
   }
-  assert.equal(networkCalls, 1);
-  assert.deepEqual(networkUrls, [PINNED_MODEL_CANDIDATE.sourceUrl]);
+  const executorManifest = JSON.parse(
+    await read(
+      new URL("../../qvac-executor/package.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.equal(
+    executorManifest.dependencies["@qvac-atlas/model-artifact"],
+    "workspace:*",
+  );
+  assert.equal(networkCalls, beforeCalls);
 });

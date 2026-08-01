@@ -1,4 +1,5 @@
 import { constants, type Stats } from "node:fs";
+import { createHash } from "node:crypto";
 import {
   lstat,
   mkdir,
@@ -74,17 +75,20 @@ async function assertPhysicalComponents(
   }
 }
 
-export async function openPrivateRoot(path: string): Promise<OpenPrivateRoot> {
+async function openPrivateRootWithPolicy(
+  path: string,
+  createMissing: boolean,
+): Promise<OpenPrivateRoot> {
   let handle: FileHandle | undefined;
   try {
     if (process.platform === "win32")
       throw new ArtifactError("artifact-private-root-unsafe");
-    await assertPhysicalComponents(path, true);
+    await assertPhysicalComponents(path, createMissing);
     let pathStat: Stats;
     try {
       pathStat = await lstat(path);
     } catch (error) {
-      if (!isMissing(error)) throw error;
+      if (!createMissing || !isMissing(error)) throw error;
       const parent = await realpath(dirname(path));
       if (basename(path) === "." || basename(path) === "..") throw error;
       await mkdir(join(parent, basename(path)), { mode: 0o700 });
@@ -126,6 +130,16 @@ export async function openPrivateRoot(path: string): Promise<OpenPrivateRoot> {
     if (error instanceof ArtifactError) throw error;
     throw new ArtifactError("artifact-private-root-unsafe");
   }
+}
+
+export function openPrivateRoot(path: string): Promise<OpenPrivateRoot> {
+  return openPrivateRootWithPolicy(path, true);
+}
+
+export function openExistingPrivateRoot(
+  path: string,
+): Promise<OpenPrivateRoot> {
+  return openPrivateRootWithPolicy(path, false);
 }
 
 export async function assertRootStable(root: OpenPrivateRoot): Promise<void> {
@@ -231,5 +245,31 @@ export async function pathExists(path: string): Promise<boolean> {
   } catch (error) {
     if (isMissing(error)) return false;
     throw new ArtifactError("artifact-cache-unsafe");
+  }
+}
+
+export async function hashExactDescriptor(
+  handle: FileHandle,
+  expectedSize: number,
+  failure: ArtifactErrorCode,
+): Promise<string> {
+  try {
+    const hash = createHash("sha256");
+    const buffer = Buffer.allocUnsafe(64 * 1024);
+    let offset = 0;
+    while (offset < expectedSize) {
+      const length = Math.min(buffer.length, expectedSize - offset);
+      const { bytesRead } = await handle.read(buffer, 0, length, offset);
+      if (bytesRead === 0) throw new ArtifactError(failure);
+      hash.update(buffer.subarray(0, bytesRead));
+      offset += bytesRead;
+    }
+    const extra = Buffer.allocUnsafe(1);
+    if ((await handle.read(extra, 0, 1, offset)).bytesRead !== 0)
+      throw new ArtifactError(failure);
+    return hash.digest("hex");
+  } catch (error) {
+    if (error instanceof ArtifactError) throw error;
+    throw new ArtifactError(failure);
   }
 }

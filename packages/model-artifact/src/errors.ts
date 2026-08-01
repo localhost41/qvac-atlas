@@ -10,7 +10,9 @@ export type ArtifactErrorCode =
   | "artifact-hash-mismatch"
   | "artifact-publish-collision"
   | "artifact-publish-failed"
-  | "artifact-verification-failed";
+  | "artifact-verification-failed"
+  | "artifact-execution-capability-invalid"
+  | "artifact-execution-validation-failed";
 
 /** Fixed, path-free failure safe to render at a trust boundary. */
 export class ArtifactError extends Error {

@@ -49,6 +49,12 @@ const rootExitSendFailureRunnerPath = path.join(
   "fixtures",
   "root-exit-send-failure-runner.mjs",
 );
+const afterBootstrapRootExitRunnerPath = path.join(
+  packageRoot,
+  "test",
+  "fixtures",
+  "after-bootstrap-root-exit-runner.mjs",
+);
 
 function childMessage(child) {
   return new Promise((resolve, reject) => {
@@ -153,6 +159,65 @@ test("launches from a clean cwd and bootstraps the exact SDK only over IPC", asy
   assert.equal(await isMissing(configMarker), true);
   assert.equal(await isMissing(workerMarker), true);
 });
+
+test(
+  "after-SDK bootstrap failure reaps a fast root and its surviving descendant",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const fixture = await createProject();
+    const tempCwd = await makeTemporaryDirectory(
+      "qvac-resolver-after-bootstrap-failure-",
+    );
+    t.after(() =>
+      Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+    );
+    const resolution = await resolveProjectLocalSdk(fixture.root);
+    assert.equal(resolution.status, "resolved");
+    let rootPid;
+    let afterHookRan = false;
+
+    await assert.rejects(
+      () =>
+        launchResolvedSdkChild({
+          handle: resolution.handle,
+          runnerPath: afterBootstrapRootExitRunnerPath,
+          tempCwd,
+          beforeBootstrap(child) {
+            rootPid = child.pid;
+          },
+          async afterSdkBootstrapSent(child) {
+            afterHookRan = true;
+            assert.deepEqual(await childMessage(child), {
+              type: "root-ready-to-exit",
+            });
+            if (child.connected) {
+              await new Promise((resolve) => child.once("disconnect", resolve));
+            }
+            await new Promise((resolve, reject) => {
+              child.send({ type: "private-second-bootstrap" }, (error) => {
+                if (error) reject(error);
+                else resolve();
+              });
+            });
+          },
+        }),
+      (error) => {
+        assert.ok(error instanceof SdkChildLaunchError);
+        assert.equal(error.code, "qvac-child-launch-failed");
+        assert.equal(JSON.stringify(error).includes("private"), false);
+        return true;
+      },
+    );
+
+    assert.equal(afterHookRan, true);
+    const grandchildPid = Number(
+      await readFile(path.join(tempCwd, "grandchild.pid"), "utf8"),
+    );
+    assert.equal(Number.isSafeInteger(rootPid), true);
+    assert.throws(() => process.kill(rootPid, 0));
+    assert.throws(() => process.kill(grandchildPid, 0));
+  },
+);
 
 test("accepts a clean cwd reached through a canonicalized parent alias", async (t) => {
   const fixture = await createProject();

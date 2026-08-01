@@ -87,3 +87,9 @@ The hardware/OS combination may itself be identifying. Publication therefore req
 - Atlas never installs QVAC. Any future model download requires a separate size,
   license, destination, and cache disclosure plus explicit consent and local hash
   verification. No such production downloader is currently enabled.
+- The dormant local-model bridge consumes one verified pinned-artifact capability
+  into an opaque single-use executor grant. Only exact frozen path/size/hash/type
+  material crosses a private parent-to-child IPC bootstrap; the supervised child
+  fully verifies it before local-path load, confirms QVAC reports that exact local
+  model, and fully verifies it again after unload and close. This bridge is not
+  wired to probe, CLI, reports, profiles, downloads, or claims.

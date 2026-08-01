@@ -16,10 +16,11 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.{js,mjs}\" package.json tsconfig.json",
-    "test": "pnpm --filter @qvac-atlas/qvac-resolver build && pnpm --filter @qvac-atlas/probe build && pnpm build && node --test test/**/*.test.js",
-    "typecheck": "tsc --noEmit --project tsconfig.json"
+    "test": "pnpm --filter @qvac-atlas/model-artifact build && pnpm --filter @qvac-atlas/qvac-resolver build && pnpm --filter @qvac-atlas/probe build && pnpm build && node --test test/**/*.test.js",
+    "typecheck": "pnpm --filter @qvac-atlas/model-artifact build && pnpm --filter @qvac-atlas/qvac-resolver build && tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
+    "@qvac-atlas/model-artifact": "workspace:*",
     "@qvac-atlas/qvac-resolver": "workspace:*"
   },
   "devDependencies": {

@@ -1,39 +1,33 @@
 # QVAC executor boundary
 
-Status: ATLAS-016A dormant integration foundation. The executor has no production
-model authorization issuer, probe-pipeline binding, CLI command, downloader,
-uploader, or claim-producing path.
+Status: ATLAS-020 dormant verified-artifact integration. The executor has no
+acquisition-consent issuer, probe-pipeline binding, CLI command, downloader,
+uploader, profile approval, or claim-producing path.
 
 ## Package boundary
 
-`@qvac-atlas/qvac-executor` depends at runtime only on the project-local SDK
-resolver. It structurally implements the probe package's `RunnerExecutor` contract
-without importing probe at runtime. Probe is used only by the synthetic integration
-test. Neither `@qvac-atlas/probe` nor `@qvac-atlas/cli` depends on the executor.
+`@qvac-atlas/qvac-executor` depends at runtime on the project-local SDK resolver
+and the narrow model-artifact executor bridge. It implements the probe package's
+`RunnerExecutor` shape without importing probe at runtime. Probe is used only by
+synthetic integration tests. Neither probe nor CLI depends on the executor.
 
 `ProjectLocalQvacExecutor` stores the resolver handle and model grant in JavaScript
 private fields. The model grant is backed by private weak collections, is
 single-use, has no enumerable state, serializes as `undefined`, and cannot be
-forged by constructing an object with the public prototype. ATLAS-016A has an
-internal test issuer in its compiled implementation, but the package export map
-does not expose that subpath. There is no production issuer.
+forged by constructing an object with the public prototype. Its public issuer
+accepts only a consumed capability for the exact pinned artifact. An arbitrary
+material issuer remains confined to the unexported synthetic-test surface.
 
-The child uses the built-in `SMOLLM2_360M_INST_Q8` registry descriptor only against
-the synthetic SDK fixture in ATLAS-016A. Adding a production issuer is not enough
-to activate this code. Before any production issuer or wiring, the child must be
-changed to load an Atlas-staged canonical local artifact through a tag-verified SDK
-0.16 public API, so the bytes actually given to QVAC are the bytes Atlas hashed.
-ATLAS-016A is not a network sandbox: deliberately combining the internal synthetic
-grant with a real resolved SDK could allow that registry descriptor to invoke
-QVAC's own download behavior. Dormancy is enforced by the unexported issuer and
-absence from probe/CLI wiring, not by intercepting SDK network calls.
+The child never reads a registry descriptor. It accepts only the canonical local
+path, size, digest, and `llamacpp-completion` engine bound into the grant. The path
+is fully verified before local load and after close, and QVAC's loaded-model info
+must confirm the same ID, type, non-delegated status, and exact path.
 
 This is an intentional stop boundary. A later issuer must display the candidate's
 Apache-2.0 license, exact 386,404,992-byte size, immutable source and destination,
 obtain explicit interactive consent, and recompute the pinned SHA-256 from local
-bytes before it can authorize real execution. The exact SDK 0.16 local-file/cache
-contract still needs tag-scoped source verification. The checked-in candidate
-remains claim-ineligible.
+bytes before it can authorize real execution. The checked-in candidate remains
+claim-ineligible, and no public command can issue acquisition consent.
 
 ## Launch and containment
 
@@ -41,8 +35,10 @@ The executor creates a fresh temporary cwd and calls the resolver's
 `launchResolvedSdkChild`. Its `beforeBootstrap` callback synchronously installs
 IPC, exit, error, stdout, stderr, deadline, and process-group supervision before
 the resolver transmits SDK path material. The audited SDK entry travels only in
-the resolver's private bootstrap IPC. It is absent from argv, environment,
-structured events, errors, and returned evidence.
+the resolver's first private bootstrap IPC. The exact artifact material follows in
+one second parent-to-child message inside the same launch-failure cleanup envelope.
+Neither bootstrap enters argv, environment, structured events, errors, or returned
+evidence.
 
 POSIX children are detached process-group leaders. Timeout or protocol failure
 sends group `SIGTERM`, waits 250 ms, sends group `SIGKILL`, and has a bounded
@@ -91,7 +87,7 @@ the already-passed shutdown phase as a defined timeout failure.
 
 Default deadlines are 180 seconds overall; 15 seconds for bootstrap/import; 10
 seconds for heartbeat; 120 seconds for model load; 30 seconds for inference; and
-10 seconds for shutdown.
+30 seconds for shutdown so the second full hash remains phase-bounded.
 
 ## Audited child lifecycle
 
@@ -99,17 +95,18 @@ The call shape is pinned to the public SDK 0.16 boundaries recorded in
 `docs/research/runtime-feasibility.md` at release commit
 `034d3158daf39b247a79e89e2cd90599a070960d`:
 
-1. Receive, revalidate, and import the resolver-provided SDK entry.
-2. Require `heartbeat`, `loadModel`, `completion`, `unloadModel`, `close`, and the
-   `SMOLLM2_360M_INST_Q8` descriptor.
+1. Install both bootstrap receivers synchronously, then receive/import the SDK and
+   parse the exact artifact bootstrap.
+2. Require `heartbeat`, `loadModel`, `getLoadedModelInfo`, `completion`,
+   `unloadModel`, and `close`.
 3. `await heartbeat()`.
-4. Load the descriptor with context 512, requested `gpu`, and 999 GPU layers.
-5. Request the fixed eight-token, seed-one, temperature-zero completion and await
-   `run.final`.
-6. Require nonempty trimmed content without transmitting or storing that content.
-7. Emit only an exact terminal `cpu|gpu` observation when present.
-8. In `finally`, unload the loaded model with `clearStorage: false`, then call
-   `close()` even when unload fails.
+4. Descriptor-safely verify the private root and artifact, exact size, and SHA-256.
+5. Load only the canonical path as `llamacpp-completion` with context 512,
+   requested `gpu`, and 999 GPU layers.
+6. Require loaded-model info to report the same ID, non-delegated type, and path.
+7. Run the fixed completion and emit only an exact terminal `cpu|gpu` observation.
+8. Unload any returned ID with `clearStorage: false`, always call `close()`, then
+   fully revalidate artifact bytes and pre-load root/file identity.
 
 Synthetic tests use an exact accepted `@qvac/sdk@0.16.0` manifest and a module with
 that public runtime shape. They prove Atlas's binding, protocol, privacy, and

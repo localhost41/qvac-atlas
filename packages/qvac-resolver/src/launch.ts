@@ -38,6 +38,7 @@ export interface LaunchResolvedSdkChildOptions {
   tempCwd: string;
   sourceEnv?: NodeJS.ProcessEnv;
   beforeBootstrap: (child: ChildProcess) => void | Promise<void>;
+  afterSdkBootstrapSent?: (child: ChildProcess) => void | Promise<void>;
 }
 
 export interface SdkBootstrapMessage {
@@ -161,7 +162,7 @@ async function settlesWithin(
 }
 
 /**
- * The child has not received contributor SDK code when this runs. Wait for the
+ * A bootstrap step failed either before or after the SDK handoff. Wait for the
  * process to be reaped after TERM, escalate to KILL after a bounded grace, and
  * never expose the child back to the caller on a failed launch.
  */
@@ -223,6 +224,7 @@ export async function launchResolvedSdkChild(
           reject(new SdkChildLaunchError("qvac-child-launch-failed"));
         });
       });
+      await options.afterSdkBootstrapSent?.(child);
     } catch {
       await terminateFailedBootstrap(child, settled);
       throw new SdkChildLaunchError("qvac-child-launch-failed");

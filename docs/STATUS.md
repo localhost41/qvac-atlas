@@ -9,7 +9,7 @@ Updated: 2026-08-01
 - The protected release line is `main`; current milestone integration occurs on `integration`.
 - The dormant executor, hostile-protocol matrix, and private-artifact foundation
   are integrated on `integration` through commit `2253dca`.
-- The complete workspace passes lint, typecheck, 254 package tests, five runtime
+- The complete workspace passes lint, typecheck, all package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -42,7 +42,13 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-019: dormant Atlas-private artifact acquisition and validation is
   integrated, with explicit consent capability, exact pinned HTTPS source,
   descriptor rehashing, and atomic no-clobber publication. It remains absent from
-  the executor, probe, CLI, and claim pipeline.
+  the probe, CLI, and claim pipeline.
+- ATLAS-020: the dormant verified-artifact executor bridge is complete. It binds
+  one exact pinned capability to an opaque single-use grant, sends only exact
+  material through a second supervised private bootstrap, verifies before local
+  load, confirms the SDK-reported loaded path, and revalidates after close. It adds
+  no acquisition consent issuer, user command, report field, profile approval, or
+  claim path.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
@@ -50,11 +56,10 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-ATLAS-020 may now bind a consumed verified-artifact capability to the isolated
-child through a separate dormant bridge. It must use only the canonical local path,
-verify the SDK-reported loaded path, preserve process containment, and remain absent
-from the probe and CLI. Production claim admission and user-facing real execution
-stay disabled until a hash-verified real lifecycle succeeds.
+ATLAS-021 may now design the explicit real-mode disclosure and consent sequence
+that can activate the already-dormant acquisition and execution capabilities from
+the probe/CLI. Production claim admission and user-facing real execution stay
+disabled until a hash-verified real lifecycle succeeds.
 
 ## Known risks
 

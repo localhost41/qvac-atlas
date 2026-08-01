@@ -1,8 +1,8 @@
 # Private model artifact boundary
 
-Status: ATLAS-019 dormant acquisition foundation. No CLI command, probe binding,
-model execution grant, report field, candidate eligibility, or profile allowlist is
-added by this work.
+Status: ATLAS-020 dormant acquisition and executor-bridge foundation. No CLI
+command, probe binding, acquisition-consent issuer, report field, candidate
+eligibility, or profile allowlist is enabled.
 
 ## Candidate and disclosure
 
@@ -31,9 +31,11 @@ module-private weak collections. They have no enumerable state, serialize as
 Consent is bound to the candidate and requested private root and is consumed before
 the first filesystem or byte-source effect, including when acquisition later
 fails. ATLAS-019 includes only an unexported synthetic consent issuer for tests;
-the package export map exposes neither that issuer nor artifact inspection or
-consumption. A later reviewed bridge can add a production issuer/consumer without
-weakening the capability representation.
+the package export map exposes neither that issuer nor general artifact inspection
+or consumption. Its narrow `./executor-bridge` export consumes a capability exactly
+once, requires the exact pinned candidate, and returns only frozen path, size,
+SHA-256, and engine material to the trusted executor. Forged, reused, and
+non-pinned capabilities fail with one fixed path-free code.
 
 ## Filesystem and source controls
 
@@ -75,11 +77,17 @@ tests use only an unexported injected byte-source seam and disable network acces
 All boundary failures have fixed codes and messages. They contain no URL, local
 path, response body, upstream exception, or digest material.
 
-## Dormancy and next boundary
+## Execution revalidation and dormancy
 
-The package is not imported by probe, CLI, catalog, schema, or the QVAC executor.
-The candidate remains ineligible for compatibility claims. ATLAS-020 must first
-review the local-file SDK bridge, connect explicit interactive disclosure and
-consent, consume the verified artifact capability exactly once, and ensure QVAC
-receives the canonical path whose descriptor Atlas verified. Merely adding a
-consent issuer must not activate model execution.
+The bridge reopens only an existing owner-controlled `0700` root and its `0600`,
+single-link regular artifact. It performs descriptor-bounded exact-size hashing and
+stable path/descriptor checks before local load and after close. The two successful
+validations retain and compare private root/file identity snapshots, detecting even
+a byte-identical permanent inode replacement across QVAC exposure. D-014's
+same-UID quiescence limitation still applies; this does not claim cryptographic
+binding against swap-and-restore races.
+
+The package is imported only by the dormant QVAC executor, not probe, CLI, catalog,
+or schema. The candidate remains ineligible for claims. ATLAS-021 must separately
+design interactive disclosure and consent activation; the execution-grant wrapper
+alone neither authorizes acquisition nor runs the model.

@@ -26,7 +26,7 @@ export const DEFAULT_EXECUTOR_LIMITS: ExecutorLimits = Object.freeze({
     "worker-start": 10_000,
     "model-load": 120_000,
     inference: 30_000,
-    "clean-shutdown": 10_000,
+    "clean-shutdown": 30_000,
   }),
   termGraceMs: 250,
   killSettleMs: 2_000,

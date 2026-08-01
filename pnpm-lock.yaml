@@ -82,6 +82,9 @@ importers:
 
   packages/qvac-executor:
     dependencies:
+      '@qvac-atlas/model-artifact':
+        specifier: workspace:*
+        version: link:../model-artifact
       '@qvac-atlas/qvac-resolver':
         specifier: workspace:*
         version: link:../qvac-resolver
