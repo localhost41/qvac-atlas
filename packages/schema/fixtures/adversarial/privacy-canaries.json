@@ -528,5 +528,85 @@
     "name": "camel-case plural shell history assignment",
     "value": "shellHistories=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered token assignment",
+    "value": "TOKEN2=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered API key assignment",
+    "value": "API_KEY2=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered password assignment",
+    "value": "PASSWORD2_BACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered cookie assignment",
+    "value": "COOKIE3=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered camel-case private key assignment",
+    "value": "privateKey2=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numbered camel-case access key assignment",
+    "value": "accessKey2=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym API key assignment",
+    "value": "APIkeyBackup=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym private key assignment",
+    "value": "PRIVATEkeyBackup=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "kebab-case API key assignment",
+    "value": "api-key=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "dotted API key assignment",
+    "value": "api.key=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "camel-case acronym-plural machine ID assignment",
+    "value": "machineIDs=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym plural access key assignment",
+    "value": "accessKEYs=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym plural private key assignment",
+    "value": "privateKEYs=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym compact plural API key assignment",
+    "value": "APIKEYs=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym API key assignment",
+    "value": "APIkey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "acronym-leading secret key assignment",
+    "value": "AWSSecretKey=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]

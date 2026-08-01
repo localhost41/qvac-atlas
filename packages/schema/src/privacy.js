@@ -47,8 +47,18 @@ const CONTENT_RULES = [
 // Report strings are schema-bounded to 1024 characters. Capture only the name and
 // the first value character so findings can never reflect the assigned value.
 const ASSIGNMENT_CANDIDATE =
-  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{1,1024})[ \t]*=[ \t]*\S/gi;
+  /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
+const COMPACT_KEY_SEGMENTS = new Map([
+  ["ACCESSKEY", "ACCESS_KEY"],
+  ["ACCESSKEYS", "ACCESS_KEYS"],
+  ["PRIVATEKEY", "PRIVATE_KEY"],
+  ["PRIVATEKEYS", "PRIVATE_KEYS"],
+  ["SECRETACCESSKEY", "SECRET_ACCESS_KEY"],
+  ["SECRETACCESSKEYS", "SECRET_ACCESS_KEYS"],
+  ["SECRETKEY", "SECRET_KEY"],
+  ["SECRETKEYS", "SECRET_KEYS"],
+]);
 const PLURAL_ASSIGNMENT_SEGMENTS = new Map([
   ["ADDRESSES", "ADDRESS"],
   ["APIKEYS", "APIKEY"],
@@ -126,39 +136,62 @@ function hasHighEntropySecret(value, pointer) {
   return candidates.some((candidate) => shannonEntropy(candidate) >= 4.25);
 }
 
-function normalizeAssignmentName(rawName) {
-  return rawName
-    .replace(/^_+/u, "")
+function addNumericBoundaries(value) {
+  return value
+    .replace(/([A-Za-z])([0-9])/gu, "$1_$2")
+    .replace(/([0-9])([A-Za-z])/gu, "$1_$2");
+}
+
+function assignmentNameVariants(rawName) {
+  const compact = rawName.replace(/[.-]+/gu, "_").replace(/^_+/u, "");
+  const simpleCamel = compact.replace(/([a-z0-9])([A-Z])/gu, "$1_$2");
+  const acronymCamel = compact
     .replace(/([A-Z]+)([A-Z][a-z])/gu, "$1_$2")
-    .replace(/([a-z0-9])([A-Z])/gu, "$1_$2")
-    .toUpperCase();
+    .replace(/([a-z0-9])([A-Z])/gu, "$1_$2");
+  return new Set(
+    [compact, simpleCamel, acronymCamel].map((candidate) =>
+      addNumericBoundaries(candidate).toUpperCase(),
+    ),
+  );
+}
+
+function isSensitiveAssignmentName(name) {
+  const segments = name
+    .split("_")
+    .filter(Boolean)
+    .flatMap((segment) =>
+      (COMPACT_KEY_SEGMENTS.get(segment) ?? segment).split("_"),
+    );
+  const policySegments = segments.map(
+    (segment) => PLURAL_ASSIGNMENT_SEGMENTS.get(segment) ?? segment,
+  );
+  const policyName = policySegments.join("_");
+  if (
+    FORBIDDEN_KEY.test(name) ||
+    FORBIDDEN_KEY.test(policyName) ||
+    /(?:API_?KEYS?|AUTHORIZATIONS?|COOKIES?|CREDENTIALS?|PASSWORDS?|SECRETS?|TOKENS?)$/u.test(
+      name,
+    )
+  )
+    return true;
+  for (let index = 0; index + 1 < policySegments.length; index += 1) {
+    if (
+      SENSITIVE_KEY_PREFIXES.has(policySegments[index]) &&
+      policySegments[index + 1] === "KEY"
+    )
+      return true;
+  }
+  return false;
 }
 
 function hasSensitiveAssignment(value) {
   for (const match of value.matchAll(ASSIGNMENT_CANDIDATE)) {
-    const name = normalizeAssignmentName(match[1]);
-    // This deliberate fixture-safe negation is exact; prefixed or suffixed forms
-    // still expose a TOKEN segment and remain sensitive.
-    if (name === "NOT_TOKEN") continue;
-    const segments = name.split("_").filter(Boolean);
-    const policySegments = segments.map(
-      (segment) => PLURAL_ASSIGNMENT_SEGMENTS.get(segment) ?? segment,
-    );
-    const policyName = policySegments.join("_");
-    if (
-      FORBIDDEN_KEY.test(name) ||
-      FORBIDDEN_KEY.test(policyName) ||
-      /(?:API_?KEYS?|AUTHORIZATIONS?|COOKIES?|CREDENTIALS?|PASSWORDS?|SECRETS?|TOKENS?)$/u.test(
-        name,
-      )
-    )
-      return true;
-    for (let index = 0; index + 1 < policySegments.length; index += 1) {
-      if (
-        SENSITIVE_KEY_PREFIXES.has(policySegments[index]) &&
-        policySegments[index + 1] === "KEY"
-      )
-        return true;
+    const variants = assignmentNameVariants(match[1]);
+    // This deliberate fixture-safe negation is exact under every supported name
+    // convention; prefixed or suffixed forms remain sensitive.
+    if (variants.has("NOT_TOKEN")) continue;
+    for (const name of variants) {
+      if (isSensitiveAssignmentName(name)) return true;
     }
   }
   return false;
