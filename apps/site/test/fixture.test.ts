@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
+  buildCatalog,
   buildCatalogFromFiles,
   serializeCatalog,
 } from "../../../packages/catalog/src/index.js";
@@ -24,6 +25,63 @@ import { withReportId } from "../../../packages/schema/src/index.js";
 const run = promisify(execFile);
 const siteRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+
+function productionProfileOf(report: Record<string, any>) {
+  return { ...report.profile, test_only: false };
+}
+
+function asProbe(
+  report: Record<string, any>,
+  {
+    cpuModel,
+    createdAt,
+    nodeVersion = "22.17.0",
+  }: { cpuModel: string; createdAt: string; nodeVersion?: string },
+) {
+  const copy = structuredClone(report);
+  copy.created_at = createdAt;
+  copy.provenance = { kind: "probe", fixture_id: null };
+  copy.platform.cpu.model = cpuModel;
+  copy.runtime.node_version = nodeVersion;
+  return withReportId(copy);
+}
+
+function failedAfterBackend(success: Record<string, any>, createdAt: string) {
+  const copy = structuredClone(success);
+  copy.created_at = createdAt;
+  copy.execution.phases = [
+    { name: "qvac-import", status: "passed", duration_ms: 35 },
+    { name: "worker-start", status: "passed", duration_ms: 210 },
+    { name: "model-load", status: "passed", duration_ms: 840 },
+    { name: "inference", status: "failed", duration_ms: 420 },
+  ];
+  copy.execution.termination = {
+    kind: "exit-code",
+    exit_code: 1,
+    signal: null,
+    last_completed_phase: "model-load",
+  };
+  copy.result = {
+    workload_status: "failed",
+    completion_observed: false,
+    failure: {
+      category: "workload-failed",
+      phase: "inference",
+      code: "WORKLOAD_FAILED",
+      sanitized_excerpt: null,
+    },
+  };
+  return withReportId(copy);
+}
+
+function source(
+  report: Record<string, any>,
+  sourceKey: string,
+  path: string,
+  kind: "genuine" | "fixture" = "genuine",
+) {
+  return { kind, path, report, sourceKey };
+}
 
 test("fixture pages are visibly segregated from compatibility claims", async () => {
   const html = await readFile(
@@ -77,6 +135,247 @@ test("static output has a restrictive CSP, skip link, and no external services",
     html,
     /google-analytics|googletagmanager|plausible\.io|posthog|segment\.io/i,
   );
+});
+
+test("static aggregate cards render the complete claim and observation state matrix", async () => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "qvac-atlas-states-"));
+  const temporarySite = join(temporaryRoot, "apps/site");
+  const canary =
+    "<script data-atlas-state-canary>globalThis.atlasStatePwned=true</script>";
+
+  try {
+    const [successFixture, fallbackFixture] = await Promise.all([
+      readFile(
+        join(repositoryRoot, "packages/schema/fixtures/success.json"),
+        "utf8",
+      ).then(JSON.parse),
+      readFile(
+        join(repositoryRoot, "packages/schema/fixtures/fallback.json"),
+        "utf8",
+      ).then(JSON.parse),
+    ]);
+    const observed = asProbe(successFixture, {
+      cpuModel: canary,
+      createdAt: "2026-08-01T01:00:00.000Z",
+    });
+    const reproducedOne = asProbe(successFixture, {
+      cpuModel: "Reproduced state CPU",
+      createdAt: "2026-08-01T02:00:00.000Z",
+    });
+    const reproducedTwo = asProbe(successFixture, {
+      cpuModel: "Reproduced state CPU",
+      createdAt: "2026-08-01T02:00:01.000Z",
+    });
+    const fallback = asProbe(fallbackFixture, {
+      cpuModel: "Fallback state CPU",
+      createdAt: "2026-08-01T03:00:00.000Z",
+    });
+    const mixedSuccess = asProbe(successFixture, {
+      cpuModel: "Mixed state CPU",
+      createdAt: "2026-08-01T04:00:00.000Z",
+    });
+    const mixedFailure = failedAfterBackend(
+      mixedSuccess,
+      "2026-08-01T04:00:01.000Z",
+    );
+    const failureSuccessShape = asProbe(successFixture, {
+      cpuModel: "Failure state CPU",
+      createdAt: "2026-08-01T05:00:00.000Z",
+    });
+    const failure = failedAfterBackend(
+      failureSuccessShape,
+      "2026-08-01T05:00:01.000Z",
+    );
+    const unknown = asProbe(successFixture, {
+      cpuModel: "Unknown state CPU",
+      createdAt: "2026-08-01T06:00:00.000Z",
+      nodeVersion: "21.7.0",
+    });
+    const fixture = structuredClone(successFixture);
+    fixture.profile = {
+      ...fixture.profile,
+      id: "atlas-state-matrix-fixture",
+      artifact_sha256: "b".repeat(64),
+    };
+    fixture.provenance.fixture_id = "state-matrix";
+    const fixtureReport = withReportId(fixture);
+
+    const catalog = buildCatalog({
+      productionProfiles: [productionProfileOf(successFixture)],
+      fixtureProfiles: [
+        { ...productionProfileOf(fixtureReport), test_only: true },
+      ],
+      sources: [
+        source(observed, "review:observed", "reports/v1/observed.json"),
+        source(
+          reproducedOne,
+          "review:reproduced-one",
+          "reports/v1/reproduced-one.json",
+        ),
+        source(
+          reproducedTwo,
+          "review:reproduced-two",
+          "reports/v1/reproduced-two.json",
+        ),
+        source(fallback, "review:fallback", "reports/v1/fallback.json"),
+        source(
+          mixedSuccess,
+          "review:mixed-success",
+          "reports/v1/mixed-success.json",
+        ),
+        source(
+          mixedFailure,
+          "review:mixed-failure",
+          "reports/v1/mixed-failure.json",
+        ),
+        source(failure, "review:failure", "reports/v1/failure.json"),
+        source(unknown, "review:unknown", "reports/v1/unknown.json"),
+        source(
+          fixtureReport,
+          "fixture:state-matrix",
+          "reports/fixtures/state-matrix.json",
+          "fixture",
+        ),
+      ],
+    });
+    assert.equal(catalog.claims.length, 6);
+    assert.deepEqual(
+      [...new Set(catalog.claims.map((entry) => entry.claim.claim))].sort(),
+      [
+        "mixed",
+        "observed-failure",
+        "observed-success",
+        "reproduced-success",
+        "unknown",
+      ],
+    );
+    assert.equal(catalog.fixtures.length, 1);
+
+    await mkdir(temporarySite, { recursive: true });
+    await symlink(
+      join(siteRoot, "node_modules"),
+      join(temporarySite, "node_modules"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    await Promise.all([
+      cp(join(siteRoot, "src"), join(temporarySite, "src"), {
+        recursive: true,
+      }),
+      cp(join(siteRoot, "public"), join(temporarySite, "public"), {
+        recursive: true,
+      }),
+    ]);
+    await writeFile(
+      join(temporarySite, "src/generated/catalog.json"),
+      serializeCatalog(catalog),
+    );
+    await run(
+      "pnpm",
+      [
+        "exec",
+        "astro",
+        "--root",
+        temporarySite,
+        "--config",
+        relative(temporarySite, join(siteRoot, "astro.config.mjs")),
+        "build",
+        "--silent",
+      ],
+      {
+        cwd: siteRoot,
+        env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1" },
+      },
+    );
+
+    const [index, fixtureIndex] = await Promise.all([
+      readFile(join(temporarySite, "dist/index.html"), "utf8"),
+      readFile(join(temporarySite, "dist/fixtures/index.html"), "utf8"),
+    ]);
+    for (const label of [
+      "Observed success",
+      "Reproduced success",
+      "Mixed evidence",
+      "Observed failure",
+      "Unknown",
+      "Fallback",
+      "Inconclusive",
+    ]) {
+      assert.match(index, new RegExp(label));
+    }
+    for (const heading of [
+      "Derived requested-device claim",
+      "Aggregate observation",
+      "Report observations",
+      "Actual-device evidence",
+      "Reports",
+      "Trusted sources",
+    ]) {
+      assert.match(index, new RegExp(heading));
+    }
+    for (const state of [
+      "observed-success",
+      "reproduced-success",
+      "mixed",
+      "observed-failure",
+      "unknown",
+    ]) {
+      assert.match(index, new RegExp(`<code>${state}</code>`));
+    }
+    assert.match(index, /aria-labelledby="genuine-catalog-card-/);
+    assert.match(
+      index,
+      /aria-label="Derived requested-device claim: Observed success"/,
+    );
+    assert.match(index, /2 reviewed reports/);
+    assert.match(index, /2 trusted sources/);
+    assert.match(
+      index,
+      /requested-device claim remains unknown; actual-device evidence is shown separately/,
+    );
+    assert.match(index, /both success and failure evidence/);
+    assert.match(
+      index,
+      /Evidence is insufficient to establish success or failure/,
+    );
+    assert.match(index, /default-src 'self'; script-src 'self'/);
+    const fallbackStart = index.indexOf(
+      'data-hardware="Fallback state CPU · GeForce RTX 3060"',
+    );
+    assert.notEqual(fallbackStart, -1);
+    const fallbackCard = index.slice(
+      fallbackStart,
+      index.indexOf("</li>", fallbackStart),
+    );
+    assert.match(fallbackCard, /data-claim-state="unknown"/);
+    assert.match(fallbackCard, /data-outcome="fallback"/);
+    assert.match(fallbackCard, /<dt>Requested device<\/dt> <dd>gpu<\/dd>/);
+    assert.match(
+      fallbackCard,
+      /<dt>Directly observed device<\/dt> <dd>cpu<\/dd>/,
+    );
+    assert.match(fallbackCard, /badge-inconclusive"> Inconclusive/);
+    assert.match(fallbackCard, /badge-fallback"> Fallback/);
+    assert.match(fallbackCard, /Actual-device evidence/);
+    assert.match(fallbackCard, /badge-observed-success"> Observed success/);
+    const markupOutsideQuotedAttributes = index.replace(/="[^"]*"/g, '=""');
+    assert.doesNotMatch(
+      markupOutsideQuotedAttributes,
+      /<script data-atlas-state-canary>/,
+    );
+    assert.match(index, /&lt;script data-atlas-state-canary&gt;/);
+    assert.doesNotMatch(index, /(?:src|href)="https?:\/\//i);
+    assert.doesNotMatch(markupOutsideQuotedAttributes, /<script(?![^>]+src=)/i);
+
+    assert.match(fixtureIndex, /Not a compatibility claim/);
+    assert.match(fixtureIndex, /not-a-claim/);
+    assert.match(fixtureIndex, /1 synthetic report/);
+    assert.match(fixtureIndex, /Excluded from aggregate claims/);
+    assert.match(fixtureIndex, /Synthetic fixture data is excluded/);
+    assert.match(fixtureIndex, /default-src 'self'; script-src 'self'/);
+    assert.doesNotMatch(fixtureIndex, /(?:src|href)="https?:\/\//i);
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
 });
 
 test("hostile report markup stays inert through file catalog generation and static rendering", async () => {

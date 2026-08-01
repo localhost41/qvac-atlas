@@ -1,17 +1,41 @@
+export type ClaimState =
+  | "observed-success"
+  | "reproduced-success"
+  | "mixed"
+  | "observed-failure"
+  | "unknown";
+
+export type ObservationState =
+  "success" | "fallback" | "failure" | "inconclusive";
+
+export type ActualDeviceClaim = "observed-success" | "reproduced-success";
+
 export interface CatalogFacets {
   hardware: string;
   observedDevice: string;
   os: string;
-  outcome: string;
+  outcome: ObservationState;
   qvac: string;
   requestedDevice: string;
 }
 
 export interface DerivedClaim {
-  actual_backend_claim: string | null;
-  claim: string;
-  observation: string;
+  actual_backend_claim: ActualDeviceClaim | null;
+  claim: ClaimState;
+  observation: ObservationState;
   reasons: string[];
+}
+
+export interface CatalogCardEntry {
+  actualDeviceClaims: ActualDeviceClaim[];
+  claim: DerivedClaim;
+  facets: CatalogFacets & { claimState: ClaimState | "not-a-claim" };
+  fixture: boolean;
+  links: { href: string; label: string }[];
+  reportCount: number;
+  reportObservations: ObservationState[];
+  sourceCount: number | null;
+  title: string;
 }
 
 export interface ReportEvidence {

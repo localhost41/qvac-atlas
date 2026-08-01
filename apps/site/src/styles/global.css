@@ -16,6 +16,8 @@
   --line: #cad4ce;
   --accent: #087f5b;
   --warning: #7a4d00;
+  --danger: #a02f2f;
+  --success: #087f5b;
 }
 
 * {
@@ -188,7 +190,31 @@ button {
 }
 
 .result-card h3 {
-  margin-top: 0;
+  margin-top: 0.2rem;
+}
+
+.card-kind,
+.claim-panel > p:first-child {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.claim-panel {
+  border-left: 0.3rem solid var(--line);
+  margin-block: 1rem;
+  padding: 0.65rem 0.9rem;
+}
+
+.claim-panel p:last-child {
+  margin: 0.35rem 0 0;
+}
+
+.fixture-card .claim-panel {
+  border-left-color: #d28b18;
 }
 
 .summary {
@@ -224,6 +250,36 @@ button {
   border-radius: 999px;
   font-size: 0.85rem;
   padding: 0.15rem 0.55rem;
+}
+
+.badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge-observed-success,
+.badge-reproduced-success,
+.badge-success {
+  border-color: var(--success);
+}
+
+.badge-observed-failure,
+.badge-failure {
+  border-color: var(--danger);
+}
+
+.badge-mixed,
+.badge-fallback,
+.badge-not-a-claim {
+  border-color: #d28b18;
+}
+
+.limitation {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  margin-bottom: 0;
+  padding-top: 1rem;
 }
 
 .evidence-links {
@@ -280,5 +336,7 @@ pre {
     --line: #3b4941;
     --accent: #61d9ad;
     --warning: #f3c46d;
+    --danger: #ff9d9d;
+    --success: #61d9ad;
   }
 }

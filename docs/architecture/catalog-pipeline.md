@@ -91,6 +91,14 @@ backend. Report fields are interpolated as text and never passed to raw-HTML,
 Markdown, style, or script directives. Detail pages show the exact validated JSON
 as escaped text together with derivation reasons and evidence limitations.
 
+Aggregate cards keep three schema-derived concepts visibly separate: the
+requested-device claim, aggregate observation, and actual-device evidence. They
+also show the member reports' observations so a valid fallback remains visible
+even though the requested-device aggregate claim is `unknown`, and show reviewed
+report and trusted-source counts. Fixture cards use an explicit non-claim label and
+never borrow genuine aggregate language. Text labels accompany every visual state;
+color is never the only distinction.
+
 ## Filesystem snapshot boundary
 
 Configuration, reports, generated catalog data, and contribution-audit reports are

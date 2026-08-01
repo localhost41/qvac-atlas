@@ -2,22 +2,69 @@
 import generatedCatalog from "../generated/catalog.json";
 import CatalogList from "../components/CatalogList.astro";
 import Base from "../layouts/Base.astro";
-import type { CatalogData } from "../types/catalog.js";
+import type {
+  ActualDeviceClaim,
+  CatalogData,
+  ObservationState,
+} from "../types/catalog.js";
 
 const catalog = generatedCatalog as unknown as CatalogData;
 const slugs = new Map(
   catalog.reports.map((entry) => [entry.reportId, entry.slug]),
 );
-const claims = catalog.claims.map((entry) => ({
-  ...entry,
-  links: entry.reportIds.flatMap((reportId) => {
-    const slug = slugs.get(reportId);
-    return slug === undefined
-      ? []
-      : [{ href: `/reports/${slug}/`, label: reportId }];
-  }),
-  title: entry.facets.hardware,
-}));
+const reports = new Map(
+  catalog.reports.map((entry) => [entry.reportId, entry]),
+);
+const observationOrder: ObservationState[] = [
+  "success",
+  "fallback",
+  "failure",
+  "inconclusive",
+];
+const actualDeviceOrder: ActualDeviceClaim[] = [
+  "observed-success",
+  "reproduced-success",
+];
+const claims = catalog.claims.map((entry) => {
+  const reportObservations = observationOrder.filter((observation) =>
+    entry.reportIds.some(
+      (reportId) => reports.get(reportId)?.claim.observation === observation,
+    ),
+  );
+  const actualDeviceClaims =
+    entry.claim.actual_backend_claim === null
+      ? actualDeviceOrder.filter((claim) =>
+          entry.reportIds.some(
+            (reportId) =>
+              reports.get(reportId)?.claim.actual_backend_claim === claim,
+          ),
+        )
+      : [entry.claim.actual_backend_claim];
+  return {
+    ...entry,
+    actualDeviceClaims,
+    claim: entry.claim,
+    facets: {
+      ...entry.facets,
+      claimState: entry.claim.claim,
+      outcome:
+        reportObservations.length === 1
+          ? reportObservations[0]!
+          : entry.claim.observation,
+    },
+    fixture: false,
+    links: entry.reportIds.flatMap((reportId) => {
+      const slug = slugs.get(reportId);
+      return slug === undefined
+        ? []
+        : [{ href: `/reports/${slug}/`, label: reportId }];
+    }),
+    reportCount: entry.reportIds.length,
+    reportObservations,
+    sourceCount: entry.sourceCount,
+    title: entry.facets.hardware,
+  };
+});
 ---
 
 <Base title="QVAC Atlas — compatibility registry">

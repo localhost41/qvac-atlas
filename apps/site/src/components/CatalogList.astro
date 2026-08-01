@@ -1,26 +1,13 @@
 ---
-interface Facets {
-  hardware: string;
-  observedDevice: string;
-  os: string;
-  outcome: string;
-  qvac: string;
-  requestedDevice: string;
-}
-
-interface Link {
-  href: string;
-  label: string;
-}
-
-interface Entry {
-  facets: Facets;
-  links: Link[];
-  title: string;
-}
+import type {
+  ActualDeviceClaim,
+  CatalogCardEntry,
+  ClaimState,
+  ObservationState,
+} from "../types/catalog.js";
 
 interface Props {
-  entries: Entry[];
+  entries: CatalogCardEntry[];
   heading: string;
   id: string;
 }
@@ -32,7 +19,8 @@ const filterDefinitions = [
   ["qvac", "QVAC version"],
   ["requestedDevice", "Requested device"],
   ["observedDevice", "Observed device"],
-  ["outcome", "Outcome"],
+  ["claimState", "Derived claim"],
+  ["outcome", "Observation"],
 ] as const;
 const values = Object.fromEntries(
   filterDefinitions.map(([key]) => [
@@ -40,6 +28,51 @@ const values = Object.fromEntries(
     [...new Set(entries.map((entry) => entry.facets[key]))].sort(),
   ]),
 ) as Record<(typeof filterDefinitions)[number][0], string[]>;
+
+const claimLabels: Record<ClaimState | "not-a-claim", string> = {
+  "observed-success": "Observed success",
+  "reproduced-success": "Reproduced success",
+  mixed: "Mixed evidence",
+  "observed-failure": "Observed failure",
+  unknown: "Unknown",
+  "not-a-claim": "Not a compatibility claim",
+};
+const observationLabels: Record<ObservationState, string> = {
+  success: "Success",
+  fallback: "Fallback",
+  failure: "Failure",
+  inconclusive: "Inconclusive",
+};
+const actualDeviceLabels: Record<ActualDeviceClaim, string> = {
+  "observed-success": "Observed success",
+  "reproduced-success": "Reproduced success",
+};
+
+function plural(count: number, singular: string): string {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+}
+
+function limitation(entry: CatalogCardEntry): string {
+  if (entry.fixture) {
+    return "Synthetic fixture data is excluded from compatibility claims and aggregate evidence.";
+  }
+  if (entry.claim.claim === "reproduced-success") {
+    return "Reproduced only for this exact compatibility key and its reviewed source grouping; it is not universal support.";
+  }
+  if (entry.claim.claim === "observed-success") {
+    return "One compatible observation does not establish universal support for other versions or devices.";
+  }
+  if (entry.claim.claim === "mixed") {
+    return "Compatible reports contain both success and failure evidence, so this is not a success claim.";
+  }
+  if (entry.claim.claim === "observed-failure") {
+    return "A defined failure on this exact configuration does not establish failure on other configurations.";
+  }
+  if (entry.reportObservations.includes("fallback")) {
+    return "A different device completed the workload. The requested-device claim remains unknown; actual-device evidence is shown separately.";
+  }
+  return "Evidence is insufficient to establish success or failure for the requested device.";
+}
 ---
 
 <section class="catalog" id={id} data-catalog>
@@ -71,18 +104,35 @@ const values = Object.fromEntries(
 
   <ul class="results" data-results>
     {
-      entries.map((entry) => (
+      entries.map((entry, index) => (
         <li
-          class="result-card"
+          class:list={["result-card", { "fixture-card": entry.fixture }]}
           data-record
           data-hardware={entry.facets.hardware}
           data-os={entry.facets.os}
           data-qvac={entry.facets.qvac}
           data-requested-device={entry.facets.requestedDevice}
           data-observed-device={entry.facets.observedDevice}
+          data-claim-state={entry.facets.claimState}
           data-outcome={entry.facets.outcome}
+          aria-labelledby={`${id}-card-${index}-title`}
         >
-          <h3>{entry.title}</h3>
+          <p class="card-kind">
+            {entry.fixture ? "Synthetic fixture" : "Aggregate evidence"}
+          </p>
+          <h3 id={`${id}-card-${index}-title`}>{entry.title}</h3>
+          <div class="claim-panel">
+            <p>Derived requested-device claim</p>
+            <p>
+              <span
+                class={`badge badge-${entry.facets.claimState}`}
+                aria-label={`Derived requested-device claim: ${claimLabels[entry.facets.claimState]}`}
+              >
+                {claimLabels[entry.facets.claimState]}
+              </span>{" "}
+              <code>{entry.facets.claimState}</code>
+            </p>
+          </div>
           <dl class="summary">
             <div>
               <dt>OS</dt>
@@ -93,22 +143,64 @@ const values = Object.fromEntries(
               <dd>{entry.facets.qvac}</dd>
             </div>
             <div>
-              <dt>Requested</dt>
+              <dt>Requested device</dt>
               <dd>{entry.facets.requestedDevice}</dd>
             </div>
             <div>
-              <dt>Observed</dt>
+              <dt>Directly observed device</dt>
               <dd>{entry.facets.observedDevice}</dd>
             </div>
             <div>
-              <dt>Outcome</dt>
+              <dt>Aggregate observation</dt>
               <dd>
-                <span class={`badge badge-${entry.facets.outcome}`}>
-                  {entry.facets.outcome}
+                <span class={`badge badge-${entry.claim.observation}`}>
+                  {observationLabels[entry.claim.observation]}
                 </span>
               </dd>
             </div>
+            <div>
+              <dt>Report observations</dt>
+              <dd class="badge-list">
+                {entry.reportObservations.map((observation) => (
+                  <span class={`badge badge-${observation}`}>
+                    {observationLabels[observation]}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt>Actual-device evidence</dt>
+              <dd class="badge-list">
+                {entry.actualDeviceClaims.length === 0
+                  ? "None established"
+                  : entry.actualDeviceClaims.map((claim) => (
+                      <span class={`badge badge-${claim}`}>
+                        {actualDeviceLabels[claim]}
+                      </span>
+                    ))}
+              </dd>
+            </div>
+            <div>
+              <dt>Reports</dt>
+              <dd>
+                {plural(
+                  entry.reportCount,
+                  entry.fixture ? "synthetic report" : "reviewed report",
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Trusted sources</dt>
+              <dd>
+                {entry.sourceCount === null
+                  ? "Excluded from aggregate claims"
+                  : plural(entry.sourceCount, "trusted source")}
+              </dd>
+            </div>
           </dl>
+          <p class="limitation">
+            <strong>Limitation:</strong> {limitation(entry)}
+          </p>
           <p class="evidence-links">
             {entry.links.map((link) => (
               <a href={link.href}>
