@@ -221,6 +221,7 @@ export class ExecutorSupervisor {
   #timeoutPhase: LifecyclePhase | null = null;
   #timeoutAfterFailure = false;
   #protocolPhase: LifecyclePhase | null = null;
+  #lifecycleTerminal = false;
   #terminating = false;
   #finalized = false;
   #disposed = false;
@@ -294,6 +295,10 @@ export class ExecutorSupervisor {
 
   readonly #onMessage = (message: unknown): void => {
     if (this.#finalized || this.#disposed || this.#override !== null) return;
+    if (this.#lifecycleTerminal) {
+      this.#protocolFailure();
+      return;
+    }
     let bytes: number;
     try {
       bytes = Buffer.byteLength(JSON.stringify(message));
@@ -362,6 +367,7 @@ export class ExecutorSupervisor {
     if (event.phase === "clean-shutdown") {
       if (event.state === "failed" && this.#firstFailure === null)
         this.#firstFailure = event.phase;
+      this.#lifecycleTerminal = true;
       this.#clearPhaseTimer();
     } else {
       this.#armPhaseTimer();
@@ -428,7 +434,7 @@ export class ExecutorSupervisor {
     signalGroup(this.#pid, "SIGTERM");
     await delay(this.#limits.postExitSweepMs);
     signalGroup(this.#pid, "SIGKILL");
-    this.#ensureTerminalPhase();
+    this.#ensureTerminalPhase(code, signal);
     const events = this.#buildEvents(code, signal);
     this.#detachListeners();
     this.#stdout.clear();
@@ -436,7 +442,10 @@ export class ExecutorSupervisor {
     this.#resolveCompletion(events);
   }
 
-  #ensureTerminalPhase(): void {
+  #ensureTerminalPhase(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): void {
     if (this.#override === "protocol") {
       const phase = this.#protocolPhase ?? this.#openPhase ?? "qvac-import";
       if (!this.#phases.some(({ name }) => name === phase)) {
@@ -457,6 +466,24 @@ export class ExecutorSupervisor {
     const alreadyRecorded = this.#phases.some(
       ({ name }) => name === failurePhase,
     );
+    if (
+      code === 0 &&
+      signal === null &&
+      this.#override === null &&
+      !this.#lifecycleTerminal &&
+      this.#firstFailure === null
+    ) {
+      // A clean root exit is not evidence that the unfinished phase failed.
+      if (!alreadyRecorded) {
+        this.#phases.push({
+          type: "phase",
+          name: failurePhase,
+          status: "unknown",
+          duration_ms: null,
+        });
+      }
+      return;
+    }
     if (!alreadyRecorded && this.#firstFailure === null) {
       this.#phases.push({
         type: "phase",
@@ -639,6 +666,19 @@ export class ExecutorSupervisor {
                 sanitized_excerpt: null,
               },
             };
+    } else if (code === 0 && this.#firstFailure === "qvac-import") {
+      // The report contract does not permit a native-runtime failure on exit 0.
+      result = {
+        type: "result",
+        workload_status: "unknown",
+        completion_observed: false,
+        failure: {
+          category: "unknown",
+          phase: this.#firstFailure,
+          code: "RUNNER_EXIT_UNEXPECTED",
+          sanitized_excerpt: null,
+        },
+      };
     } else if (this.#firstFailure !== null) {
       const phase = this.#firstFailure;
       result = {
@@ -660,18 +700,27 @@ export class ExecutorSupervisor {
         completion_observed: false,
         failure: {
           category: "unknown",
-          phase: this.#openPhase ?? "qvac-import",
+          phase:
+            this.#openPhase ??
+            LIFECYCLE_PHASES[this.#expectedPhaseIndex] ??
+            "qvac-import",
           code: "RUNNER_EXIT_UNEXPECTED",
           sanitized_excerpt: null,
         },
       };
     }
 
+    const reportedPhases = this.#reportedPhases();
+    const inferenceAttempted = reportedPhases.some(
+      ({ name, status }) =>
+        name === "inference" && (status === "passed" || status === "failed"),
+    );
+    // An observation made during an incomplete inference is not fixed evidence.
     const backend: ProbeEvent[] =
-      this.#backend === null
+      this.#backend === null || !inferenceAttempted
         ? []
         : [{ type: "backend", backend: this.#backend }];
-    return [...this.#reportedPhases(), ...backend, termination, result];
+    return [...reportedPhases, ...backend, termination, result];
   }
 
   #clearTimers(): void {
