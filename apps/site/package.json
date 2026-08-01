@@ -5,15 +5,16 @@
   "description": "QVAC Atlas static registry scaffold",
   "type": "module",
   "scripts": {
-    "build": "astro build",
+    "build": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro build",
     "lint": "prettier --plugin=prettier-plugin-astro --check \"src/**/*.{astro,ts}\" \"test/**/*.ts\" package.json tsconfig.json astro.config.mjs",
     "test": "tsx --test test/**/*.test.ts",
-    "typecheck": "astro check"
+    "typecheck": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "@types/node": "^24.3.0",
     "astro": "^5.13.7",
+    "cross-env": "^10.0.0",
     "prettier-plugin-astro": "^0.14.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
