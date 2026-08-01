@@ -6,6 +6,9 @@
   "description": "Normative QVAC Atlas report schema, canonicalization, claim derivation, and privacy validation",
   "exports": {
     ".": "./src/index.js",
+    "./report": {
+      "types": "./src/generated/report.d.ts"
+    },
     "./report.schema.json": "./schemas/report.schema.json",
     "./claim.schema.json": "./schemas/claim.schema.json"
   },
@@ -14,14 +17,18 @@
     "src"
   ],
   "scripts": {
-    "build": "node scripts/check-schema.js",
-    "lint": "node --check src/canonicalize.js && node --check src/evidence.js && node --check src/claims.js && node --check src/privacy.js && node --check src/validate.js && node --check src/index.js",
+    "build": "node scripts/check-schema.js && node scripts/generate-report-types.mjs --check",
+    "generate:types": "node scripts/generate-report-types.mjs --write",
+    "lint": "node --check scripts/generate-report-types.mjs && node --check src/canonicalize.js && node --check src/evidence.js && node --check src/claims.js && node --check src/privacy.js && node --check src/validate.js && node --check src/index.js",
     "test": "node --test",
     "typecheck": "node --check src/index.js"
   },
   "dependencies": {
     "ajv": "8.17.1",
     "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "15.0.4"
   },
   "engines": {
     "node": ">=20"

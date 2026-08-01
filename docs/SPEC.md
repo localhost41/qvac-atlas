@@ -59,8 +59,8 @@ All runtime phases have deadlines. Failure finalization retains only structured 
 ## Report principles
 
 - JSON Schema is normative. Runtime schema and semantic validation is mandatory;
-  provisional handwritten TypeScript assembly types remain until ATLAS-017 replaces
-  them with schema-derived types and drift checks.
+  TypeScript assembly types are generated from that schema and guarded by a
+  full-schema digest plus a byte-for-byte drift check.
 - Reports have separate schema, probe, QVAC, and profile versions.
 - Unknown and skipped are explicit; absence is not interpreted as failure.
 - Canonical JSON is deterministic across supported operating systems.

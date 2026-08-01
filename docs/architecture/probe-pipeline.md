@@ -146,12 +146,15 @@ the pipeline uses the existing test-only profile and fixture provenance.
 
 ## Type authority
 
-JSON Schema remains the sole normative report definition. `AtlasReport` and related
-TypeScript interfaces are provisional assembly conveniences because the schema
-package does not yet emit generated types. Runtime schema and semantic validation is
-mandatory immediately before every preview and final write. A later schema-codegen
-packet should replace these interfaces; TypeScript compilation alone must never be
-treated as report validation.
+JSON Schema remains the sole normative report definition. The schema package emits
+a checked-in `AtlasReport` declaration through its type-only `./report` export, and
+the probe derives its convenience aliases through indexed access into that generated
+type. A byte-for-byte in-memory drift gate fails when the normative schema changes
+without regenerating the declaration. The generated banner binds the declaration to
+a canonical SHA-256 of the complete normative schema, including runtime-only
+conditional branches omitted from the TypeScript projection. Runtime schema and
+semantic validation remains mandatory immediately before every preview and final
+write; TypeScript compilation is never treated as report validation.
 
 ## Verification
 
