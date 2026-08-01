@@ -15,11 +15,11 @@ const CONTENT_RULES = [
   ["email", /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i],
   ["windows-user-path", /[A-Za-z]:\\Users\\[^\\\s]+/i],
   ["posix-user-path", /\/(?:Users|home)\/[^/\s"']+/],
-  ["windows-absolute-path", /(?:^|[\s"'(=_])[A-Za-z]:[\\/][^\s"'<>]+/],
-  ["windows-unc-path", /(?:^|[\s"'(=_])\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
+  ["windows-absolute-path", /[A-Za-z]:[\\/][^\s"'<>]+/],
+  ["windows-unc-path", /\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
   [
     "posix-absolute-path",
-    /(?:^|[\s"'(=:_])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^\s"'<>]*)?/,
+    /(?<![A-Za-z0-9./])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^/\s"'<>]+)+/,
   ],
   ["mac-address", /(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}/i],
   [

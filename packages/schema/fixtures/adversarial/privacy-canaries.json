@@ -35,6 +35,11 @@
     "expected_rule": "posix-user-path"
   },
   {
+    "name": "hyphen-delimited generic POSIX path",
+    "value": "prefix-/tmp/private/model.gguf",
+    "expected_rule": "posix-absolute-path"
+  },
+  {
     "name": "Windows home path",
     "value": "failed at C:\\Users\\atlas-fixture\\project\\model.gguf",
     "expected_rule": "windows-user-path"
@@ -43,6 +48,16 @@
     "name": "underscore-delimited Windows home path",
     "value": "prefix_C:\\Users\\private\\model.gguf",
     "expected_rule": "windows-user-path"
+  },
+  {
+    "name": "hyphen-delimited generic Windows path",
+    "value": "prefix-D:\\models\\private\\model.gguf",
+    "expected_rule": "windows-absolute-path"
+  },
+  {
+    "name": "hyphen-delimited Windows UNC path",
+    "value": "prefix-\\\\server\\private\\model.gguf",
+    "expected_rule": "windows-unc-path"
   },
   {
     "name": "email address",
