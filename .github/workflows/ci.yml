@@ -18,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
@@ -27,8 +28,23 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Audit report and registry admission
-        run: node scripts/validate-contribution.mjs
+      - name: Audit PR report history and registry admission
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          TARGET_SHA: ${{ github.sha }}
+        run: node scripts/validate-contribution.mjs --base "$BASE_SHA" --target "$TARGET_SHA"
+      - name: Audit pushed report history and registry admission
+        if: github.event_name == 'push'
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          if [[ ! "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || [[ "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            echo "::error::Push append-only audit requires an exact nonzero before commit."
+            exit 1
+          fi
+          node scripts/validate-contribution.mjs --base "$BASE_SHA" --target "$TARGET_SHA"
       - run: pnpm check
       - name: Rebuild deterministic catalog
         run: node scripts/build-catalog.mjs
