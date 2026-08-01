@@ -245,6 +245,7 @@ test("public acquisition ignores hostile candidate, source, and hook extras", as
       candidate: {
         ...PINNED_MODEL_CANDIDATE,
         sourceUrl: "https://hostile.invalid/private-model",
+        filename: "hostile-private-model.gguf",
         byteLength: 1,
         sha256: "0".repeat(64),
       },
@@ -267,6 +268,10 @@ test("public acquisition ignores hostile candidate, source, and hook extras", as
   assert.equal(networkCalls, beforeCalls + 1);
   assert.equal(networkUrls.at(-1), PINNED_MODEL_CANDIDATE.sourceUrl);
   assert.deepEqual(await partials(root), []);
+  assert.equal(
+    (await readdir(root)).includes("hostile-private-model.gguf"),
+    false,
+  );
 });
 
 test("acquires atomically with private modes and returns only an opaque capability", async () => {
@@ -722,5 +727,6 @@ test("remains dormant, package-private, and network-free under acceptance", asyn
     const manifest = await read(new URL(relative, import.meta.url), "utf8");
     assert.equal(manifest.includes("@qvac-atlas/model-artifact"), false);
   }
-  assert.equal(networkCalls, 0);
+  assert.equal(networkCalls, 1);
+  assert.deepEqual(networkUrls, [PINNED_MODEL_CANDIDATE.sourceUrl]);
 });
