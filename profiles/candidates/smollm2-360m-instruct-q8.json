@@ -1,0 +1,15 @@
+{
+  "status": "source-verified-runtime-unverified",
+  "claim_eligible": false,
+  "profile_id": "atlas-smollm2-360m-lifecycle",
+  "profile_version": "1.0.0-candidate.1",
+  "qvac_model_key": "SMOLLM2_360M_INST_Q8",
+  "repository": "HuggingFaceTB/SmolLM2-360M-Instruct-GGUF",
+  "revision": "593b5a2e04c8f3e4ee880263f93e0bd2901ad47f",
+  "file": "smollm2-360m-instruct-q8_0.gguf",
+  "size_bytes": 386404992,
+  "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+  "license": "Apache-2.0",
+  "engine": "llamacpp-completion",
+  "download_policy": "explicit-consent-only-not-implemented"
+}

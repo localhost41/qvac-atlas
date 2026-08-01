@@ -1,11 +1,14 @@
 {
-  "name": "@qvac-atlas/cli",
-  "version": "0.0.0",
+  "name": "@qvac-atlas/probe",
+  "version": "0.1.0",
   "private": true,
-  "description": "QVAC Atlas fixture-driven CLI shell",
+  "description": "Local-only QVAC Atlas probe pipeline",
   "type": "module",
-  "bin": {
-    "qvac-atlas": "./dist/index.js"
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
@@ -14,7 +17,7 @@
     "typecheck": "tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
-    "@qvac-atlas/probe": "workspace:*"
+    "@qvac-atlas/schema": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
