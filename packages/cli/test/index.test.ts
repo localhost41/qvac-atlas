@@ -29,28 +29,38 @@ test("noninteractive probe refuses before invoking the probe or writing", async 
 });
 
 test("invalid fixture syntax refuses before reading cwd or invoking effects", async () => {
-  const errors: string[] = [];
-  let readCwd = false;
-  const exit = await runCli(["probe", "--output", "report.json"], {
-    interactive: true,
-    cwd: () => {
-      readCwd = true;
-      throw new Error("must not read cwd");
-    },
-    ask: async () => "yes",
-    stdout: () => {},
-    stderr: (value) => errors.push(value),
-    runProbe: async () => {
-      throw new Error("must not run");
-    },
-  });
-  assert.equal(exit, 2);
-  assert.equal(readCwd, false);
-  assert.match(
-    errors.join(""),
-    /This build accepts synthetic fixture scenarios only/,
-  );
-  assert.match(errors.join(""), /separate reviewed activation decision/);
+  const cases = [
+    ["probe", "--output", "report.json"],
+    ["probe", "--fixture", "success", "--fixture", "timeout", "--output", "a"],
+    ["probe", "--fixture", "success", "--output", "a", "--output", "b"],
+    ["probe", "--fixture", "success", "--output", ""],
+    ["probe", "--fixture", "success", "--project", "", "--output", "a"],
+    ["probe", "--fixture", "success", "--output", "a\nb"],
+  ];
+  for (const args of cases) {
+    const errors: string[] = [];
+    let readCwd = false;
+    const exit = await runCli(args, {
+      interactive: true,
+      cwd: () => {
+        readCwd = true;
+        throw new Error("must not read cwd");
+      },
+      ask: async () => "yes",
+      stdout: () => {},
+      stderr: (value) => errors.push(value),
+      runProbe: async () => {
+        throw new Error("must not run");
+      },
+    });
+    assert.equal(exit, 2);
+    assert.equal(readCwd, false);
+    assert.match(
+      errors.join(""),
+      /This build accepts synthetic fixture scenarios only/,
+    );
+    assert.match(errors.join(""), /separate reviewed activation decision/);
+  }
 });
 
 test("probe failures do not echo raw errors or local paths", async () => {

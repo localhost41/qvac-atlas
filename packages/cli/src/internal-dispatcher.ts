@@ -1,4 +1,9 @@
-import { runCli, usage, type CliDependencies } from "./index.js";
+import {
+  parseFixtureArgs,
+  runCli,
+  usage,
+  type CliDependencies,
+} from "./index.js";
 
 interface RealModule {
   runEnabledRealCli(
@@ -73,6 +78,10 @@ export async function dispatchCli(
   if (real === null) {
     if (hasRealFlagIntent(args)) {
       dependencies.stderr(realUsage());
+      return 2;
+    }
+    if (parseFixtureArgs(args) === null) {
+      dependencies.stderr(`${usage()}\n`);
       return 2;
     }
     let interactive: boolean;

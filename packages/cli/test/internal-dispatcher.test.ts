@@ -93,6 +93,35 @@ test("malformed real intent has no effects beyond fixed usage", async () => {
   }
 });
 
+test("malformed fixture syntax has no effects beyond fixed usage", async () => {
+  const cases = [
+    ["probe", "--fixture", "success", "--fixture", "timeout", "--output", "a"],
+    ["probe", "--fixture", "success", "--output", "a", "--output", "b"],
+    [
+      "probe",
+      "--fixture",
+      "success",
+      "--project",
+      "a",
+      "--project",
+      "b",
+      "--output",
+      "c",
+    ],
+    ["probe", "--fixture", "success", "--output", ""],
+    ["probe", "--fixture", "success", "--project", "", "--output", "a"],
+    ["probe", "--fixture", "success", "--output", "a\nb"],
+    ["probe", "--fixture", "success", "--output", "a\rb"],
+    ["probe", "--fixture", "success", "--output", "a\tb"],
+    ["probe", "--fixture", "success", "--output", "x".repeat(4_097)],
+  ];
+  for (const args of cases) {
+    const calls: string[] = [];
+    assert.equal(await dispatchCli(args, dependencies(calls), false), 2);
+    assert.deepEqual(calls, ["stderr"]);
+  }
+});
+
 test("fixture value named --real remains fixture syntax", async () => {
   const calls: string[] = [];
   const exit = await dispatchCli(

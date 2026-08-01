@@ -49,17 +49,31 @@ interface ParsedFixtureArguments {
   scenario: FixtureScenario;
 }
 
-function parseArgs(args: string[]): ParsedFixtureArguments | null {
+function validFixturePath(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= 4_096 &&
+    !/[\x00-\x1f\x7f]/u.test(value)
+  );
+}
+
+export function parseFixtureArgs(
+  args: readonly string[],
+): ParsedFixtureArguments | null {
   if (args[0] !== "probe") return null;
   let output: string | undefined;
   let project = ".";
   let scenario: FixtureScenario | undefined;
+  const seen = new Set<string>();
   for (let index = 1; index < args.length; index += 2) {
     const flag = args[index];
     const value = args[index + 1];
-    if (value === undefined) return null;
-    if (flag === "--output") output = value;
-    else if (flag === "--project") project = value;
+    if (flag === undefined || value === undefined || seen.has(flag))
+      return null;
+    seen.add(flag);
+    if (flag === "--output" && validFixturePath(value)) output = value;
+    else if (flag === "--project" && validFixturePath(value)) project = value;
     else if (flag === "--fixture" && SCENARIOS.has(value as FixtureScenario))
       scenario = value as FixtureScenario;
     else return null;
@@ -72,7 +86,7 @@ export async function runCli(
   args: string[],
   dependencies: CliDependencies,
 ): Promise<number> {
-  const parsed = parseArgs(args);
+  const parsed = parseFixtureArgs(args);
   if (parsed === null) {
     dependencies.stderr(`${usage()}\n`);
     return 2;
