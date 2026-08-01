@@ -186,6 +186,14 @@ test("static aggregate cards render the complete claim and observation state mat
       failureSuccessShape,
       "2026-08-01T05:00:01.000Z",
     );
+    const failedFallbackShape = asProbe(fallbackFixture, {
+      cpuModel: "Failed fallback state CPU",
+      createdAt: "2026-08-01T05:30:00.000Z",
+    });
+    const failedFallback = failedAfterBackend(
+      failedFallbackShape,
+      "2026-08-01T05:30:01.000Z",
+    );
     const unknown = asProbe(successFixture, {
       cpuModel: "Unknown state CPU",
       createdAt: "2026-08-01T06:00:00.000Z",
@@ -229,6 +237,11 @@ test("static aggregate cards render the complete claim and observation state mat
           "reports/v1/mixed-failure.json",
         ),
         source(failure, "review:failure", "reports/v1/failure.json"),
+        source(
+          failedFallback,
+          "review:failed-fallback",
+          "reports/v1/failed-fallback.json",
+        ),
         source(unknown, "review:unknown", "reports/v1/unknown.json"),
         source(
           fixtureReport,
@@ -238,7 +251,7 @@ test("static aggregate cards render the complete claim and observation state mat
         ),
       ],
     });
-    assert.equal(catalog.claims.length, 6);
+    assert.equal(catalog.claims.length, 7);
     assert.deepEqual(
       [...new Set(catalog.claims.map((entry) => entry.claim.claim))].sort(),
       [
@@ -357,6 +370,26 @@ test("static aggregate cards render the complete claim and observation state mat
     assert.match(fallbackCard, /badge-fallback"> Fallback/);
     assert.match(fallbackCard, /Actual-device evidence/);
     assert.match(fallbackCard, /badge-observed-success"> Observed success/);
+    const failedFallbackStart = index.indexOf(
+      'data-hardware="Failed fallback state CPU · GeForce RTX 3060"',
+    );
+    assert.notEqual(failedFallbackStart, -1);
+    const failedFallbackCard = index.slice(
+      failedFallbackStart,
+      index.indexOf("</li>", failedFallbackStart),
+    );
+    assert.match(failedFallbackCard, /data-claim-state="unknown"/);
+    assert.match(failedFallbackCard, /data-outcome="failure"/);
+    assert.match(
+      failedFallbackCard,
+      /<dt>Requested device<\/dt> <dd>gpu<\/dd>/,
+    );
+    assert.match(
+      failedFallbackCard,
+      /<dt>Directly observed device<\/dt> <dd>cpu<\/dd>/,
+    );
+    assert.match(failedFallbackCard, /badge-failure"> Failure/);
+    assert.doesNotMatch(failedFallbackCard, /Observed failure/);
     const markupOutsideQuotedAttributes = index.replace(/="[^"]*"/g, '=""');
     assert.doesNotMatch(
       markupOutsideQuotedAttributes,

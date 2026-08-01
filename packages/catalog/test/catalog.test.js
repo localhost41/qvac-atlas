@@ -184,6 +184,31 @@ test("compatible success and failure evidence produce a mixed claim", async () =
   assert.equal(catalog.claims[0].claim.claim, "mixed");
 });
 
+test("a failed fallback remains an observation, not a requested-device failure claim", async () => {
+  const raw = await fixture("fallback.json");
+  const failure = failedAfterBackend(asProbe(raw));
+  assert.equal(failure.profile.requested_backend, "gpu");
+  assert.equal(failure.execution.backend_observation.backend, "cpu");
+  assert.equal(validatePublishableReport(failure).valid, true);
+
+  const catalog = buildCatalog({
+    productionProfiles: [profileOf(raw)],
+    sources: [
+      source(failure, "review:failed-fallback", "reports/v1/failure.json"),
+    ],
+  });
+
+  assert.equal(catalog.reports[0].claim.observation, "failure");
+  assert.equal(catalog.reports[0].claim.claim, "unknown");
+  assert.equal(
+    catalog.reports[0].claim.reasons.includes("different-backend-observed"),
+    true,
+  );
+  assert.equal(catalog.claims[0].claim.claim, "unknown");
+  assert.notEqual(catalog.claims[0].claim.claim, "observed-failure");
+  assert.notEqual(catalog.claims[0].claim.claim, "mixed");
+});
+
 test("catalog serialization is deterministic across input order", async () => {
   const success = await fixture("success.json");
   const timeout = await fixture("timeout.json");

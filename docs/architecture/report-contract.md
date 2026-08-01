@@ -116,11 +116,14 @@ The rules are deliberately conservative:
 | -------------------------------------------------------------------------------------- | ------------ | ---------------------- | ---------------------- |
 | Standard workload completed; requested device directly observed                        | success      | observed-success       | observed-success       |
 | Standard workload completed; a different device directly observed                      | fallback     | unknown                | observed-success       |
-| Standard workload on an exact QVAC version produced a defined runtime failure          | failure      | observed-failure       | none                   |
+| Standard workload produced a defined failure on the requested/auto-selected device     | failure      | observed-failure       | none                   |
+| Standard workload produced a defined failure after a different device was observed     | failure      | unknown                | none                   |
 | Missing QVAC, skipped work, unknown result, unobserved backend, or nonstandard profile | inconclusive | unknown                | none                   |
 
 Doctor success alone is never sufficient. A completed GPU request observed on CPU
-is useful fallback evidence but not GPU success.
+is useful fallback evidence but not GPU success. Likewise, a failure after CPU was
+directly observed cannot become a failure claim about the requested GPU; the
+failure observation remains visible while the requested-device claim is unknown.
 
 `reproduced-success` requires at least two successful reports with different
 trusted registry `sourceKey` values and different report IDs. Source independence

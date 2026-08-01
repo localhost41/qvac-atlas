@@ -8,6 +8,34 @@ import {
 } from "../src/index.js";
 import { asProbe, jsonFixture, standardProfiles } from "./helpers.js";
 
+function failedAfterObservedBackend(report) {
+  const copy = structuredClone(report);
+  copy.created_at = "2026-08-01T00:00:00.000Z";
+  copy.execution.phases = [
+    { name: "qvac-import", status: "passed", duration_ms: 1 },
+    { name: "worker-start", status: "passed", duration_ms: 1 },
+    { name: "model-load", status: "passed", duration_ms: 1 },
+    { name: "inference", status: "failed", duration_ms: 1 },
+  ];
+  copy.execution.termination = {
+    kind: "clean-exit",
+    exit_code: 0,
+    signal: null,
+    last_completed_phase: "model-load",
+  };
+  copy.result = {
+    workload_status: "failed",
+    completion_observed: false,
+    failure: {
+      category: "workload-failed",
+      phase: "inference",
+      code: "WORKLOAD_FAILED",
+      sanitized_excerpt: null,
+    },
+  };
+  return withReportId(copy);
+}
+
 test("contributors cannot author public claim state", async () => {
   const report = await jsonFixture("success.json");
   report.claim_status = "reproduced-success";
@@ -226,6 +254,46 @@ test("workload errors may exit cleanly but failure phase order remains mandatory
     deriveReportClaim(reorderedReport, { standardProfiles: profiles }).claim,
     "unknown",
   );
+});
+
+test("a failure on a different observed device is not attributed to the requested device", async () => {
+  const cases = [
+    { fixture: "fallback.json", requested: "gpu", observed: "cpu" },
+    { fixture: "success.json", requested: "cpu", observed: "gpu" },
+  ];
+
+  for (const { fixture, requested, observed } of cases) {
+    const report = asProbe(await jsonFixture(fixture));
+    report.profile.requested_backend = requested;
+    report.execution.backend_observation.backend = observed;
+    const profiles = (await standardProfiles()).map((profile) => ({
+      ...profile,
+      requested_backend: requested,
+    }));
+    const failed = failedAfterObservedBackend(report);
+    assert.equal(validateReport(failed).valid, true);
+    const claim = deriveReportClaim(failed, { standardProfiles: profiles });
+    assert.equal(claim.observation, "failure");
+    assert.equal(claim.claim, "unknown");
+    assert.equal(claim.actual_backend_claim, null);
+    assert.equal(claim.reasons.includes("defined-runtime-failure"), true);
+    assert.equal(claim.reasons.includes("different-backend-observed"), true);
+  }
+
+  for (const requested of ["gpu", "auto"]) {
+    const report = asProbe(await jsonFixture("success.json"));
+    report.profile.requested_backend = requested;
+    const profiles = (await standardProfiles()).map((profile) => ({
+      ...profile,
+      requested_backend: requested,
+    }));
+    const claim = deriveReportClaim(failedAfterObservedBackend(report), {
+      standardProfiles: profiles,
+    });
+    assert.equal(claim.observation, "failure");
+    assert.equal(claim.claim, "observed-failure");
+    assert.equal(claim.reasons.includes("different-backend-observed"), false);
+  }
 });
 
 test("32-bit Windows native exit codes remain representable", async () => {

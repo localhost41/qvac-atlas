@@ -22,6 +22,10 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
     report.result.completion_observed === true;
   const actualBackend = report.execution.backend_observation.backend;
   const requestedBackend = report.profile.requested_backend;
+  const differentBackendObserved =
+    evidence.backendObserved &&
+    requestedBackend !== "auto" &&
+    requestedBackend !== actualBackend;
 
   if (!evidence.trustedProfile) reasons.push("nonstandard-profile");
   if (!evidence.supportedRuntime) reasons.push("unsupported-node-runtime");
@@ -33,9 +37,7 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
 
   if (evidence.successEligible) {
     reasons.push("standard-workload-completed");
-    const fellBack =
-      requestedBackend !== "auto" && requestedBackend !== actualBackend;
-    if (fellBack) {
+    if (differentBackendObserved) {
       reasons.push("different-backend-observed");
       return {
         observation: "fallback",
@@ -55,6 +57,15 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
 
   if (evidence.failureEligible) {
     reasons.push("defined-runtime-failure");
+    if (differentBackendObserved) {
+      reasons.push("different-backend-observed");
+      return {
+        observation: "failure",
+        claim: "unknown",
+        actual_backend_claim: null,
+        reasons: [...new Set(reasons)].sort(),
+      };
+    }
     return {
       observation: "failure",
       claim: "observed-failure",
