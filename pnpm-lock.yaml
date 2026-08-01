@@ -47,9 +47,18 @@ importers:
 
   packages/cli:
     dependencies:
+      '@qvac-atlas/model-artifact':
+        specifier: workspace:*
+        version: link:../model-artifact
       '@qvac-atlas/probe':
         specifier: workspace:*
         version: link:../probe
+      '@qvac-atlas/qvac-executor':
+        specifier: workspace:*
+        version: link:../qvac-executor
+      '@qvac-atlas/qvac-resolver':
+        specifier: workspace:*
+        version: link:../qvac-resolver
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
