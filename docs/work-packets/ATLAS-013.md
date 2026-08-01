@@ -67,9 +67,8 @@ Before creating the disposable diff, all of these conditions must be true:
   `git status --porcelain=v1 --untracked-files=all`. A non-Git or dirty volunteer
   project is out of scope for this first run.
 - The prepared disposable Atlas clone is a fresh full clone at the recorded Atlas
-  commit, has an empty status, and has passed the reproducible-repository gate on
-  Node major 22 with `pnpm@11.10.0`. Dependency preparation happens before the
-  physical ceremony and must not install QVAC or mutate the volunteer project.
+  commit, has an empty status, and has completed the separate reproducibility setup
+  below on Node major 22 with `pnpm@11.10.0`.
 - The host is macOS arm64, Node major 22 is active, and the package-manager version
   is exactly `11.10.0`. A different OS, architecture, Node major, or pnpm version
   stops the event.
@@ -88,6 +87,27 @@ Before creating the disposable diff, all of these conditions must be true:
 
 Record only pass/fail for the clean-tree, platform, tool-version, SDK-presence,
 TTY, destination, and capacity checks. Do not preserve raw command output.
+
+### Reproducibility setup is a separate completed phase
+
+Clone and workspace-dependency setup are not part of the zero-effects physical
+preflight. Complete them in the disposable Atlas clone before opening the physical
+event:
+
+1. On Node 22 with `pnpm@11.10.0`, run the reproducible-repository gate from
+   `docs/RELEASE-CHECKLIST.md`, including a frozen-lockfile install and the full
+   checks and catalog diff.
+2. If the release captain requires offline dependency setup, use
+   `pnpm install --offline --frozen-lockfile` with a previously populated store and
+   stop if it cannot complete; never silently fall back to network. Otherwise any
+   approved networked `pnpm install --frozen-lockfile` belongs only to this earlier,
+   separately recorded setup phase.
+3. This phase may prepare Atlas workspace dependencies only. It must not install or
+   import QVAC, fetch or inspect the model/cache, mutate the volunteer project, or
+   create the physical report.
+4. Reconfirm the clone's exact commit and clean tree after the reproducibility gate,
+   then mark setup complete. From the start of physical preflight until the later
+   artifact/workload consent, no network access is allowed.
 
 ### Conservative capacity requirement
 
@@ -109,10 +129,11 @@ The operator may inspect capacity locally, but the evidence log records only
 `capacity_gate: passed`. It must not record mount names, paths, account names, or
 raw `df` output.
 
-## Exact artifact disclosure
+## Mandatory pre-ceremony artifact and workload acknowledgment
 
-The host operator must see and understand this complete disclosure before any
-cache access, directory creation, reuse, or download:
+Before the one-shot invocation, the host operator and independent reviewer must
+acknowledge this packet's complete artifact disclosure. This is a reviewed run-sheet
+checkpoint, not text that the CLI is claimed to print:
 
 | Field              | Exact value                                                                                                                                        |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -133,11 +154,25 @@ The cache directory is mode `0700` and owned files are mode `0600`. An invalid f
 entry is never repaired, overwritten, or deleted by Atlas. A cache hit and a cache
 miss both require fresh workload/model consent for this event.
 
+They must also acknowledge the exact executor workload that is pinned in the
+reviewed code but is intentionally not all repeated by the CLI disclosure:
+
+- call `loadModel` with model type `llamacpp-completion`, context size 512,
+  requested device class `gpu`, and 999 GPU layers;
+- call `completion` with one user history item whose content is
+  `Reply with exactly: atlas`, streaming enabled, and generation parameters
+  `predict: 8`, `seed: 1`, and `temp: 0`; and
+- call `unloadModel` with `clearStorage: false`, then `close` and complete the
+  post-run artifact validation.
+
+The acknowledgment must occur before the physical ceremony and must not copy the
+prompt, paths, or URL into the event log.
+
 The candidate profile is still candidate-only and claim-ineligible. If its prose
 still says explicit consent is not implemented, that is a metadata follow-up after
 this validation; do not edit the profile as part of ATLAS-013.
 
-## Approved one-shot true-seam procedure
+## Proposed, reviewable one-shot true-seam procedure
 
 The safest validation entry is the actual top-level CLI composition, with exactly
 its dormant literal changed in a disposable clone. A parallel harness or direct
@@ -148,11 +183,14 @@ therefore forbidden.
 The independent reviewer must approve the following procedure and exact hashes
 before it begins:
 
-1. Make a disposable **full clone** from the approved Atlas repository. Check out
-   detached `atlas_base_commit`. Do not use the canonical working tree, a linked
-   worktree, a durable validation branch, or a copied build artifact.
-2. Reconfirm the disposable clone is at the exact commit and clean. Run the frozen
-   reproducibility checks there. Do not touch the volunteer project or QVAC cache.
+1. Use the disposable **full clone** prepared in the separate reproducibility phase
+   from the approved Atlas repository at detached `atlas_base_commit`. Do not use
+   the canonical working tree, a linked worktree, a durable validation branch, or
+   a copied build artifact.
+2. Reconfirm that the distinct reproducibility setup phase above completed at the
+   exact commit and left the disposable clone clean. Do not repeat dependency
+   installation during physical preflight. Do not touch the volunteer project or
+   QVAC cache.
 3. In only `packages/cli/src/bin.ts`, change the final argument passed to
    `dispatchCli` from the literal `false` to the literal `true`. Leave the shipped
    command, dispatcher, coordinator, prompts, dependencies, package metadata,
@@ -179,12 +217,14 @@ stage outcomes; it does not wrap or intercept the CLI.
 
 ## Zero-effects preflight and consent order
 
-The preflight before the first in-program consent is read-only. It may establish
+After reproducibility setup is complete, the physical preflight before the first
+in-program consent is read-only and zero-network. It may establish
 commit/cleanliness, platform/tool versions, direct manifest declaration, already
 present physical SDK shape, TTYs, destination nonexistence, and capacity. It must
-not import or execute volunteer project code, invoke Doctor or QVAC, inspect or
-create the Atlas cache, touch the report path, start a model process, or use the
-network. If any preflight item fails, stop with zero physical-run effects.
+not install a dependency, import or execute volunteer project code, invoke Doctor
+or QVAC, inspect or create the Atlas cache, touch the report path, start a model
+process, or use the network. If any preflight item fails, stop with zero
+physical-run effects.
 
 The one top-level invocation then preserves this exact order:
 
@@ -200,9 +240,14 @@ The one top-level invocation then preserves this exact order:
 4. Run and normalize Doctor. Raw Doctor output is not persisted. An ordinary
    unsupported/unknown Doctor result may be recorded only through its bounded
    evidence vocabulary; an invariant or cleanup failure stops the event.
-5. Show the exact artifact disclosure above together with the fixed workload:
-   local `llamacpp-completion`, context size 512, requested device class `gpu`, 999
-   requested GPU layers, and the fixed non-sensitive completion probe.
+5. The CLI's in-program artifact/workload disclosure value is exactly the canonical
+   `COMBINED_WORKLOAD_DISCLOSURE`: its pinned artifact fields and policies,
+   candidate profile/version, requested `gpu`, five lifecycle labels, and excluded
+   effects. The existing interaction renders its standard label and JSON
+   serialization of that value only. Engine, context size, GPU-layer count, and
+   fixed prompt were mandatory pre-ceremony acknowledgments above; they are not
+   falsely attributed to this CLI output. Do not interleave, prepend, append, or
+   manually print supplementary disclosure during the invocation.
 6. **Artifact/workload consent.** Ask separately whether Atlas may verify/reuse or
    download the pinned artifact and execute that workload. Refusal stops before
    cache access, network, worker/model start, or report output.
@@ -227,18 +272,18 @@ After full local artifact verification it must, under the existing bounded
 supervisor:
 
 1. import the exact resolved project-local SDK through the private bootstrap;
-2. require `heartbeat`, `load`, `getLoadedModelInfo`, `completion`, `unload`, and
-   `close` operations;
+2. require `heartbeat`, `loadModel`, `getLoadedModelInfo`, `completion`,
+   `unloadModel`, and `close` operations;
 3. complete the SDK heartbeat;
 4. capture the descriptor-safe full pre-run artifact hash and identity;
-5. load the verified local artifact as `llamacpp-completion`, context 512, with
-   requested `gpu` and 999 GPU layers;
+5. call `loadModel` for the verified local artifact as `llamacpp-completion`,
+   context 512, with requested `gpu` and 999 GPU layers;
 6. require loaded-model information to match the exact nondelegated model ID, type,
    and verified path without exposing that path;
 7. run the fixed completion and obtain device evidence only from public completion
    statistics;
-8. call unload with `clearStorage: false`, close, fully reap the process group, and
-   repeat full artifact hash and identity verification.
+8. call `unloadModel` with `clearStorage: false`, call `close`, fully reap the
+   process group, and repeat full artifact hash and identity verification.
 
 All overall and phase deadlines, message caps, grant consumption rules, terminal
 state rules, abort behavior, and POSIX process-group cleanup remain unchanged.
@@ -259,6 +304,14 @@ The generated report remains `provenance: probe`, candidate/nonstandard, and
 claim-ineligible. A physical run cannot turn candidate metadata into a production
 profile.
 
+The internal pre/post artifact identity result is a bounded derivation, not a
+manual assertion. Record `derived-passed` only when report evidence contains a
+passed `clean-shutdown` phase **and** clean termination (`clean-exit`, exit code 0,
+no signal, and `last_completed_phase: clean-shutdown`). In every other case record
+`uncertain`; a generic shutdown failure does not disclose whether hash/identity,
+`unloadModel`, or `close` failed. A later manual hash or metadata check is only an
+inspection of current state and cannot backfill this internal result.
+
 ## Evidence log and privacy boundary
 
 Keep the sanitized run record private and outside both repositories. It may contain
@@ -267,11 +320,14 @@ only:
 - the Atlas, volunteer-project, and normative QVAC baseline full commit hashes and
   the reviewed one-token-diff approval outcome;
 - exact Node and pnpm versions plus coarse `macOS` and `arm64` labels;
-- pass/fail for preflight gates and reached/approved/refused for each named consent
-  checkpoint, without the prompt or response text;
+- pass/fail for preflight gates; `approved|refused|not-reached` for fingerprint,
+  project-code, artifact/workload, and local-write checkpoints; and
+  `declined|refused|not-reached` for publication intent, without prompt or response
+  text;
 - cache outcome `verified-hit` or `verified-miss` without paths or URLs;
-- allowlisted phase status/reason/duration, final process-cleanup status, and
-  artifact pre/post equality outcome;
+- allowlisted phase status/reason/duration, final process-cleanup status, the
+  strictly derived internal artifact-equality outcome, and a separately sourced
+  manual current-state artifact inspection;
 - observed device class `cpu`, `gpu`, or `unknown` exactly as admitted by the
   report; report ID; privacy-review outcome; retention choices; and final verdict.
 
@@ -297,9 +353,12 @@ The run is not complete when inference returns. In this order:
 1. Confirm the CLI has settled, its acquisition and executor children/process
    group are fully reaped, and no Atlas/QVAC descendant remains. Record only the
    boolean result, never a process listing or command line.
-2. Confirm the final artifact still has the expected size, full SHA-256, identity,
-   ownership, mode, and link count, and that no Atlas-owned staging entry remains.
-   Do not delete, repair, overwrite, or adopt an invalid final or uncertain partial.
+2. Inspect the final artifact's **current state** for expected size, full SHA-256,
+   ownership, mode, and link count, and confirm no Atlas-owned staging entry
+   remains. This manual post-run inspection does not prove what the isolated child
+   observed before or after native use and must never be relabeled as internal
+   pre/post identity equality. Do not delete, repair, overwrite, or adopt an
+   invalid final or uncertain partial.
 3. The host operator explicitly chooses `retain` or `remove` for the verified final
    artifact. Retention is the documented cache policy. Removal, if chosen, is a
    separate manual action targeting only the exact disclosed final file after all
@@ -329,8 +388,10 @@ exact affected objects for maintainer review, and do not rerun or improvise clea
   both capacity gates passed;
 - the sole reviewed disposable diff and actual top-level production composition
   were used once, with all separate consents in the required order;
-- exact artifact verification, every lifecycle phase, pre/post equality, bounded
-  settlement, full process cleanup, and cache-state review passed;
+- exact artifact verification, every lifecycle phase, bounded settlement, full
+  process cleanup, and cache-state review passed; specifically, internally derived
+  pre/post artifact equality was `derived-passed` and the separate manual
+  current-state inspection was `verified`;
 - direct public completion statistics reported `gpu`;
 - a canonical private report exactly matched its preview and passed independent
   privacy review; and
@@ -341,12 +402,14 @@ statistics reported `cpu`. It is useful evidence, not an ATLAS-013 GPU-gate pass
 not a profile-admission result, and not activation authority.
 
 `INCONCLUSIVE` covers `unknown` device evidence, a consented early refusal, or a
-bounded unsupported result with clean settlement. `FAIL` covers a defined lifecycle,
-verification, report, or privacy failure after effects began and clean settlement
-was still proved. `STOP / MANUAL REVIEW` covers dirty or unpinned input, insufficient
-capacity, unreviewed diff, unexpected effect, invariant violation, timeout/crash,
-possible survivor, uncertain cache/output state, privacy exposure, or any pressure
-to bypass consent. None of the latter three verdicts pass the physical gate.
+bounded unsupported result with clean settlement. `FAIL` covers a bounded defined
+lifecycle or local report-write transaction failure after effects began when clean
+settlement was still proved and no privacy, security, process, or artifact-identity
+uncertainty exists. `STOP / MANUAL REVIEW` covers dirty or unpinned input,
+insufficient capacity, unreviewed diff, unexpected effect, invariant violation,
+timeout/crash, possible survivor, uncertain cache/output state, failed privacy
+review or any privacy exposure, or any pressure to bypass consent. None of the
+latter three verdicts pass the physical gate.
 
 There is no automatic retry and no conversion of unknown or fallback evidence into
 success.
@@ -389,15 +452,16 @@ preflight: passed
 capacity_gate: passed
 one_token_diff_review: passed
 consents:
-  fingerprint: approved
-  project_code: approved
-  artifact_workload: approved
-  publication_intent: declined
-  local_write: approved
+  fingerprint: <approved|refused|not-reached>
+  project_code: <approved|refused|not-reached>
+  artifact_workload: <approved|refused|not-reached>
+  publication_intent: <declined|refused|not-reached>
+  local_write: <approved|refused|not-reached>
 artifact: <verified-hit|verified-miss>
 lifecycle: <passed|failed|inconclusive>
 device_class: <gpu|cpu|unknown>
-artifact_postcheck: <passed|failed|uncertain>
+internal_artifact_identity: <derived-passed|uncertain>
+manual_artifact_current_state: <verified|failed|not-performed>
 process_cleanup: <passed|failed|uncertain>
 report_id: <schema-bounded-id-or-omitted>
 privacy_review: <passed|failed|not-completed>
