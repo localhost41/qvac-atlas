@@ -1,7 +1,8 @@
 # Probe pipeline
 
-Status: ATLAS-009 fixture-driven production foundation. Real QVAC SDK execution
-and production claim admission remain disabled.
+Status: ATLAS-021B genuine candidate report and dependency-inverted pipeline are
+implemented but dormant. Real QVAC SDK execution, CLI wiring, and production claim
+admission remain disabled.
 
 ## Scope
 
@@ -114,9 +115,46 @@ ATLAS-009 supplies only a fake executor for success, missing-QVAC, worker-crash,
 timeout scenarios. Every assembled report therefore has fixture provenance and can
 never create a registry claim.
 
-## ATLAS-015 production integration contract
+## Dormant genuine candidate pipeline
 
-The future real executor may accept only a private, pre-audited resolver grant for:
+ATLAS-021B adds a relative-only real state machine and coordinator-facing pipeline;
+neither is exported from the probe package or wired to a command. The output
+boundary privately owns its path and is preflighted before any interaction. The
+coordinator privately retains one continuous resolved-project session and returns
+only exact status unions plus newly snapshotted QVAC, Doctor, and lifecycle
+evidence. Interaction callbacks receive only deeply frozen disclosures, exact
+decisions, publication warnings, and canonical report JSON—never an SDK handle,
+artifact/execution capability, runtime object, or path.
+
+The real ordering is output vacancy, privacy disclosure, fingerprint decision,
+allowlisted collection and exact-project resolution, project-code disclosure and
+decision, normalized Doctor, combined artifact/workload disclosure and decision,
+runtime, draft preview, publication intent, exact final preview, local-write
+decision, and an uncancellable exclusive write. Every awaited seam checks abort
+before invocation and before interpreting its result. Once the write begins,
+resolve is authoritative commit; rejection settles after owned cleanup and proves
+that no Atlas-created target or partial remains. A foreign no-clobber racer may
+occupy the private path.
+
+ATLAS-021C must construct the interaction and output closures from one normalized,
+immutable output path. This keeps the hidden-path write confirmation bound to the
+same path that was preflighted and eventually written. The confirmation closure
+may display that path, but it is never passed through generic pipeline arguments or
+results, nor to other interaction callbacks.
+
+Coordinator results and nested evidence use exact-key parsing, detachment, bounded
+enum/code allowlists, schema validation, and privacy scanning before draft preview
+and again before final serialization. Exact normalized Doctor failures and timeouts
+are retained; a throw or malformed result becomes `unknown/unavailable`.
+Acquisition, grant, launch, resolver, or runtime preflight failure produces no
+report. Synthetic tests cover refusal, malformed/proxy values, private path/digest
+canaries, mutation after callbacks, abort settlement, write races, and exact
+final-preview/write bytes.
+
+## ATLAS-021C composition contract
+
+The integrated dormant executor accepts only a private, pre-audited resolver grant
+for:
 
 - Node 22;
 - an exact project-declared physical `@qvac/sdk` 0.16.0 installation;
@@ -134,15 +172,22 @@ The production child receives the audited entry through private IPC, uses a fres
 temporary cwd, removes `NODE_PATH`, `NODE_OPTIONS`, `QVAC_CONFIG_PATH`, and
 `QVAC_WORKER_PATH`, uses `fork` with `execArgv: []`, and imports only the audited file
 URL. SDK paths never enter structured events or reports. No real executor is present
-in this packet, so these rules cannot be bypassed through the CLI.
+in the probe package, and ATLAS-021C must compose the dormant resolver, acquisition,
+and executor without exposing their capabilities through this pipeline or the CLI
+interaction layer.
 
 ## Profile candidate
 
 `profiles/candidates/smollm2-360m-instruct-q8.json` records the source-verified
-candidate metadata and explicitly sets `claim_eligible: false`. There is no download
-implementation. Promotion requires explicit license/size disclosure, opt-in
-download, local SHA-256 verification, and a real successful lifecycle. Until then,
-the pipeline uses the existing test-only profile and fixture provenance.
+candidate metadata and explicitly sets `claim_eligible: false`. Contained
+acquisition exists but remains unwired and has performed no real fetch. Promotion
+requires explicit license/size disclosure, opt-in download, local SHA-256
+verification, and a real successful lifecycle. Until then, the exported pipeline
+uses the existing test-only profile and fixture provenance.
+The dormant relative-only pipeline can assemble probe provenance with candidate
+profile `atlas-smollm2-360m-lifecycle@1.0.0-candidate.1`, but central claim
+evaluation with the empty production-profile allowlist remains ineligible for both
+success and failure claims.
 
 ## Type authority
 
@@ -152,9 +197,11 @@ the probe derives its convenience aliases through indexed access into that gener
 type. A byte-for-byte in-memory drift gate fails when the normative schema changes
 without regenerating the declaration. The generated banner binds the declaration to
 a canonical SHA-256 of the complete normative schema, including runtime-only
-conditional branches omitted from the TypeScript projection. Runtime schema and
-semantic validation remains mandatory immediately before every preview and final
-write; TypeScript compilation is never treated as report validation.
+conditional branches omitted from the TypeScript projection. Runtime schema,
+semantic, and privacy validation are mandatory before draft and final
+serialization. The frozen final bytes shown to the user are held unchanged through
+write consent and the write; TypeScript compilation is never treated as report
+validation.
 
 ## Verification
 

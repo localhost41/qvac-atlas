@@ -7,10 +7,10 @@ Updated: 2026-08-01
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
-- The dormant executor, hostile-protocol matrix, private-artifact foundation, and
-  verified-artifact executor bridge are integrated on `integration` through commit
-  `275cf3d`.
-- The complete workspace passes lint, typecheck, 286 package tests, five runtime
+- The dormant executor, hostile-protocol matrix, private-artifact foundation,
+  verified-artifact bridge, contained acquisition, and genuine candidate pipeline
+  are integrated through ATLAS-021B.
+- The complete workspace passes lint, typecheck, 306 package tests, five runtime
   isolation tests, static build, strict schema compilation, deterministic catalog
   regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
@@ -55,6 +55,12 @@ M1 — Local probe and registry vertical slice.
   the fixed account cache root, finite manual HTTPS redirects, reserve checks,
   nonce-exact staging/recovery, and a directly supervised fully reaped acquisition
   child. It remains absent from probe and CLI and performs no real model fetch.
+- ATLAS-021B: genuine candidate report assembly and the dependency-inverted real
+  consent/state pipeline are complete. Exact resolved-QVAC and lifecycle evidence
+  cross one private coordinator boundary; capabilities and paths do not. Draft and
+  final reports pass schema, privacy, and canonical identity gates. The candidate
+  remains nonstandard and claim-ineligible, and the real pipeline is not exported
+  or wired to the CLI.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
@@ -62,10 +68,10 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-ATLAS-021 is implementing the explicit real-mode disclosure, contained acquisition,
-and local report sequence in four serialized packets. The shipped CLI gate remains
-hardcoded off. Production claim admission and user-facing real execution stay
-disabled until a hash-verified ATLAS-013 lifecycle and privacy review succeed.
+ATLAS-021C is the next serialized packet: concrete coordinator and CLI composition
+behind a hardcoded false release gate. Production claim admission and user-facing
+real execution stay disabled until a hash-verified ATLAS-013 lifecycle and privacy
+review succeed.
 
 ## Known risks
 
