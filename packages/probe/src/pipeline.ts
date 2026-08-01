@@ -134,6 +134,7 @@ export async function runFixtureProbe(
     qvac,
     doctor,
     runner: runnerEvidence,
+    redactionCounts: collected.redactionCounts,
   });
   state.advance("assembled");
   validateLocalReport(report);

@@ -2,7 +2,7 @@ import os from "node:os";
 
 import { scanPrivacy } from "@qvac-atlas/schema";
 
-import type { PlatformEvidence } from "./types.js";
+import type { PlatformEvidence, RedactionCounts } from "./types.js";
 
 export interface PlatformSource {
   platform(): NodeJS.Platform | string;
@@ -22,15 +22,62 @@ const nodePlatformSource: PlatformSource = {
   nodeVersion: () => process.versions.node,
 };
 
-function safeLabel(value: unknown): string {
-  if (typeof value !== "string") return "unknown";
+const REDACTION_CATEGORY: Readonly<Record<string, keyof RedactionCounts>> = {
+  "private-key": "credentials",
+  "bearer-token": "credentials",
+  jwt: "credentials",
+  "known-token": "credentials",
+  "credential-url": "credentials",
+  "sensitive-assignment": "credentials",
+  "high-entropy-string": "credentials",
+  email: "identifiers",
+  "stable-identifier": "identifiers",
+  "forbidden-field-name": "identifiers",
+  "ipv4-address": "network",
+  "ipv6-address": "network",
+  "mac-address": "network",
+  "windows-user-path": "paths",
+  "posix-user-path": "paths",
+  "windows-absolute-path": "paths",
+  "windows-unc-path": "paths",
+  "posix-absolute-path": "paths",
+};
+
+const zeroRedactionCounts = (): RedactionCounts => ({
+  credentials: 0,
+  identifiers: 0,
+  network: 0,
+  paths: 0,
+});
+
+function safeLabel(value: unknown): {
+  value: string;
+  redactionCounts: RedactionCounts;
+} {
+  const redactionCounts = zeroRedactionCounts();
+  if (typeof value !== "string") return { value: "unknown", redactionCounts };
   const normalized = value
     .replace(/[\u0000-\u001f\u007f]+/g, " ")
     .trim()
     .slice(0, 160);
-  if (normalized.length === 0 || scanPrivacy({ value: normalized }).length > 0)
-    return "unknown";
-  return normalized;
+  if (normalized.length === 0) return { value: "unknown", redactionCounts };
+  const categories = new Set<keyof RedactionCounts>();
+  for (const finding of scanPrivacy({ value: normalized })) {
+    const category = REDACTION_CATEGORY[finding.rule];
+    if (category !== undefined) categories.add(category);
+  }
+  if (categories.size === 0) return { value: normalized, redactionCounts };
+  for (const category of categories) redactionCounts[category] = 1;
+  return { value: "unknown", redactionCounts };
+}
+
+function addRedactionCounts(
+  target: RedactionCounts,
+  addition: RedactionCounts,
+): void {
+  for (const category of Object.keys(target) as Array<keyof RedactionCounts>) {
+    target[category] = Math.min(100_000, target[category] + addition[category]);
+  }
 }
 
 function family(value: string): PlatformEvidence["os"]["family"] {
@@ -67,22 +114,35 @@ function memoryBucket(bytes: number): PlatformEvidence["memory_bucket"] {
 export function collectPlatform(source: PlatformSource = nodePlatformSource): {
   platform: PlatformEvidence;
   nodeVersion: string;
+  redactionCounts: RedactionCounts;
 } {
+  const release = safeLabel(source.release());
   const model = safeLabel(source.cpus()[0]?.model);
+  const nodeVersion = safeLabel(source.nodeVersion());
+  const redactionCounts = zeroRedactionCounts();
+  addRedactionCounts(redactionCounts, release.redactionCounts);
+  addRedactionCounts(redactionCounts, model.redactionCounts);
+  addRedactionCounts(redactionCounts, nodeVersion.redactionCounts);
   return {
     platform: {
       os: {
         family: family(String(source.platform())),
-        version: safeLabel(source.release()),
+        version: release.value,
         build: null,
       },
       architecture: architecture(source.arch()),
-      cpu: { vendor: cpuVendor(model), model, family: null, feature_flags: [] },
+      cpu: {
+        vendor: cpuVendor(model.value),
+        model: model.value,
+        family: null,
+        feature_flags: [],
+      },
       memory_bucket: memoryBucket(source.totalmem()),
       // Node has no safe cross-platform GPU inventory API. Empty means
       // uncollected in this packet, never evidence of CPU execution.
       gpus: [],
     },
-    nodeVersion: safeLabel(source.nodeVersion()).replace(/^v/, ""),
+    nodeVersion: nodeVersion.value.replace(/^v/, ""),
+    redactionCounts,
   };
 }

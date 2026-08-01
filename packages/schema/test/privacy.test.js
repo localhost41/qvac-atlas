@@ -44,12 +44,64 @@ test("known token shapes, high entropy, and forbidden field names are blocked", 
   ]);
 });
 
-test("allowlisted hashes and version-like driver data do not produce false positives", async () => {
+test("only schema-constrained hashes and versions bypass entropy scanning", async () => {
   const report = await jsonFixture("success.json");
   assert.deepEqual(scanPrivacy(report), []);
-  assert.deepEqual(
-    scanPrivacy({ driver_version: "1.2.3.4", artifact_sha256: "a".repeat(64) }),
-    [],
+  const entropyCanary = "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8";
+  const exempt = {
+    report_id: entropyCanary,
+    schema_version: entropyCanary,
+    probe_version: entropyCanary,
+    runtime: { node_version: entropyCanary },
+    qvac: {
+      sdk_version: entropyCanary,
+      packages: [{ version: entropyCanary }],
+    },
+    profile: { version: entropyCanary, artifact_sha256: entropyCanary },
+    privacy: { sanitizer_version: entropyCanary },
+  };
+  assert.equal(
+    scanPrivacy(exempt).some(({ rule }) => rule === "high-entropy-string"),
+    false,
+  );
+  for (const [path, value] of [
+    ["os version", { platform: { os: { version: entropyCanary } } }],
+    [
+      "driver version",
+      { platform: { gpus: [{ driver_version: entropyCanary }] } },
+    ],
+  ]) {
+    assert.equal(
+      scanPrivacy(value).some(({ rule }) => rule === "high-entropy-string"),
+      true,
+      path,
+    );
+  }
+});
+
+test("dotted quads in driver versions cannot bypass network scanning", () => {
+  assert.deepEqual(scanPrivacy({ driver_version: "1.2.3.4" }), [
+    { path: "/driver_version", rule: "ipv4-address" },
+  ]);
+});
+
+test("IPv6 detection respects address validity and contributor-string boundaries", () => {
+  for (const value of [
+    "2001:db8:::1",
+    "not-an-address:still-not-an-address",
+    "prefix2001:db8::1suffix",
+  ]) {
+    assert.equal(
+      scanPrivacy({ value }).some(({ rule }) => rule === "ipv6-address"),
+      false,
+      value,
+    );
+  }
+  assert.equal(
+    scanPrivacy({ value: "endpoint [fe80::1%en0]:443" }).some(
+      ({ rule }) => rule === "ipv6-address",
+    ),
+    true,
   );
 });
 
@@ -107,6 +159,76 @@ test("privacy checks reject a leak even after its report ID is refreshed", async
     JSON.stringify(validation.errors).includes("atlas-fixture"),
     false,
   );
+});
+
+test("every privacy canary rejects a refreshed-ID genuine report without echo", async () => {
+  const canaries = await jsonFixture("adversarial/privacy-canaries.json");
+  for (const canary of canaries) {
+    const report = await jsonFixture("success.json");
+    report.provenance = { kind: "probe", fixture_id: null };
+    report.platform.cpu.model = canary.value;
+    const adjusted = withReportId(report);
+    const validation = validatePublishableReport(adjusted);
+    assert.equal(validation.valid, false, canary.name);
+    assert.equal(
+      validation.errors.some(
+        ({ code }) => code === `privacy:${canary.expected_rule}`,
+      ),
+      true,
+      canary.name,
+    );
+    assert.equal(
+      JSON.stringify(validation.errors).includes(canary.value),
+      false,
+      canary.name,
+    );
+  }
+});
+
+test("OS and driver entropy plus driver dotted quads reject refreshed genuine reports", async () => {
+  const entropyCanary = "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8";
+  const cases = [
+    {
+      name: "OS entropy",
+      rule: "high-entropy-string",
+      apply: (report) => {
+        report.platform.os.version = entropyCanary;
+      },
+      value: entropyCanary,
+    },
+    {
+      name: "driver entropy",
+      rule: "high-entropy-string",
+      apply: (report) => {
+        report.platform.gpus[0].driver_version = entropyCanary;
+      },
+      value: entropyCanary,
+    },
+    {
+      name: "driver dotted quad",
+      rule: "ipv4-address",
+      apply: (report) => {
+        report.platform.gpus[0].driver_version = "192.0.2.42";
+      },
+      value: "192.0.2.42",
+    },
+  ];
+  for (const entry of cases) {
+    const report = await jsonFixture("success.json");
+    report.provenance = { kind: "probe", fixture_id: null };
+    entry.apply(report);
+    const validation = validatePublishableReport(withReportId(report));
+    assert.equal(validation.valid, false, entry.name);
+    assert.equal(
+      validation.errors.some(({ code }) => code === `privacy:${entry.rule}`),
+      true,
+      entry.name,
+    );
+    assert.equal(
+      JSON.stringify(validation.errors).includes(entry.value),
+      false,
+    );
+  }
 });
 
 test("publication requires both explicit consent decisions", async () => {

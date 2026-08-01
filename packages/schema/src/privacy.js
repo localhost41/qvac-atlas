@@ -1,3 +1,5 @@
+import { isIP } from "node:net";
+
 const FORBIDDEN_KEY =
   /(?:^|_)(?:api_?key|auth(?:orization)?|cookie|credential|email|env(?:ironment)?|full_?log|home(?:_directory)?|host(?:name)?|ip(?:_address)?|mac(?:_address)?|machine_?id|organization|output|password|process(?:_list)?|prompt|secret|serial(?:_number)?|shell_?history|ssid|token|username)(?:$|_)/i;
 
@@ -20,6 +22,7 @@ const CONTENT_RULES = [
     /(?:^|[\s"'(=:])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^\s"'<>]*)?/,
   ],
   ["mac-address", /\b(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}\b/i],
+  ["stable-identifier", /\b[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\b/i],
   [
     "ipv4-address",
     /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/,
@@ -30,8 +33,20 @@ const CONTENT_RULES = [
   ],
 ];
 
-const HASH_OR_VERSION_PATH =
-  /\/(?:artifact_sha256|report_id|probe_version|schema_version|sanitizer_version|sdk_version|version|node_version|driver_version)$/;
+const EXACT_ENTROPY_EXEMPT_PATHS = new Set([
+  "/report_id",
+  "/schema_version",
+  "/probe_version",
+  "/runtime/node_version",
+  "/qvac/sdk_version",
+  "/profile/version",
+  "/profile/artifact_sha256",
+  "/privacy/sanitizer_version",
+]);
+const PACKAGE_VERSION_PATH = /^\/qvac\/packages\/\d+\/version$/;
+const IPV6_CANDIDATE =
+  /\[[0-9A-Fa-f:.]{2,128}(?:%[0-9A-Za-z_.~-]{1,64})?\]|[0-9A-Fa-f:.]{0,128}:[0-9A-Fa-f:.]{1,128}(?:%[0-9A-Za-z_.~-]{1,64})?/gu;
+const IPV6_ADJACENT = /[0-9A-Za-z_.%~-]/u;
 
 function pointerSegment(value) {
   return value.replaceAll("~", "~0").replaceAll("/", "~1");
@@ -49,9 +64,39 @@ function shannonEntropy(value) {
 }
 
 function hasHighEntropySecret(value, pointer) {
-  if (HASH_OR_VERSION_PATH.test(pointer)) return false;
+  if (
+    EXACT_ENTROPY_EXEMPT_PATHS.has(pointer) ||
+    PACKAGE_VERSION_PATH.test(pointer)
+  )
+    return false;
   const candidates = value.match(/[A-Za-z0-9+/=_-]{32,}/g) ?? [];
   return candidates.some((candidate) => shannonEntropy(candidate) >= 4.25);
+}
+
+function hasIpv6Address(value) {
+  for (const match of value.matchAll(IPV6_CANDIDATE)) {
+    let candidate = match[0];
+    if (candidate.length > 192) continue;
+    const bracketed = candidate.startsWith("[") && candidate.endsWith("]");
+    const before = value[match.index - 1];
+    const after = value[match.index + match[0].length];
+    if (
+      (before !== undefined && IPV6_ADJACENT.test(before)) ||
+      (after !== undefined &&
+        (IPV6_ADJACENT.test(after) || (!bracketed && after === ":")))
+    )
+      continue;
+    if (bracketed) {
+      candidate = candidate.slice(1, -1);
+    } else {
+      candidate = candidate.replace(/[.,;!?]+$/u, "");
+    }
+    const zoneIndex = candidate.indexOf("%");
+    const address =
+      zoneIndex === -1 ? candidate : candidate.slice(0, zoneIndex);
+    if (isIP(address) === 6) return true;
+  }
+  return false;
 }
 
 /**
@@ -78,9 +123,10 @@ export function scanPrivacy(value) {
     if (typeof current !== "string") return;
 
     for (const [rule, pattern] of CONTENT_RULES) {
-      if (rule === "ipv4-address" && /\/driver_version$/.test(pointer))
-        continue;
       if (pattern.test(current)) findings.push({ path: pointer || "/", rule });
+    }
+    if (hasIpv6Address(current)) {
+      findings.push({ path: pointer || "/", rule: "ipv6-address" });
     }
     if (hasHighEntropySecret(current, pointer)) {
       findings.push({ path: pointer || "/", rule: "high-entropy-string" });

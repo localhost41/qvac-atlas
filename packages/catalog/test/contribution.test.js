@@ -19,6 +19,10 @@ async function schemaFixture(name = "success.json") {
   );
 }
 
+async function privacyCanaries() {
+  return schemaFixture("adversarial/privacy-canaries.json");
+}
+
 function asProbe(report) {
   const copy = structuredClone(report);
   copy.provenance = { kind: "probe", fixture_id: null };
@@ -249,6 +253,81 @@ test("privacy-invalid evidence is rejected without echoing the value", async () 
       return true;
     },
   );
+});
+
+test("every refreshed-ID privacy canary is rejected by catalog admission without echo", async () => {
+  for (const canary of await privacyCanaries()) {
+    const report = asProbe(await schemaFixture());
+    report.platform.cpu.model = canary.value;
+    const adjusted = withReportId(report);
+    const root = await repository({
+      report: adjusted,
+      sources: [metadata(adjusted)],
+      productionProfiles: [productionProfile(adjusted)],
+    });
+
+    await assert.rejects(
+      buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+      (error) => {
+        assert.match(
+          error.message,
+          new RegExp(`privacy:${canary.expected_rule}`),
+        );
+        assert.equal(error.message.includes(canary.value), false);
+        return true;
+      },
+      canary.name,
+    );
+  }
+});
+
+test("catalog admission scans OS entropy, driver entropy, and driver dotted quads", async () => {
+  const entropyCanary = "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8";
+  const cases = [
+    {
+      name: "OS entropy",
+      rule: "high-entropy-string",
+      value: entropyCanary,
+      apply: (report) => {
+        report.platform.os.version = entropyCanary;
+      },
+    },
+    {
+      name: "driver entropy",
+      rule: "high-entropy-string",
+      value: entropyCanary,
+      apply: (report) => {
+        report.platform.gpus[0].driver_version = entropyCanary;
+      },
+    },
+    {
+      name: "driver dotted quad",
+      rule: "ipv4-address",
+      value: "192.0.2.42",
+      apply: (report) => {
+        report.platform.gpus[0].driver_version = "192.0.2.42";
+      },
+    },
+  ];
+  for (const entry of cases) {
+    const report = asProbe(await schemaFixture());
+    entry.apply(report);
+    const adjusted = withReportId(report);
+    const root = await repository({
+      report: adjusted,
+      sources: [metadata(adjusted)],
+      productionProfiles: [productionProfile(adjusted)],
+    });
+    await assert.rejects(
+      buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+      (error) => {
+        assert.match(error.message, new RegExp(`privacy:${entry.rule}`));
+        assert.equal(error.message.includes(entry.value), false);
+        return true;
+      },
+      entry.name,
+    );
+  }
 });
 
 test("test-only profiles cannot cross into genuine admission", async () => {

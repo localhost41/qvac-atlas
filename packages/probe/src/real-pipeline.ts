@@ -639,6 +639,7 @@ export async function runRealProbePipeline(
       qvac,
       doctor,
       runner,
+      redactionCounts: collected.redactionCounts,
     });
     state.advance("assembled");
     validateLocalReport(report);

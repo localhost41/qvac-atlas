@@ -16,3 +16,4 @@ export type DeviceClass = Exclude<
 export type RunnerEvidence = AtlasReport["execution"] & {
   result: AtlasReport["result"];
 };
+export type RedactionCounts = AtlasReport["privacy"]["redaction_counts"];

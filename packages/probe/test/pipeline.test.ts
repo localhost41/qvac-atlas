@@ -114,6 +114,30 @@ test("identical injected evidence produces byte-identical output", async () => {
   assert.equal(await once(), await once());
 });
 
+test("fixture assembly preserves truthful platform redaction counts", async () => {
+  const result = await runFixtureProbe(options, {
+    interaction: new RecordingInteraction(true, true, false),
+    writer: new RecordingWriter(),
+    platformSource: {
+      ...deterministicPlatform,
+      release: () => "2001:db8::1",
+      cpus: () => [{ model: "owner@example.invalid /Users/private/model" }],
+    },
+    doctor: passingDoctor,
+    now,
+  });
+  assert.notEqual(result.status, "refused");
+  if (result.status === "refused") return;
+  assert.deepEqual(result.report.privacy.redaction_counts, {
+    credentials: 0,
+    identifiers: 1,
+    network: 1,
+    paths: 1,
+  });
+  assert.equal(JSON.stringify(result.report).includes("owner@example"), false);
+  assert.equal(JSON.stringify(result.report).includes("2001:db8"), false);
+});
+
 for (const scenario of ["missing-qvac", "worker-crash", "timeout"] as const) {
   test(`${scenario} assembles a canonical schema-valid local fixture report`, async () => {
     const result = await runFixtureProbe(

@@ -25,6 +25,7 @@ import {
   type RealProbeDependencies,
 } from "../src/real-pipeline.js";
 import { RealProbeStateMachine } from "../src/real-state-machine.js";
+import type { PlatformSource } from "../src/platform.js";
 import type { RunnerEvidence } from "../src/types.js";
 import { deterministicPlatform } from "./fixtures.js";
 
@@ -113,6 +114,7 @@ type HarnessOptions = {
   doctor?: unknown;
   runtime?: unknown;
   preflight?: unknown;
+  platformSource?: PlatformSource;
   onCall?: (name: string) => void;
 };
 
@@ -197,10 +199,10 @@ function harness(options: HarnessOptions = {}) {
       },
     },
     platformSource: {
-      ...deterministicPlatform,
+      ...(options.platformSource ?? deterministicPlatform),
       platform: () => {
         call("collect");
-        return deterministicPlatform.platform();
+        return (options.platformSource ?? deterministicPlatform).platform();
       },
     },
     now,
@@ -249,6 +251,32 @@ test("genuine candidate pipeline preserves consent order and writes exact final 
   assert.deepEqual(result.report.profile, CANDIDATE_PROFILE);
   assert.equal(Object.isFrozen(result.report), true);
   assert.equal(Object.isFrozen(result.report.execution.phases), true);
+});
+
+test("genuine assembly preserves truthful platform redaction counts without leaked values", async () => {
+  const state = harness({
+    platformSource: {
+      ...deterministicPlatform,
+      release: () => "Bearer atlas_fixture_1234567890 at 2001:db8::1",
+      cpus: () => [{ model: "owner@example.invalid /Users/private/model" }],
+    },
+  });
+  const result = await runRealProbePipeline(
+    { signal: new AbortController().signal },
+    state.dependencies,
+  );
+  assert.equal(result.status, "written");
+  if (result.status !== "written") return;
+  assert.deepEqual(result.report.privacy.redaction_counts, {
+    credentials: 1,
+    identifiers: 1,
+    network: 1,
+    paths: 1,
+  });
+  const serialized = JSON.stringify(result.report);
+  assert.equal(serialized.includes("atlas_fixture"), false);
+  assert.equal(serialized.includes("owner@example"), false);
+  assert.equal(serialized.includes("2001:db8"), false);
 });
 
 test("candidate success and lifecycle failure remain ineligible in both central evaluators", async () => {
@@ -578,6 +606,12 @@ test("direct candidate assembly is canonical, private, and schema-valid", () => 
     qvac,
     doctor: { status: "passed", reason: "completed", duration_ms: 8 },
     runner: successfulRunner(),
+    redactionCounts: {
+      credentials: 0,
+      identifiers: 0,
+      network: 0,
+      paths: 0,
+    },
   });
   validateLocalReport(report);
   assert.deepEqual(scanPrivacy(report), []);

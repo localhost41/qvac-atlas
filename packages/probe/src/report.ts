@@ -6,6 +6,7 @@ import type {
   PlatformEvidence,
   ProfileEvidence,
   QvacEvidence,
+  RedactionCounts,
   RunnerEvidence,
 } from "./types.js";
 
@@ -34,6 +35,7 @@ export interface AssembleReportInput {
   qvac: QvacEvidence;
   doctor: CheckEvidence;
   runner: RunnerEvidence;
+  redactionCounts?: RedactionCounts;
 }
 
 export function assembleFixtureReport(input: AssembleReportInput): AtlasReport {
@@ -65,7 +67,7 @@ export function assembleFixtureReport(input: AssembleReportInput): AtlasReport {
     privacy: {
       collection_policy: "allowlist-v1",
       sanitizer_version: "0.1.0",
-      redaction_counts: {
+      redaction_counts: input.redactionCounts ?? {
         credentials: 0,
         identifiers: 0,
         network: 0,
@@ -84,6 +86,7 @@ export interface AssembleProbeReportInput {
   qvac: QvacEvidence;
   doctor: CheckEvidence;
   runner: RunnerEvidence;
+  redactionCounts: RedactionCounts;
 }
 
 function deepFreeze<T>(value: T): T {
@@ -135,12 +138,7 @@ export function assembleProbeReport(
     privacy: {
       collection_policy: "allowlist-v1",
       sanitizer_version: "0.1.0",
-      redaction_counts: {
-        credentials: 0,
-        identifiers: 0,
-        network: 0,
-        paths: 0,
-      },
+      redaction_counts: snapshot.redactionCounts,
     },
   };
   try {

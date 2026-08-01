@@ -35,6 +35,31 @@
     "expected_rule": "ipv4-address"
   },
   {
+    "name": "full IPv6 address",
+    "value": "connected to 2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "compressed IPv6 address",
+    "value": "connected to 2001:db8::8a2e:370:7334",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "bracketed IPv6 address",
+    "value": "connected to [2001:db8::1]:443",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "zone-qualified IPv6 address",
+    "value": "adapter fe80::1%en0",
+    "expected_rule": "ipv6-address"
+  },
+  {
+    "name": "canonical UUID",
+    "value": "machine 123e4567-e89b-12d3-a456-426614174000",
+    "expected_rule": "stable-identifier"
+  },
+  {
     "name": "credential-bearing URL",
     "value": "https://fixture-user:fixture-password@example.invalid/resource",
     "expected_rule": "credential-url"
