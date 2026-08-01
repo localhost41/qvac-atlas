@@ -1,0 +1,7 @@
+{
+  "id": "atlas-small-llm-lifecycle-test",
+  "version": "1.0.0",
+  "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "requested_backend": "gpu",
+  "test_only": true
+}

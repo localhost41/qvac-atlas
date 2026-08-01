@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "probe_version": "0.1.0",
+  "report_id": "sha256:1a26c7c28872e7a19f5f079c25ef1cba7847da900f3186e697f6bee73f52b469",
+  "created_at": "2026-07-31T12:01:00.000Z",
+  "provenance": { "kind": "fixture", "fixture_id": "fallback" },
+  "consent": { "fingerprint_acknowledged": true, "publication": true },
+  "platform": {
+    "os": { "family": "linux", "version": "24.04", "build": null },
+    "architecture": "x64",
+    "cpu": { "vendor": "Intel", "model": "Core i7-12700K", "family": "Alder Lake", "feature_flags": ["avx", "avx2"] },
+    "memory_bucket": "32-63-gib",
+    "gpus": [{ "index": 0, "vendor": "NVIDIA", "model": "GeForce RTX 3060", "device_id": "0x2504", "driver_version": "550.54.14" }]
+  },
+  "runtime": { "node_version": "22.17.0" },
+  "qvac": {
+    "discovery": { "status": "passed", "reason": "completed", "duration_ms": 15 },
+    "sdk_version": "0.16.0",
+    "packages": [{ "name": "@qvac/sdk", "version": "0.16.0" }]
+  },
+  "official_checks": {
+    "doctor": { "status": "passed", "reason": "completed", "duration_ms": 410 },
+    "bundle_verification": { "status": "passed", "reason": "completed", "duration_ms": 105 }
+  },
+  "profile": {
+    "id": "atlas-small-llm-lifecycle-test",
+    "version": "1.0.0",
+    "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "requested_backend": "gpu"
+  },
+  "execution": {
+    "phases": [
+      { "name": "qvac-import", "status": "passed", "duration_ms": 38 },
+      { "name": "worker-start", "status": "passed", "duration_ms": 240 },
+      { "name": "model-load", "status": "passed", "duration_ms": 930 },
+      { "name": "inference", "status": "passed", "duration_ms": 1200 },
+      { "name": "clean-shutdown", "status": "passed", "duration_ms": 39 }
+    ],
+    "backend_observation": { "status": "observed", "backend": "cpu", "method": "qvac-structured-output" },
+    "termination": { "kind": "clean-exit", "exit_code": 0, "signal": null, "last_completed_phase": "clean-shutdown" }
+  },
+  "result": {
+    "workload_status": "passed",
+    "completion_observed": true,
+    "failure": { "category": "none", "phase": null, "code": null, "sanitized_excerpt": null }
+  },
+  "privacy": {
+    "collection_policy": "allowlist-v1",
+    "sanitizer_version": "0.1.0",
+    "redaction_counts": { "credentials": 0, "identifiers": 0, "network": 0, "paths": 0 }
+  }
+}

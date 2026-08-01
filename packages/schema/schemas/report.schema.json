@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qvac-atlas.dev/schemas/report/1.0.0",
+  "title": "QVAC Atlas probe report",
+  "description": "Allowlist-only, immutable evidence from one standardized QVAC Atlas probe.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "probe_version",
+    "report_id",
+    "created_at",
+    "provenance",
+    "consent",
+    "platform",
+    "runtime",
+    "qvac",
+    "official_checks",
+    "profile",
+    "execution",
+    "result",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "probe_version": { "$ref": "#/$defs/semver" },
+    "report_id": { "$ref": "#/$defs/reportId" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "consent": { "$ref": "#/$defs/consent" },
+    "platform": { "$ref": "#/$defs/platform" },
+    "runtime": { "$ref": "#/$defs/runtime" },
+    "qvac": { "$ref": "#/$defs/qvac" },
+    "official_checks": { "$ref": "#/$defs/officialChecks" },
+    "profile": { "$ref": "#/$defs/profile" },
+    "execution": { "$ref": "#/$defs/execution" },
+    "result": { "$ref": "#/$defs/result" },
+    "privacy": { "$ref": "#/$defs/privacy" }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
+      "maxLength": 64
+    },
+    "nullableSemver": {
+      "oneOf": [
+        { "$ref": "#/$defs/semver" },
+        { "type": "null" }
+      ]
+    },
+    "shortString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[^\\r\\n\\u0000-\\u001f\\u007f]+$"
+    },
+    "nullableShortString": {
+      "oneOf": [
+        { "$ref": "#/$defs/shortString" },
+        { "type": "null" }
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "reportId": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "fixture_id"],
+      "properties": {
+        "kind": { "enum": ["probe", "fixture"] },
+        "fixture_id": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "fixture" } }, "required": ["kind"] },
+          "then": { "properties": { "fixture_id": { "type": "string" } } },
+          "else": { "properties": { "fixture_id": { "type": "null" } } }
+        }
+      ]
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fingerprint_acknowledged", "publication"],
+      "properties": {
+        "fingerprint_acknowledged": { "type": "boolean" },
+        "publication": { "type": "boolean" }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "cpu", "memory_bucket", "gpus"],
+      "properties": {
+        "os": { "$ref": "#/$defs/os" },
+        "architecture": { "enum": ["arm64", "x64", "unknown"] },
+        "cpu": { "$ref": "#/$defs/cpu" },
+        "memory_bucket": { "enum": ["under-8-gib", "8-15-gib", "16-31-gib", "32-63-gib", "64-gib-or-more", "unknown"] },
+        "gpus": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/gpu" }
+        }
+      }
+    },
+    "os": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "version", "build"],
+      "properties": {
+        "family": { "enum": ["linux", "macos", "windows", "unknown"] },
+        "version": { "$ref": "#/$defs/shortString" },
+        "build": { "$ref": "#/$defs/nullableShortString" }
+      }
+    },
+    "cpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendor", "model", "family", "feature_flags"],
+      "properties": {
+        "vendor": { "$ref": "#/$defs/shortString" },
+        "model": { "$ref": "#/$defs/shortString" },
+        "family": { "$ref": "#/$defs/nullableShortString" },
+        "feature_flags": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9._+-]{1,40}$" }
+        }
+      }
+    },
+    "gpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "vendor", "model", "device_id", "driver_version"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 31 },
+        "vendor": { "$ref": "#/$defs/shortString" },
+        "model": { "$ref": "#/$defs/shortString" },
+        "device_id": {
+          "oneOf": [
+            { "type": "string", "pattern": "^(?:0x)?[a-f0-9]{4,8}$" },
+            { "type": "null" }
+          ]
+        },
+        "driver_version": { "$ref": "#/$defs/nullableShortString" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_version"],
+      "properties": {
+        "node_version": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "qvac": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["discovery", "sdk_version", "packages"],
+      "properties": {
+        "discovery": { "$ref": "#/$defs/check" },
+        "sdk_version": { "$ref": "#/$defs/nullableSemver" },
+        "packages": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/qvacPackage" }
+        }
+      }
+    },
+    "qvacPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^@qvac/[a-z0-9][a-z0-9._-]{0,79}$" },
+        "version": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason", "duration_ms"],
+      "properties": {
+        "status": { "$ref": "#/$defs/phaseStatus" },
+        "reason": { "$ref": "#/$defs/checkReason" },
+        "duration_ms": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0, "maximum": 3600000 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "officialChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doctor", "bundle_verification"],
+      "properties": {
+        "doctor": { "$ref": "#/$defs/check" },
+        "bundle_verification": { "$ref": "#/$defs/check" }
+      }
+    },
+    "phaseStatus": { "enum": ["passed", "failed", "skipped", "unknown"] },
+    "checkReason": {
+      "enum": ["completed", "failed", "timed-out", "missing-qvac", "not-applicable", "not-reached", "unavailable", "unknown"]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "artifact_sha256", "requested_backend"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$" },
+        "version": { "$ref": "#/$defs/semver" },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "requested_backend": { "$ref": "#/$defs/requestedDevice" }
+      }
+    },
+    "requestedDevice": { "enum": ["auto", "cpu", "gpu"] },
+    "runtimeBackend": { "enum": ["cpu", "gpu", "unknown"] },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phases", "backend_observation", "termination"],
+      "properties": {
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/phase" }
+        },
+        "backend_observation": { "$ref": "#/$defs/backendObservation" },
+        "termination": { "$ref": "#/$defs/termination" }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "duration_ms"],
+      "properties": {
+        "name": { "enum": ["qvac-import", "worker-start", "model-load", "inference", "clean-shutdown"] },
+        "status": { "$ref": "#/$defs/phaseStatus" },
+        "duration_ms": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0, "maximum": 3600000 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "backendObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "backend", "method"],
+      "properties": {
+        "status": { "enum": ["observed", "not-reached", "unavailable"] },
+        "backend": {
+          "oneOf": [
+            { "$ref": "#/$defs/runtimeBackend" },
+            { "type": "null" }
+          ]
+        },
+        "method": { "enum": ["public-api", "qvac-structured-output", "runner-event", "unavailable"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "observed" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "backend": { "$ref": "#/$defs/runtimeBackend" },
+              "method": { "enum": ["public-api", "qvac-structured-output", "runner-event"] }
+            }
+          },
+          "else": {
+            "properties": {
+              "backend": { "type": "null" },
+              "method": { "const": "unavailable" }
+            }
+          }
+        }
+      ]
+    },
+    "termination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "exit_code", "signal", "last_completed_phase"],
+      "properties": {
+        "kind": { "enum": ["clean-exit", "exit-code", "signal", "timeout", "spawn-error", "not-started", "unknown"] },
+        "exit_code": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            { "type": "null" }
+          ]
+        },
+        "signal": {
+          "oneOf": [
+            { "enum": ["SIGABRT", "SIGBUS", "SIGILL", "SIGKILL", "SIGSEGV", "SIGTERM", "UNKNOWN"] },
+            { "type": "null" }
+          ]
+        },
+        "last_completed_phase": {
+          "oneOf": [
+            { "enum": ["qvac-import", "worker-start", "model-load", "inference", "clean-shutdown"] },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workload_status", "completion_observed", "failure"],
+      "properties": {
+        "workload_status": { "$ref": "#/$defs/phaseStatus" },
+        "completion_observed": { "type": "boolean" },
+        "failure": { "$ref": "#/$defs/failure" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "phase", "code", "sanitized_excerpt"],
+      "properties": {
+        "category": { "enum": ["none", "missing-qvac", "native-runtime", "worker-crash", "timeout", "backend-unobserved", "workload-failed", "spawn-error", "unknown"] },
+        "phase": {
+          "oneOf": [
+            { "enum": ["discover-qvac", "run-doctor", "run-verification", "qvac-import", "worker-start", "model-load", "inference", "clean-shutdown"] },
+            { "type": "null" }
+          ]
+        },
+        "code": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$" },
+            { "type": "null" }
+          ]
+        },
+        "sanitized_excerpt": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 1024 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collection_policy", "sanitizer_version", "redaction_counts"],
+      "properties": {
+        "collection_policy": { "const": "allowlist-v1" },
+        "sanitizer_version": { "$ref": "#/$defs/semver" },
+        "redaction_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["credentials", "identifiers", "network", "paths"],
+          "properties": {
+            "credentials": { "type": "integer", "minimum": 0, "maximum": 100000 },
+            "identifiers": { "type": "integer", "minimum": 0, "maximum": 100000 },
+            "network": { "type": "integer", "minimum": 0, "maximum": 100000 },
+            "paths": { "type": "integer", "minimum": 0, "maximum": 100000 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qvac-atlas.dev/schemas/profile/1.0.0",
+  "title": "QVAC Atlas immutable workload profile descriptor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "artifact_sha256", "requested_backend", "test_only"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$" },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "artifact_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "requested_backend": { "enum": ["auto", "cpu", "gpu"] },
+    "test_only": { "type": "boolean" }
+  }
+}

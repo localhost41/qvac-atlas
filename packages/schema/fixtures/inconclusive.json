@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "probe_version": "0.1.0",
+  "report_id": "sha256:b3de6ebf5a5045ae2d51c1b6efb2c265da8ce6ff7508e952332833dd19d5d882",
+  "created_at": "2026-07-31T12:05:00.000Z",
+  "provenance": { "kind": "fixture", "fixture_id": "inconclusive" },
+  "consent": { "fingerprint_acknowledged": true, "publication": true },
+  "platform": {
+    "os": { "family": "macos", "version": "15.5", "build": "24F74" },
+    "architecture": "arm64",
+    "cpu": { "vendor": "Apple", "model": "Apple M2", "family": "M2", "feature_flags": ["neon"] },
+    "memory_bucket": "16-31-gib",
+    "gpus": [{ "index": 0, "vendor": "Apple", "model": "M2 Integrated", "device_id": null, "driver_version": null }]
+  },
+  "runtime": { "node_version": "22.17.0" },
+  "qvac": {
+    "discovery": { "status": "passed", "reason": "completed", "duration_ms": 11 },
+    "sdk_version": "0.16.0",
+    "packages": [{ "name": "@qvac/sdk", "version": "0.16.0" }]
+  },
+  "official_checks": {
+    "doctor": { "status": "unknown", "reason": "unavailable", "duration_ms": null },
+    "bundle_verification": { "status": "skipped", "reason": "not-applicable", "duration_ms": null }
+  },
+  "profile": {
+    "id": "atlas-small-llm-lifecycle-test",
+    "version": "1.0.0",
+    "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "requested_backend": "auto"
+  },
+  "execution": {
+    "phases": [
+      { "name": "qvac-import", "status": "passed", "duration_ms": 34 },
+      { "name": "worker-start", "status": "passed", "duration_ms": 215 },
+      { "name": "model-load", "status": "passed", "duration_ms": 880 },
+      { "name": "inference", "status": "unknown", "duration_ms": null }
+    ],
+    "backend_observation": { "status": "unavailable", "backend": null, "method": "unavailable" },
+    "termination": { "kind": "unknown", "exit_code": null, "signal": null, "last_completed_phase": "model-load" }
+  },
+  "result": {
+    "workload_status": "unknown",
+    "completion_observed": false,
+    "failure": { "category": "unknown", "phase": "inference", "code": "RESULT_UNAVAILABLE", "sanitized_excerpt": "The runner did not emit a trustworthy completion event." }
+  },
+  "privacy": {
+    "collection_policy": "allowlist-v1",
+    "sanitizer_version": "0.1.0",
+    "redaction_counts": { "credentials": 0, "identifiers": 0, "network": 0, "paths": 0 }
+  }
+}

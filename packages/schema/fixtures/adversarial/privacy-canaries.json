@@ -1,0 +1,47 @@
+[
+  {
+    "name": "bearer credential",
+    "value": "Bearer atlas_fixture_not_a_secret_1234567890",
+    "expected_rule": "bearer-token"
+  },
+  {
+    "name": "JWT-shaped value",
+    "value": "eyJmaXh0dXJlIjoxMjN9.eyJub3RfYSI6InNlY3JldCJ9.c2lnbmF0dXJlX2ZpeHR1cmU",
+    "expected_rule": "jwt"
+  },
+  {
+    "name": "POSIX home path",
+    "value": "failed at /Users/atlas-fixture/project/model.gguf",
+    "expected_rule": "posix-user-path"
+  },
+  {
+    "name": "Windows home path",
+    "value": "failed at C:\\Users\\atlas-fixture\\project\\model.gguf",
+    "expected_rule": "windows-user-path"
+  },
+  {
+    "name": "email address",
+    "value": "contact atlas-fixture@example.invalid",
+    "expected_rule": "email"
+  },
+  {
+    "name": "MAC address",
+    "value": "adapter 02:00:5e:10:00:00",
+    "expected_rule": "mac-address"
+  },
+  {
+    "name": "IP address",
+    "value": "connected to 192.0.2.42",
+    "expected_rule": "ipv4-address"
+  },
+  {
+    "name": "credential-bearing URL",
+    "value": "https://fixture-user:fixture-password@example.invalid/resource",
+    "expected_rule": "credential-url"
+  },
+  {
+    "name": "sensitive assignment",
+    "value": "API_KEY=atlas_fixture_value",
+    "expected_rule": "sensitive-assignment"
+  }
+]

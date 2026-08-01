@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "probe_version": "0.1.0",
+  "report_id": "sha256:9391391bb0854a0aa847d8f06f4ebc49751688a2c34576748c3f9343147ccd86",
+  "created_at": "2026-07-31T12:04:00.000Z",
+  "provenance": { "kind": "fixture", "fixture_id": "missing-qvac" },
+  "consent": { "fingerprint_acknowledged": true, "publication": true },
+  "platform": {
+    "os": { "family": "linux", "version": "24.04", "build": null },
+    "architecture": "x64",
+    "cpu": { "vendor": "Intel", "model": "Core i5-1240P", "family": "Alder Lake", "feature_flags": ["avx", "avx2"] },
+    "memory_bucket": "16-31-gib",
+    "gpus": []
+  },
+  "runtime": { "node_version": "22.17.0" },
+  "qvac": {
+    "discovery": { "status": "failed", "reason": "missing-qvac", "duration_ms": 9 },
+    "sdk_version": null,
+    "packages": []
+  },
+  "official_checks": {
+    "doctor": { "status": "skipped", "reason": "missing-qvac", "duration_ms": null },
+    "bundle_verification": { "status": "skipped", "reason": "not-applicable", "duration_ms": null }
+  },
+  "profile": {
+    "id": "atlas-small-llm-lifecycle-test",
+    "version": "1.0.0",
+    "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "requested_backend": "cpu"
+  },
+  "execution": {
+    "phases": [{ "name": "qvac-import", "status": "skipped", "duration_ms": null }],
+    "backend_observation": { "status": "not-reached", "backend": null, "method": "unavailable" },
+    "termination": { "kind": "not-started", "exit_code": null, "signal": null, "last_completed_phase": null }
+  },
+  "result": {
+    "workload_status": "skipped",
+    "completion_observed": false,
+    "failure": { "category": "missing-qvac", "phase": "discover-qvac", "code": "QVAC_NOT_FOUND", "sanitized_excerpt": null }
+  },
+  "privacy": {
+    "collection_policy": "allowlist-v1",
+    "sanitizer_version": "0.1.0",
+    "redaction_counts": { "credentials": 0, "identifiers": 0, "network": 0, "paths": 0 }
+  }
+}

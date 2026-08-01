@@ -1,0 +1,38 @@
+{
+  "fallback.json": {
+    "observation": "fallback",
+    "claim": "unknown",
+    "actual_backend_claim": "observed-success",
+    "reasons": ["different-backend-observed", "standard-workload-completed"]
+  },
+  "inconclusive.json": {
+    "observation": "inconclusive",
+    "claim": "unknown",
+    "actual_backend_claim": null,
+    "reasons": ["backend-not-directly-observed", "insufficient-evidence", "workload-state-unknown"]
+  },
+  "missing-qvac.json": {
+    "observation": "inconclusive",
+    "claim": "unknown",
+    "actual_backend_claim": null,
+    "reasons": ["backend-not-directly-observed", "insufficient-evidence", "qvac-version-unavailable", "workload-skipped"]
+  },
+  "success.json": {
+    "observation": "success",
+    "claim": "observed-success",
+    "actual_backend_claim": "observed-success",
+    "reasons": ["requested-backend-observed", "standard-workload-completed"]
+  },
+  "timeout.json": {
+    "observation": "failure",
+    "claim": "observed-failure",
+    "actual_backend_claim": null,
+    "reasons": ["defined-runtime-failure"]
+  },
+  "worker-crash.json": {
+    "observation": "failure",
+    "claim": "observed-failure",
+    "actual_backend_claim": null,
+    "reasons": ["backend-not-directly-observed", "defined-runtime-failure"]
+  }
+}

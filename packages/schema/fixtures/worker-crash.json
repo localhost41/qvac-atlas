@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "probe_version": "0.1.0",
+  "report_id": "sha256:cb27f507b7af25ea486e55a78caf986731009cbb769645400446b8f0e287c65c",
+  "created_at": "2026-07-31T12:02:00.000Z",
+  "provenance": { "kind": "fixture", "fixture_id": "worker-crash" },
+  "consent": { "fingerprint_acknowledged": true, "publication": true },
+  "platform": {
+    "os": { "family": "linux", "version": "12", "build": null },
+    "architecture": "arm64",
+    "cpu": { "vendor": "ARM", "model": "Cortex-A76", "family": "ARMv8", "feature_flags": ["asimd", "crc32"] },
+    "memory_bucket": "8-15-gib",
+    "gpus": []
+  },
+  "runtime": { "node_version": "22.17.0" },
+  "qvac": {
+    "discovery": { "status": "passed", "reason": "completed", "duration_ms": 18 },
+    "sdk_version": "0.16.0",
+    "packages": [{ "name": "@qvac/sdk", "version": "0.16.0" }]
+  },
+  "official_checks": {
+    "doctor": { "status": "passed", "reason": "completed", "duration_ms": 360 },
+    "bundle_verification": { "status": "passed", "reason": "completed", "duration_ms": 95 }
+  },
+  "profile": {
+    "id": "atlas-small-llm-lifecycle-test",
+    "version": "1.0.0",
+    "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "requested_backend": "cpu"
+  },
+  "execution": {
+    "phases": [
+      { "name": "qvac-import", "status": "passed", "duration_ms": 31 },
+      { "name": "worker-start", "status": "failed", "duration_ms": 44 }
+    ],
+    "backend_observation": { "status": "not-reached", "backend": null, "method": "unavailable" },
+    "termination": { "kind": "signal", "exit_code": null, "signal": "SIGILL", "last_completed_phase": "qvac-import" }
+  },
+  "result": {
+    "workload_status": "failed",
+    "completion_observed": false,
+    "failure": { "category": "worker-crash", "phase": "worker-start", "code": "WORKER_SIGILL", "sanitized_excerpt": "Worker terminated with illegal instruction during native addon initialization." }
+  },
+  "privacy": {
+    "collection_policy": "allowlist-v1",
+    "sanitizer_version": "0.1.0",
+    "redaction_counts": { "credentials": 0, "identifiers": 0, "network": 0, "paths": 1 }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qvac-atlas.dev/schemas/claim/1.0.0",
+  "title": "Derived QVAC Atlas claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["observation", "claim", "actual_backend_claim", "reasons"],
+  "properties": {
+    "observation": { "enum": ["success", "fallback", "failure", "inconclusive"] },
+    "claim": { "enum": ["observed-success", "reproduced-success", "mixed", "observed-failure", "unknown"] },
+    "actual_backend_claim": {
+      "oneOf": [
+        { "enum": ["observed-success", "reproduced-success"] },
+        { "type": "null" }
+      ]
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "standard-workload-completed",
+          "requested-backend-observed",
+          "different-backend-observed",
+          "defined-runtime-failure",
+          "qvac-version-unavailable",
+          "backend-not-directly-observed",
+          "workload-not-completed",
+          "workload-skipped",
+          "workload-state-unknown",
+          "nonstandard-profile",
+          "insufficient-evidence",
+          "success-and-failure-evidence",
+          "independently-reproduced",
+          "fixture-evidence"
+        ]
+      }
+    }
+  }
+}
