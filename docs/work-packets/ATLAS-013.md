@@ -125,9 +125,9 @@ least 512 MiB (536,870,912 bytes) free on its volume. A cache miss requires at l
 10 GiB preflight and the applicable contained check must pass. The approximately
 1 GiB available on the development host recorded in `docs/STATUS.md` is not enough.
 
-The operator may inspect capacity locally, but the evidence log records only
-`capacity_gate: passed`. It must not record mount names, paths, account names, or
-raw `df` output.
+The operator may inspect capacity locally, but when the check is reached the
+evidence log records only `capacity_gate: passed|failed`. It must not record mount
+names, paths, account names, free-byte measurements, or raw `df` output.
 
 ## Mandatory pre-ceremony artifact and workload acknowledgment
 
@@ -318,9 +318,10 @@ Keep the sanitized run record private and outside both repositories. It may cont
 only:
 
 - the Atlas, volunteer-project, and normative QVAC baseline full commit hashes and
-  the reviewed one-token-diff approval outcome;
+  the one-token-diff review outcome `passed|failed|not-reached`;
 - exact Node and pnpm versions plus coarse `macOS` and `arm64` labels;
-- pass/fail for preflight gates; `approved|refused|not-reached` for fingerprint,
+- `passed|failed` for a reached preflight, `passed|failed|not-reached` for capacity
+  and one-token-diff review; `approved|refused|not-reached` for fingerprint,
   project-code, artifact/workload, and local-write checkpoints; and
   `declined|refused|not-reached` for publication intent, without prompt or response
   text;
@@ -329,7 +330,8 @@ only:
   strictly derived internal artifact-equality outcome, and a separately sourced
   manual current-state artifact inspection;
 - observed device class `cpu`, `gpu`, or `unknown` exactly as admitted by the
-  report; report ID; privacy-review outcome; retention choices; and final verdict.
+  report; report ID; privacy-review outcome; artifact/report retention choices;
+  disposable-clone destruction outcome; and final verdict.
 
 The record, terminal tooling, screenshots, and review notes must never capture raw
 project/cache/model/output paths; account or mount names; source or redirect URLs;
@@ -366,19 +368,29 @@ The run is not complete when inference returns. In this order:
 4. The operator separately chooses `retain-private` or `remove-after-review` for the
    local report. It is never copied into Atlas, the volunteer project, a cloud-sync
    folder, an issue, or a pull request under this authorization.
-5. Quarantine the entire disposable clone until diff, build, run, and cleanup
-   review finishes. Then remove that exact clone or retain it offline for incident
-   review; never commit, merge, reuse, package, link, or copy its modified source or
-   build output. This is an exact-target action approved by its owner, not a broad
-   cleanup command.
+5. Keep the entire disposable clone isolated only until the immediate diff, build,
+   run, and cleanup review finishes. Preserve sanitized commit hashes, the
+   one-token diff identity, and allowlisted evidence instead of the enabled tree.
+   Then destroy the exact disposable clone and its enabled build before assigning a
+   normal verdict, and record `disposable_destroyed: passed|failed`. Never commit,
+   merge, reuse, package, link, or copy its modified source or build output. Failure
+   to prove destruction is `STOP / MANUAL REVIEW`.
 6. Recheck the canonical Atlas checkout at `atlas_base_commit`: clean tree, shipped
    `packages/cli/src/bin.ts` still passes literal `false`, no disposable branch,
    link, copied build, report, or model. Recheck the volunteer project commit and
    clean tree. Record only pass/fail and hashes.
 
+ATLAS-013 itself never authorizes retention of the enabled clone, even offline. If
+forensic preservation is necessary, stop ATLAS-013 and transfer custody only under
+separately granted incident-response authority. That event remains
+`STOP / MANUAL REVIEW`; it cannot receive a normal ATLAS-013 verdict while the
+enabled clone or build survives.
+
 If a crash leaves a named partial, cleanup is uncertain, an invalid final appears,
 or a process may remain, stop. Keep the host private and quiescent, preserve the
-exact affected objects for maintainer review, and do not rerun or improvise cleanup.
+exact affected cache/output objects for maintainer review, and do not rerun or
+improvise cleanup. This does not authorize retaining the enabled clone; its
+destruction rule and separate incident-response exception above still apply.
 
 ## Verdict rules
 
@@ -395,7 +407,8 @@ exact affected objects for maintainer review, and do not rerun or improvise clea
 - direct public completion statistics reported `gpu`;
 - a canonical private report exactly matched its preview and passed independent
   privacy review; and
-- retention and disposable-clone rollback decisions were completed and recorded.
+- artifact/report retention decisions were recorded, disposable clone and enabled
+  build destruction was `passed`, and canonical rollback was proved.
 
 `VALID FALLBACK — observed CPU lifecycle` has the same requirements but direct
 statistics reported `cpu`. It is useful evidence, not an ATLAS-013 GPU-gate pass,
@@ -408,8 +421,9 @@ settlement was still proved and no privacy, security, process, or artifact-ident
 uncertainty exists. `STOP / MANUAL REVIEW` covers dirty or unpinned input,
 insufficient capacity, unreviewed diff, unexpected effect, invariant violation,
 timeout/crash, possible survivor, uncertain cache/output state, failed privacy
-review or any privacy exposure, or any pressure to bypass consent. None of the
-latter three verdicts pass the physical gate.
+review or any privacy exposure, failed or unproved disposable-clone destruction,
+or any pressure to bypass consent. None of the latter three verdicts pass the
+physical gate.
 
 There is no automatic retry and no conversion of unknown or fallback evidence into
 success.
@@ -448,9 +462,9 @@ node_version: <22.x.y>
 pnpm_version: 11.10.0
 platform: macOS
 architecture: arm64
-preflight: passed
-capacity_gate: passed
-one_token_diff_review: passed
+preflight: <passed|failed>
+capacity_gate: <passed|failed|not-reached>
+one_token_diff_review: <passed|failed|not-reached>
 consents:
   fingerprint: <approved|refused|not-reached>
   project_code: <approved|refused|not-reached>
@@ -467,6 +481,7 @@ report_id: <schema-bounded-id-or-omitted>
 privacy_review: <passed|failed|not-completed>
 artifact_retention: <retain|remove|manual-review>
 report_retention: <retain-private|remove-after-review|manual-review>
+disposable_destroyed: <passed|failed>
 canonical_rollback: <passed|failed>
 verdict: <gpu-pass|cpu-fallback|inconclusive|fail|stop>
 ```
