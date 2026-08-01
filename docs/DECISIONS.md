@@ -91,3 +91,20 @@ pinned SHA-256; reject symlinks and path escapes; compare QVAC's loaded local pa
 and hash again after the lifecycle. This remains a narrow path-based safety model,
 not cryptographic proof of the bytes opened by the native addon. It stays dormant
 until its own implementation, adversarial review, and real-device gate pass.
+
+## D-015 — The verified artifact crosses only a private supervised bootstrap
+
+ATLAS-020 keeps the local-model bridge dormant and preserves the existing lifecycle
+and evidence grammar. A verified-artifact capability may be consumed only into the
+executor's existing opaque, single-use grant. The grant material crosses to the
+trusted child in a second exact parent-to-child IPC message sent inside the
+resolver's established TERM/KILL/reap failure envelope; it never enters argv,
+environment, stdout, stderr, child-to-parent events, errors, or reports.
+
+The supervised child, not the caller process, performs a descriptor-safe full hash
+immediately before `loadModel`, passes only the canonical absolute local path with
+explicit `llamacpp-completion` type, and requires `getLoadedModelInfo` to return the
+same model ID, a non-delegated local model, the exact model type, and the exact path.
+After unload and close it revalidates the artifact again. Any mismatch is fixed,
+path-free, non-claim-producing evidence. ATLAS-020 adds no consent issuer, CLI,
+probe wiring, report field, profile approval, download, or real model execution.
