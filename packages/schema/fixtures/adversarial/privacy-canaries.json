@@ -608,5 +608,65 @@
     "name": "acronym-leading secret key assignment",
     "value": "AWSSecretKey=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numeric-infix API key assignment",
+    "value": "API2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "versioned camel-case API key assignment",
+    "value": "apiV2Key=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numeric-infix access key assignment",
+    "value": "ACCESS2KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "underscored numeric-infix API key assignment",
+    "value": "API2_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numeric-infix private key assignment",
+    "value": "private2Key=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "numeric-infix camel-case access key assignment",
+    "value": "access2Key=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "prefixed compact secret access key assignment",
+    "value": "AWSSECRETACCESSKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "prefixed compact private key assignment",
+    "value": "MYPRIVATEKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "prefixed compact access key assignment",
+    "value": "MYACCESSKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "prefixed compact secret key assignment",
+    "value": "MYSECRETKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym MAC address assignment",
+    "value": "MACaddress=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "mixed-acronym IP address assignment",
+    "value": "IPaddress=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]

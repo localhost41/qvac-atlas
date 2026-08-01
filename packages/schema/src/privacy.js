@@ -49,15 +49,33 @@ const CONTENT_RULES = [
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
-const COMPACT_KEY_SEGMENTS = new Map([
+const COMPACT_ASSIGNMENT_SEGMENTS = new Map([
   ["ACCESSKEY", "ACCESS_KEY"],
   ["ACCESSKEYS", "ACCESS_KEYS"],
+  ["APIKEY", "API_KEY"],
+  ["APIKEYS", "API_KEYS"],
+  ["FULLLOG", "FULL_LOG"],
+  ["FULLLOGS", "FULL_LOGS"],
+  ["HOMEDIRECTORIES", "HOME_DIRECTORIES"],
+  ["HOMEDIRECTORY", "HOME_DIRECTORY"],
+  ["IPADDRESS", "IP_ADDRESS"],
+  ["IPADDRESSES", "IP_ADDRESSES"],
+  ["MACADDRESS", "MAC_ADDRESS"],
+  ["MACADDRESSES", "MAC_ADDRESSES"],
+  ["MACHINEID", "MACHINE_ID"],
+  ["MACHINEIDS", "MACHINE_IDS"],
   ["PRIVATEKEY", "PRIVATE_KEY"],
   ["PRIVATEKEYS", "PRIVATE_KEYS"],
+  ["PROCESSLIST", "PROCESS_LIST"],
+  ["PROCESSLISTS", "PROCESS_LISTS"],
+  ["SERIALNUMBER", "SERIAL_NUMBER"],
+  ["SERIALNUMBERS", "SERIAL_NUMBERS"],
   ["SECRETACCESSKEY", "SECRET_ACCESS_KEY"],
   ["SECRETACCESSKEYS", "SECRET_ACCESS_KEYS"],
   ["SECRETKEY", "SECRET_KEY"],
   ["SECRETKEYS", "SECRET_KEYS"],
+  ["SHELLHISTORIES", "SHELL_HISTORIES"],
+  ["SHELLHISTORY", "SHELL_HISTORY"],
 ]);
 const PLURAL_ASSIGNMENT_SEGMENTS = new Map([
   ["ADDRESSES", "ADDRESS"],
@@ -156,11 +174,19 @@ function assignmentNameVariants(rawName) {
 }
 
 function isSensitiveAssignmentName(name) {
-  const segments = name
-    .split("_")
-    .filter(Boolean)
+  const rawSegments = name.split("_").filter(Boolean);
+  // A recognized compact key family may have an ordinary namespace prefix
+  // inside the same segment (for example AWSSECRETACCESSKEY). Match only at
+  // the segment end so KEYBOARD and KEYSTONE supersets remain safe.
+  if (
+    rawSegments.some((segment) =>
+      /(?:ACCESS|API|PRIVATE|SECRET(?:ACCESS)?)KEYS?$/u.test(segment),
+    )
+  )
+    return true;
+  const segments = rawSegments
     .flatMap((segment) =>
-      (COMPACT_KEY_SEGMENTS.get(segment) ?? segment).split("_"),
+      (COMPACT_ASSIGNMENT_SEGMENTS.get(segment) ?? segment).split("_"),
     );
   const policySegments = segments.map(
     (segment) => PLURAL_ASSIGNMENT_SEGMENTS.get(segment) ?? segment,
@@ -174,12 +200,11 @@ function isSensitiveAssignmentName(name) {
     )
   )
     return true;
-  for (let index = 0; index + 1 < policySegments.length; index += 1) {
-    if (
-      SENSITIVE_KEY_PREFIXES.has(policySegments[index]) &&
-      policySegments[index + 1] === "KEY"
-    )
-      return true;
+  for (let index = 0; index < policySegments.length; index += 1) {
+    if (!SENSITIVE_KEY_PREFIXES.has(policySegments[index])) continue;
+    // Namespace and version segments are allowed between a sensitive prefix
+    // and KEY. Requiring adjacency let API2KEY and apiV2Key bypass policy.
+    if (policySegments.slice(index + 1).includes("KEY")) return true;
   }
   return false;
 }
