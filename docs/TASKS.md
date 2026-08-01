@@ -46,7 +46,12 @@ Updated: 2026-08-01
 | ATLAS-030  | catalog worker      | Sol              | completed        | ATLAS-024, ATLAS-026            | Trusted active/superseded/withdrawn evidence lifecycle that excludes retired reports from current claims     |
 | ATLAS-031  | operations worker   | Terra            | completed        | ATLAS-021D, ATLAS-026           | Exact Node-22 toolchain, one-command local readiness, activation checklist, and incident/admission runbooks  |
 | ATLAS-032  | quality worker      | Sol              | completed        | ATLAS-024                       | History-wide append-only proof that rejects intermediate mutation, deletion, or type/mode drift              |
-| ATLAS-033  | release captain     | Sol xhigh        | awaiting human   | ATLAS-021D                      | Release-candidate architecture, privacy, evidence, operations, and physical-run adjudication                 |
+| ATLAS-033  | release captain     | Sol xhigh        | completed        | ATLAS-021D                      | Release-candidate architecture, privacy, evidence, operations, and physical-run adjudication                 |
+| ATLAS-034  | release captain     | Sol xhigh        | in progress      | ATLAS-033                       | Community-launch preparation program and serialized integration                                               |
+| ATLAS-034A | distribution worker | Sol xhigh        | in progress      | ATLAS-034                       | Locally installable `0.1.0` CLI artifact with clean non-workspace smoke tests                                 |
+| ATLAS-034B | governance worker   | Sol xhigh        | in progress      | ATLAS-034                       | Repository ownership, security, release, and public-host bootstrap controls                                   |
+| ATLAS-034C | launch worker       | Sol xhigh        | in progress      | ATLAS-034                       | Deployable static site, contributor walkthrough, private-beta kit, and unsent launch materials                |
+| ATLAS-034D | quality workers     | Sol xhigh        | pending          | ATLAS-034A–034C                 | Integrated community-launch candidate and independent acceptance report                                       |
 
 ## Queue rules
 

@@ -132,13 +132,12 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-The next serialized gate is the independent human review of the private engineering
-report and enabled disposable clone. If the reviewer releases the clone from
-forensic hold, destroy it; then restore at least 10 GiB of ceremony headroom,
-prepare a clean commit-pinned Git QVAC project using the official package manifest,
-and conduct a fresh pre-approved ATLAS-013 run. Production profile/report admission
-and user-facing real execution stay disabled until that physical gate and the later
-repository-trust and activation gates succeed.
+The ATLAS-033 independent review is complete and the reviewer-released enabled
+clone was destroyed. ATLAS-034 now prepares installable distribution, repository
+governance, static deployment, contributor onboarding, and beta/release operations
+in parallel. The previous physical attempt remains engineering evidence with a
+formal `STOP / MANUAL REVIEW`; production profile/report admission and user-facing
+real execution stay disabled unless a conforming ATLAS-013 gate is later accepted.
 
 ## Known risks
 
