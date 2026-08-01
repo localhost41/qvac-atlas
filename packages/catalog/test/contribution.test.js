@@ -351,9 +351,9 @@ test("catalog admission scans OS entropy, driver entropy, and driver dotted quad
     {
       name: "driver dotted quad",
       rule: "ipv4-address",
-      value: "192.0.2.42",
+      value: "driver_192.0.2.42_release",
       apply: (report) => {
-        report.platform.gpus[0].driver_version = "192.0.2.42";
+        report.platform.gpus[0].driver_version = "driver_192.0.2.42_release";
       },
     },
   ];

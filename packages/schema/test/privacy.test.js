@@ -80,9 +80,11 @@ test("only schema-constrained hashes and versions bypass entropy scanning", asyn
 });
 
 test("dotted quads in driver versions cannot bypass network scanning", () => {
-  assert.deepEqual(scanPrivacy({ driver_version: "1.2.3.4" }), [
-    { path: "/driver_version", rule: "ipv4-address" },
-  ]);
+  for (const driver_version of ["1.2.3.4", "driver_1.2.3.4_release"]) {
+    assert.deepEqual(scanPrivacy({ driver_version }), [
+      { path: "/driver_version", rule: "ipv4-address" },
+    ]);
+  }
 });
 
 test("IPv6 detection respects address validity and contributor-string boundaries", () => {
@@ -208,9 +210,9 @@ test("OS and driver entropy plus driver dotted quads reject refreshed genuine re
       name: "driver dotted quad",
       rule: "ipv4-address",
       apply: (report) => {
-        report.platform.gpus[0].driver_version = "192.0.2.42";
+        report.platform.gpus[0].driver_version = "driver_192.0.2.42_release";
       },
-      value: "192.0.2.42",
+      value: "driver_192.0.2.42_release",
     },
   ];
   for (const entry of cases) {

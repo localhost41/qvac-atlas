@@ -35,6 +35,11 @@
     "expected_rule": "ipv4-address"
   },
   {
+    "name": "underscore-delimited IP address",
+    "value": "driver_192.0.2.42_release",
+    "expected_rule": "ipv4-address"
+  },
+  {
     "name": "full IPv6 address",
     "value": "connected to 2001:0db8:85a3:0000:0000:8a2e:0370:7334",
     "expected_rule": "ipv6-address"
@@ -57,6 +62,11 @@
   {
     "name": "canonical UUID",
     "value": "machine 123e4567-e89b-12d3-a456-426614174000",
+    "expected_rule": "stable-identifier"
+  },
+  {
+    "name": "underscore-delimited UUID",
+    "value": "device_123e4567-e89b-12d3-a456-426614174000_value",
     "expected_rule": "stable-identifier"
   },
   {
