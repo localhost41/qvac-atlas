@@ -49,7 +49,9 @@ const CONTENT_RULES = [
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
-const COMPACT_SENSITIVE_PREFIX = /(?:SECRET|PRIVATE|ACCESS|API)/gu;
+const COMPACT_ADJACENT_SENSITIVE_KEY =
+  /(?:SECRET(?:V(?:ERSION)?\d*|\d+)?(?:ACCESS(?:V(?:ERSION)?\d*|\d+)?)?KEY|PRIVATE(?:V(?:ERSION)?\d*|\d+)?KEY|ACCESS(?:V(?:ERSION)?\d*|\d+)?KEY|API(?:V(?:ERSION)?\d*|\d+)?KEY)/gu;
+const COMPACT_LEADING_SENSITIVE_PREFIX = /^(?:SECRET|PRIVATE|ACCESS|API)/u;
 const SAFE_KEY_WORD_PREFIX = /^KEY(?:BOARD|STONE|WORD|NOTE)/u;
 const SAFE_KEY_ENDING_STEMS = [
   "DON",
@@ -193,21 +195,32 @@ function assignmentNameVariants(rawName) {
 function hasCompactSensitiveKey(segment) {
   // The segment and every generated variant are schema-bounded. Continue past
   // benign words so a later real key family in the same segment is still found.
-  for (const prefix of segment.matchAll(COMPACT_SENSITIVE_PREFIX)) {
-    const prefixEnd = prefix.index + prefix[0].length;
-    // SECRETARY is an ordinary safe superset already permitted by policy.
-    if (prefix[0] === "SECRET" && segment.startsWith("ARY", prefixEnd)) continue;
-    let keyIndex = segment.indexOf("KEY", prefixEnd);
-    while (keyIndex !== -1) {
-      const bridge = segment.slice(prefixEnd, keyIndex);
-      const tail = segment.slice(keyIndex + 3);
-      const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
-        bridge.endsWith(stem),
-      );
-      if (!ordinaryKeyWord && !SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`))
-        return true;
-      keyIndex = segment.indexOf("KEY", keyIndex + 3);
-    }
+  for (const match of segment.matchAll(COMPACT_ADJACENT_SENSITIVE_KEY)) {
+    const tail = segment.slice(match.index + match[0].length);
+    if (SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`)) continue;
+    return true;
+  }
+  const prefix = segment.match(COMPACT_LEADING_SENSITIVE_PREFIX);
+  if (prefix === null) return false;
+  const prefixEnd = prefix[0].length;
+  // Avoid ordinary words whose spelling begins with a policy prefix.
+  if (
+    (prefix[0] === "SECRET" && segment.startsWith("ARY", prefixEnd)) ||
+    (prefix[0] === "ACCESS" && segment.startsWith("ORY", prefixEnd)) ||
+    (prefix[0] === "API" && segment.startsWith("ARY", prefixEnd)) ||
+    (prefix[0] === "PRIVATE" && segment.startsWith("ER", prefixEnd))
+  )
+    return false;
+  let keyIndex = segment.indexOf("KEY", prefixEnd);
+  while (keyIndex !== -1) {
+    const bridge = segment.slice(prefixEnd, keyIndex);
+    const tail = segment.slice(keyIndex + 3);
+    const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
+      bridge.endsWith(stem),
+    );
+    if (!ordinaryKeyWord && !SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`))
+      return true;
+    keyIndex = segment.indexOf("KEY", keyIndex + 3);
   }
   return false;
 }
