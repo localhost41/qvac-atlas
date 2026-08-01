@@ -108,12 +108,10 @@ test(
       assert.match(audit.sha256, /^[0-9a-f]{64}$/u);
 
       const installRoot = path.join(root, "fresh-project");
-      const fakeHome = path.join(root, "home");
       const npmCache = path.join(root, "npm-cache");
       const globalModules = path.join(root, "global", "node_modules");
       const marker = path.join(root, "global-qvac-was-loaded");
       await mkdir(installRoot, { recursive: true });
-      await mkdir(fakeHome, { recursive: true });
       await mkdir(npmCache, { recursive: true });
       for (const packageName of ["sdk", "cli"]) {
         const packageRoot = path.join(globalModules, "@qvac", packageName);
@@ -157,7 +155,6 @@ test(
           encoding: "utf8",
           env: {
             ...process.env,
-            HOME: fakeHome,
             npm_config_audit: "false",
             npm_config_cache: npmCache,
             npm_config_fund: "false",
@@ -194,7 +191,6 @@ test(
       );
       const executionEnv = {
         ...process.env,
-        HOME: fakeHome,
         NODE_PATH: globalModules,
         QVAC_ATLAS_REAL: "1",
         QVAC_ATLAS_YES: "1",
