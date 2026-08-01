@@ -33,7 +33,7 @@ Updated: 2026-08-01
 | ATLAS-021  | release captain     | Sol              | in progress      | ATLAS-020                       | Dormant real-mode activation program; hard-gated and claim-ineligible until ATLAS-013                      |
 | ATLAS-021A | artifact worker     | Sol              | completed        | ATLAS-020                       | Manual redirect authority, crash-recoverable staging, and contained acquisition child                      |
 | ATLAS-021B | probe worker        | Sol              | completed        | ATLAS-021A                      | Genuine candidate report assembly and dependency-inverted real consent/state pipeline                      |
-| ATLAS-021C | CLI worker          | Sol              | pending          | ATLAS-021B                      | Concrete cwd resolver/Doctor/artifact/executor wiring behind a hardcoded false release gate                |
+| ATLAS-021C | CLI worker          | Sol              | completed        | ATLAS-021B                      | Concrete cwd resolver/Doctor/artifact/executor wiring behind a hardcoded false release gate                |
 | ATLAS-021D | quality workers     | Sol + Terra      | pending          | ATLAS-021C                      | Independent activation, containment, privacy, UX, and reproducibility acceptance                           |
 | ATLAS-022  | quality worker      | Terra            | completed        | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
 

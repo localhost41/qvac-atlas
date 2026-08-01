@@ -12,6 +12,7 @@ import {
 } from "@qvac-atlas/probe";
 
 import { LocalMockProbeAdapter, type ProbeAdapter } from "./mock-adapter.js";
+import { dispatchCli } from "./internal-dispatcher.js";
 
 const SCENARIOS = new Set<FixtureScenario>([
   "success",
@@ -37,7 +38,7 @@ function yes(value: string): boolean {
 }
 
 function usage(): string {
-  return "Usage: qvac-atlas probe --fixture <success|missing-qvac|worker-crash|timeout> --output <path> [--project <path>]";
+  return "Usage: qvac-atlas probe --fixture <success|missing-qvac|worker-crash|timeout> --output <path> [--project <path>]\n       qvac-atlas probe --real --output <path>";
 }
 
 function parseArgs(args: string[], cwd: string): ProbeOptions | null {
@@ -67,7 +68,15 @@ export async function runCli(
   args: string[],
   dependencies: CliDependencies,
 ): Promise<number> {
-  const options = parseArgs(args, dependencies.cwd());
+  let options: ProbeOptions | null;
+  try {
+    options = parseArgs(args, dependencies.cwd());
+  } catch {
+    dependencies.stderr(
+      "QVAC Atlas stopped safely before completion. No report was uploaded; check the chosen local destination and try again.\n",
+    );
+    return 1;
+  }
   if (options === null) {
     dependencies.stderr(
       `${usage()}\nReal QVAC execution remains disabled until the audited SDK resolver is bound to a reviewed executor and passes the device gate.\n`,
@@ -138,33 +147,53 @@ export function renderFixtureResult(adapter: ProbeAdapter): string {
 }
 
 async function main(): Promise<void> {
-  const reader = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  let reader: ReturnType<typeof createInterface> | undefined;
   try {
-    process.exitCode = await runCli(process.argv.slice(2), {
-      interactive: Boolean(process.stdin.isTTY && process.stdout.isTTY),
-      cwd: () => process.cwd(),
-      ask: (question) => reader.question(question),
-      stdout: (value) => process.stdout.write(value),
-      stderr: (value) => process.stderr.write(value),
-      runProbe: (options, interaction) =>
-        runFixtureProbe(options, {
-          interaction,
-          doctor: {
-            run: async () => ({
-              evidence: {
-                status: "passed",
-                reason: "completed",
-                duration_ms: 1,
-              },
-            }),
-          },
-        }),
-    });
+    process.exitCode = await dispatchCli(
+      process.argv.slice(2),
+      {
+        interactive: false,
+        isInteractive: () =>
+          Boolean(process.stdin.isTTY && process.stdout.isTTY),
+        cwd: () => process.cwd(),
+        ask: (question) => {
+          reader ??= createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          return reader.question(question);
+        },
+        askReal: (question, signal) => {
+          reader ??= createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          return reader.question(question, { signal });
+        },
+        stdout: (value) => process.stdout.write(value),
+        stderr: (value) => process.stderr.write(value),
+        onSigint: (listener) => {
+          process.once("SIGINT", listener);
+          return () => process.off("SIGINT", listener);
+        },
+        runProbe: (options, interaction) =>
+          runFixtureProbe(options, {
+            interaction,
+            doctor: {
+              run: async () => ({
+                evidence: {
+                  status: "passed" as const,
+                  reason: "completed" as const,
+                  duration_ms: 1,
+                },
+              }),
+            },
+          }),
+      },
+      false,
+    );
   } finally {
-    reader.close();
+    reader?.close();
   }
 }
 

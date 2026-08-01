@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -169,4 +169,84 @@ test("Doctor timeout escalates to SIGKILL and settles for a signal-ignoring chil
   }).execute(entry, root);
   assert.equal(result.timedOut, true);
   assert.ok(Date.now() - started < 1_000);
+});
+
+test("Doctor abort rejects only after a stubborn descendant is absent", async (context) => {
+  if (process.platform === "win32") return context.skip("POSIX signal fixture");
+  const root = await mkdtemp(path.join(os.tmpdir(), "atlas-doctor-abort-"));
+  const entry = path.join(root, "doctor.js");
+  const marker = path.join(root, "process-tree.json");
+  const ready = path.join(root, "descendant.ready");
+  const term = path.join(root, "term-signals.txt");
+  const descendantProgram = [
+    "const {appendFileSync,writeFileSync}=require('node:fs')",
+    "const ready=process.argv[1]",
+    "const term=process.argv[2]",
+    "process.on('SIGTERM',()=>appendFileSync(term,'descendant\\n'))",
+    "writeFileSync(ready,'ready')",
+    "setInterval(()=>{},1000)",
+  ].join(";");
+  await writeFile(
+    entry,
+    [
+      "const {spawn}=require('node:child_process')",
+      "const {appendFileSync,existsSync,writeFileSync}=require('node:fs')",
+      `process.on('SIGTERM',()=>appendFileSync(${JSON.stringify(term)},'root\\n'))`,
+      `const child=spawn(process.execPath,['-e',${JSON.stringify(descendantProgram)},${JSON.stringify(ready)},${JSON.stringify(term)}],{stdio:'ignore'})`,
+      `const deadline=Date.now()+2000;while(!existsSync(${JSON.stringify(ready)})&&Date.now()<deadline){}`,
+      `if(!existsSync(${JSON.stringify(ready)}))throw new Error('descendant-not-ready')`,
+      `writeFileSync(${JSON.stringify(marker)},JSON.stringify({root:process.pid,descendant:child.pid}))`,
+      "setInterval(()=>{},1000)",
+    ].join(";"),
+    "utf8",
+  );
+  const controller = new AbortController();
+  let pending: Promise<DoctorExecution> | undefined;
+  let processTree:
+    { readonly root: number; readonly descendant: number } | undefined;
+  context.after(async () => {
+    controller.abort();
+    await pending?.catch(() => undefined);
+    if (processTree !== undefined) {
+      for (const pid of [processTree.descendant, processTree.root]) {
+        try {
+          process.kill(pid, "SIGKILL");
+        } catch {
+          // A passing executor has already removed the complete group.
+        }
+      }
+    }
+    await rm(root, { recursive: true, force: true });
+  });
+  pending = new NodeDoctorExecutor({
+    timeoutMs: 5_000,
+    graceMs: 60,
+    hardSettleMs: 750,
+  }).execute(entry, root, controller.signal);
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    processTree = await readFile(marker, "utf8").then(
+      (value) => JSON.parse(value) as typeof processTree,
+      () => undefined,
+    );
+    if (processTree !== undefined) break;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  assert.equal(Number.isSafeInteger(processTree?.root), true);
+  assert.equal(Number.isSafeInteger(processTree?.descendant), true);
+  const abortedAt = Date.now();
+  controller.abort();
+  await assert.rejects(() => pending, { message: "doctor-aborted" });
+  const abortDuration = Date.now() - abortedAt;
+  assert.ok(abortDuration >= 40);
+  assert.ok(abortDuration < 1_500);
+  const termSignals = await readFile(term, "utf8");
+  assert.match(termSignals, /root/);
+  assert.match(termSignals, /descendant/);
+  for (const pid of [processTree!.root, processTree!.descendant]) {
+    assert.throws(
+      () => process.kill(pid, 0),
+      (error: NodeJS.ErrnoException) => error.code === "ESRCH",
+    );
+  }
+  processTree = undefined;
 });

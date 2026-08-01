@@ -135,6 +135,31 @@ function signalGroup(pid: number | undefined, signal: NodeJS.Signals): void {
   }
 }
 
+function groupExists(pid: number | undefined): boolean {
+  if (pid === undefined || process.platform === "win32") return false;
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    return !(
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ESRCH"
+    );
+  }
+}
+
+async function settleKilledGroup(
+  pid: number | undefined,
+  timeoutMs: number,
+): Promise<void> {
+  signalGroup(pid, "SIGKILL");
+  const expiresAt = performance.now() + timeoutMs;
+  while (groupExists(pid) && performance.now() < expiresAt) await delay(20);
+  if (groupExists(pid)) throw new Error("executor-cleanup-failed");
+}
+
 type ReportSignal =
   | "SIGABRT"
   | "SIGBUS"
@@ -205,6 +230,7 @@ export class ExecutorSupervisor {
   readonly #phases: Extract<ProbeEvent, { type: "phase" }>[] = [];
   readonly #completion: Promise<readonly unknown[]>;
   #resolveCompletion!: (events: readonly unknown[]) => void;
+  #rejectCompletion!: (error: Error) => void;
   #child: ChildProcess | undefined;
   #pid: number | undefined;
   #attachedAt = performance.now();
@@ -223,6 +249,7 @@ export class ExecutorSupervisor {
   #protocolPhase: LifecyclePhase | null = null;
   #lifecycleTerminal = false;
   #terminating = false;
+  #abortRequested = false;
   #finalized = false;
   #disposed = false;
   #overallTimer: NodeJS.Timeout | undefined;
@@ -234,8 +261,9 @@ export class ExecutorSupervisor {
     this.#limits = limits;
     this.#stdout = new BoundedTail(limits.maxOutputBytes);
     this.#stderr = new BoundedTail(limits.maxOutputBytes);
-    this.#completion = new Promise((resolve) => {
+    this.#completion = new Promise((resolve, reject) => {
       this.#resolveCompletion = resolve;
+      this.#rejectCompletion = reject;
     });
   }
 
@@ -263,10 +291,18 @@ export class ExecutorSupervisor {
       this.#limits.overallMs,
     );
     this.#armPhaseTimer();
+    if (this.#abortRequested) this.#terminate();
   }
 
   wait(): Promise<readonly unknown[]> {
     return this.#completion;
+  }
+
+  /** Request bounded TERM/KILL cleanup; wait() settles only after final sweep. */
+  abort(): void {
+    if (this.#finalized || this.#disposed) return;
+    this.#abortRequested = true;
+    if (this.#child !== undefined) this.#terminate();
   }
 
   disposeAfterLaunchFailure(): void {
@@ -433,7 +469,15 @@ export class ExecutorSupervisor {
     this.#clearTimers();
     signalGroup(this.#pid, "SIGTERM");
     await delay(this.#limits.postExitSweepMs);
-    signalGroup(this.#pid, "SIGKILL");
+    try {
+      await settleKilledGroup(this.#pid, this.#limits.killSettleMs);
+    } catch {
+      this.#detachListeners();
+      this.#stdout.clear();
+      this.#stderr.clear();
+      this.#rejectCompletion(new Error("executor-cleanup-failed"));
+      return;
+    }
     this.#ensureTerminalPhase(code, signal);
     const events = this.#buildEvents(code, signal);
     this.#detachListeners();

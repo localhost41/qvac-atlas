@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import {
   access,
   chmod,
@@ -197,6 +198,103 @@ async function runSynthetic(project, internal = {}) {
     internal: { limits: fastLimits(), ...internal },
   });
   return { executor, events: await executor.execute() };
+}
+
+function abortTreeSdk(phase, markerName) {
+  const descendantProgram = [
+    "const {appendFileSync,writeFileSync}=require('node:fs')",
+    "const ready=process.argv[1]",
+    "const term=process.argv[2]",
+    "process.on('SIGTERM',()=>appendFileSync(term,'descendant\\n'))",
+    "writeFileSync(ready,'ready')",
+    "setInterval(()=>{},1000)",
+  ].join(";");
+  const prelude = `
+import { spawn as spawnAbortDescendant } from 'node:child_process'
+import { appendFileSync as appendAbortTerm, existsSync as abortReadyExists, writeFileSync as writeAbortTree } from 'node:fs'
+import pathAbort from 'node:path'
+const abortMarkerRoot = process.env.TMPDIR
+if (typeof abortMarkerRoot !== 'string') throw new Error('missing abort marker root')
+const abortTreePath = pathAbort.join(abortMarkerRoot, ${JSON.stringify(markerName)})
+const abortReadyPath = pathAbort.join(abortMarkerRoot, ${JSON.stringify(`${markerName}.ready`)})
+const abortTermPath = pathAbort.join(abortMarkerRoot, ${JSON.stringify(`${markerName}.term`)})
+async function stallForAbort() {
+  process.on('SIGTERM', () => appendAbortTerm(abortTermPath, 'root\\n'))
+  const descendant = spawnAbortDescendant(
+    process.execPath,
+    ['-e', ${JSON.stringify(descendantProgram)}, abortReadyPath, abortTermPath],
+    { stdio: 'ignore' },
+  )
+  const readyDeadline = Date.now() + 2_000
+  while (!abortReadyExists(abortReadyPath) && Date.now() < readyDeadline) {}
+  if (!abortReadyExists(abortReadyPath)) throw new Error('abort descendant not ready')
+  writeAbortTree(
+    abortTreePath,
+    JSON.stringify({ root: process.pid, descendant: descendant.pid }),
+  )
+  await new Promise(() => {})
+}
+`;
+  let source = `${prelude}\n${happySdk}`;
+  if (phase === "bootstrap") {
+    return source.replace(
+      "const expectedArtifactPath",
+      "await stallForAbort()\nconst expectedArtifactPath",
+    );
+  }
+  if (phase === "model-load") {
+    return source.replace(
+      "export async function loadModel(options) {",
+      "export async function loadModel(options) {\n  await stallForAbort()",
+    );
+  }
+  if (phase === "unload") {
+    return source.replace(
+      "export async function unloadModel(options) {",
+      "export async function unloadModel(options) {\n  await stallForAbort()",
+    );
+  }
+  if (phase === "close") {
+    return source.replace(
+      "export async function close() {\n  clearInterval(guard)",
+      "export async function close() {\n  clearInterval(guard)\n  await stallForAbort()",
+    );
+  }
+  throw new Error("invalid abort phase");
+}
+
+async function waitForProcessTree(markerPath) {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
+    const value = await readFile(markerPath, "utf8").then(
+      (text) => JSON.parse(text),
+      () => undefined,
+    );
+    if (
+      Number.isSafeInteger(value?.root) &&
+      value.root > 0 &&
+      Number.isSafeInteger(value?.descendant) &&
+      value.descendant > 0
+    ) {
+      return value;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("abort process tree did not become ready");
+}
+
+function killIfPresent(pid) {
+  try {
+    process.kill(pid, "SIGKILL");
+  } catch {
+    // The test expects the executor to have reaped the complete group.
+  }
+}
+
+function assertProcessAbsent(pid) {
+  assert.throws(
+    () => process.kill(pid, 0),
+    (error) => error?.code === "ESRCH",
+  );
 }
 
 async function validateAsFixtureReport(events) {
@@ -1002,6 +1100,158 @@ test("signal after a complete lifecycle is schema-valid inconclusive evidence", 
 });
 
 test(
+  "AbortSignal plus an attached bootstrap rejection reaps a stubborn process tree",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const markerRoot = await mkdtemp(
+      path.join(os.tmpdir(), "qvac-executor-abort-bootstrap-"),
+    );
+    const markerName = "bootstrap-process-tree.json";
+    const markerPath = path.join(markerRoot, markerName);
+    const termPath = path.join(markerRoot, `${markerName}.term`);
+    const project = await makeProject(abortTreeSdk("bootstrap", markerName));
+    let processTree;
+    t.after(async () => {
+      if (processTree !== undefined) {
+        killIfPresent(processTree.descendant);
+        killIfPresent(processTree.root);
+      }
+      await Promise.all([
+        rm(project.root, { recursive: true, force: true }),
+        rm(markerRoot, { recursive: true, force: true }),
+      ]);
+    });
+
+    const controller = new AbortController();
+    let abortedAt = 0;
+    const rejectedBootstrap = {};
+    Object.defineProperty(rejectedBootstrap, "type", {
+      enumerable: true,
+      get() {
+        const deadline = Date.now() + 4_000;
+        while (!existsSync(markerPath) && Date.now() < deadline) {}
+        abortedAt = Date.now();
+        controller.abort();
+        throw new Error("private attached bootstrap rejection");
+      },
+    });
+    const executor = createSyntheticExecutorForTest({
+      sdkHandle: project.handle,
+      modelGrant: issueSyntheticModelGrantForTest(project.artifact),
+      internal: {
+        artifactBootstrapOverride: rejectedBootstrap,
+        tempParent: markerRoot,
+        sourceEnv: { ...process.env, TMPDIR: markerRoot },
+        limits: fastLimits({
+          overallMs: 5_000,
+          termGraceMs: 60,
+          killSettleMs: 750,
+          phaseMs: {
+            "qvac-import": 5_000,
+            "worker-start": 5_000,
+            "model-load": 5_000,
+            inference: 5_000,
+            "clean-shutdown": 5_000,
+          },
+        }),
+      },
+    });
+    const pending = executor.execute(controller.signal);
+    processTree = await waitForProcessTree(markerPath);
+    const events = await pending;
+
+    assert.equal(events.at(-1).failure.code, "EXECUTOR_ABORTED");
+    assert.ok(abortedAt > 0);
+    const abortDuration = Date.now() - abortedAt;
+    assert.ok(abortDuration >= 40);
+    assert.ok(abortDuration < 1_500);
+    const termSignals = await readFile(termPath, "utf8");
+    assert.match(termSignals, /root/);
+    assert.match(termSignals, /descendant/);
+    assertProcessAbsent(processTree.root);
+    assertProcessAbsent(processTree.descendant);
+    processTree = undefined;
+  },
+);
+
+for (const phase of ["model-load", "unload", "close"]) {
+  test(
+    `AbortSignal during ${phase} waits for TERM/KILL and reaps root plus descendant`,
+    { skip: process.platform === "win32" },
+    async (t) => {
+      const markerRoot = await mkdtemp(
+        path.join(os.tmpdir(), `qvac-executor-abort-${phase}-`),
+      );
+      const markerName = `${phase}-process-tree.json`;
+      const markerPath = path.join(markerRoot, markerName);
+      const termPath = path.join(markerRoot, `${markerName}.term`);
+      const project = await makeProject(abortTreeSdk(phase, markerName));
+      let processTree;
+      t.after(async () => {
+        if (processTree !== undefined) {
+          killIfPresent(processTree.descendant);
+          killIfPresent(processTree.root);
+        }
+        await Promise.all([
+          rm(project.root, { recursive: true, force: true }),
+          rm(markerRoot, { recursive: true, force: true }),
+        ]);
+      });
+
+      const controller = new AbortController();
+      const executor = createSyntheticExecutorForTest({
+        sdkHandle: project.handle,
+        modelGrant: issueSyntheticModelGrantForTest(project.artifact),
+        internal: {
+          tempParent: markerRoot,
+          sourceEnv: { ...process.env, TMPDIR: markerRoot },
+          limits: fastLimits({
+            overallMs: 5_000,
+            termGraceMs: 60,
+            killSettleMs: 750,
+            phaseMs: {
+              "qvac-import": 5_000,
+              "worker-start": 5_000,
+              "model-load": 5_000,
+              inference: 5_000,
+              "clean-shutdown": 5_000,
+            },
+          }),
+        },
+      });
+      let settled = false;
+      const pending = executor.execute(controller.signal).then((events) => {
+        settled = true;
+        return events;
+      });
+      try {
+        processTree = await waitForProcessTree(markerPath);
+      } catch (error) {
+        controller.abort();
+        await pending.catch(() => undefined);
+        throw error;
+      }
+      const abortedAt = Date.now();
+      controller.abort();
+      await Promise.resolve();
+      assert.equal(settled, false);
+      const events = await pending;
+
+      assert.ok(Array.isArray(events));
+      const abortDuration = Date.now() - abortedAt;
+      assert.ok(abortDuration >= 40);
+      assert.ok(abortDuration < 1_500);
+      const termSignals = await readFile(termPath, "utf8");
+      assert.match(termSignals, /root/);
+      assert.match(termSignals, /descendant/);
+      assertProcessAbsent(processTree.root);
+      assertProcessAbsent(processTree.descendant);
+      processTree = undefined;
+    },
+  );
+}
+
+test(
   "timeout removes a nested grandchild from the detached process group",
   { skip: process.platform === "win32" },
   async (t) => {
@@ -1088,11 +1338,10 @@ test("executor package vendors no SDK and implements no downloader or network cl
   }
 });
 
-test("executor remains absent from CLI/probe wiring and candidate claims", async () => {
+test("executor is wired only through private CLI composition and remains non-claim", async () => {
   const packagesRoot = path.dirname(packageRoot);
-  const cliManifest = await readFile(
-    path.join(packagesRoot, "cli", "package.json"),
-    "utf8",
+  const cliManifest = JSON.parse(
+    await readFile(path.join(packagesRoot, "cli", "package.json"), "utf8"),
   );
   const cliSource = await readFile(
     path.join(packagesRoot, "cli", "src", "index.ts"),
@@ -1102,7 +1351,12 @@ test("executor remains absent from CLI/probe wiring and candidate claims", async
     path.join(packagesRoot, "probe", "src", "pipeline.ts"),
     "utf8",
   );
-  for (const surface of [cliManifest, cliSource, probePipeline]) {
+  assert.equal(cliManifest.private, true);
+  assert.equal(
+    cliManifest.dependencies?.["@qvac-atlas/qvac-executor"],
+    "workspace:*",
+  );
+  for (const surface of [cliSource, probePipeline]) {
     assert.equal(surface.includes("qvac-executor"), false);
     assert.equal(surface.includes("ProjectLocalQvacExecutor"), false);
   }

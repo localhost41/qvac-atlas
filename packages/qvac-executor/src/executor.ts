@@ -34,7 +34,8 @@ const internalOptions = new WeakMap<
 
 /**
  * A dormant real lifecycle executor. Its artifact-bound grant issuer cannot be
- * reached without acquisition consent and remains absent from probe and CLI.
+ * reached without acquisition consent and is composed only by the hardcoded-false
+ * CLI-private coordinator, never the public probe API.
  */
 export class ProjectLocalQvacExecutor {
   readonly #sdkHandle: ResolvedSdkHandle;
@@ -49,7 +50,8 @@ export class ProjectLocalQvacExecutor {
     this.#modelGrant = modelGrant;
   }
 
-  async execute(): Promise<readonly unknown[]> {
+  async execute(signal?: AbortSignal): Promise<readonly unknown[]> {
+    if (signal?.aborted) return notStartedEvents("EXECUTOR_ABORTED");
     const configured = internalOptions.get(this) ?? {};
     if ((configured.platform ?? process.platform) === "win32") {
       return notStartedEvents("WINDOWS_CONTAINMENT_UNAVAILABLE");
@@ -64,35 +66,55 @@ export class ProjectLocalQvacExecutor {
     const supervisor = new ExecutorSupervisor(
       configured.limits ?? DEFAULT_EXECUTOR_LIMITS,
     );
+    const supervised = supervisor.wait();
+    void supervised.catch(() => undefined);
+    let attached = false;
+    const abort = (): void => supervisor.abort();
+    signal?.addEventListener("abort", abort, { once: true });
     try {
+      if (signal?.aborted) return notStartedEvents("EXECUTOR_ABORTED");
       const tempParent = configured.tempParent ?? os.tmpdir();
       tempCwd = await mkdtemp(path.join(tempParent, "qvac-atlas-executor-"));
+      if (signal?.aborted) return notStartedEvents("EXECUTOR_ABORTED");
       const runnerPath =
         configured.runnerPath ??
         fileURLToPath(new URL("./child-runner.js", import.meta.url));
-      await launchResolvedSdkChild({
-        handle: this.#sdkHandle,
-        runnerPath,
-        tempCwd,
-        sourceEnv: configured.sourceEnv,
-        beforeBootstrap(child) {
-          supervisor.attach(child);
-        },
-        async afterSdkBootstrapSent(child) {
-          const configuredMessage = configured.artifactBootstrapOverride;
-          if (configuredMessage === null) return;
-          const message =
-            configuredMessage === undefined
-              ? createArtifactBootstrapMessage(artifact)
-              : configuredMessage;
-          await sendArtifactBootstrap(child, message);
-        },
-      });
-      return await supervisor.wait();
-    } catch {
-      supervisor.disposeAfterLaunchFailure();
-      return notStartedEvents("QVAC_CHILD_LAUNCH_FAILED");
+      try {
+        await launchResolvedSdkChild({
+          handle: this.#sdkHandle,
+          runnerPath,
+          tempCwd,
+          signal,
+          sourceEnv: configured.sourceEnv,
+          beforeBootstrap(child) {
+            supervisor.attach(child);
+            attached = true;
+          },
+          async afterSdkBootstrapSent(child) {
+            if (signal?.aborted) throw new Error("executor-aborted");
+            const configuredMessage = configured.artifactBootstrapOverride;
+            if (configuredMessage === null) return;
+            const message =
+              configuredMessage === undefined
+                ? createArtifactBootstrapMessage(artifact)
+                : configuredMessage;
+            await sendArtifactBootstrap(child, message);
+          },
+        });
+      } catch {
+        if (attached) {
+          supervisor.abort();
+          await supervised;
+        } else {
+          supervisor.disposeAfterLaunchFailure();
+        }
+        return notStartedEvents(
+          signal?.aborted ? "EXECUTOR_ABORTED" : "QVAC_CHILD_LAUNCH_FAILED",
+        );
+      }
+      return await supervised;
     } finally {
+      signal?.removeEventListener("abort", abort);
       if (tempCwd !== undefined) {
         await rm(tempCwd, { recursive: true, force: true }).catch(() => {});
       }

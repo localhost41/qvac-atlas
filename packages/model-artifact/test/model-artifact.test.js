@@ -771,7 +771,7 @@ test("executor bridge is exact, pinned, single-use, and descriptor-safe", async 
   );
 });
 
-test("remains dormant with one narrow executor dependency and no real network", async () => {
+test("remains dormant with narrow private consumers and no real network", async () => {
   const beforeCalls = networkCalls;
   const { readFile: read } = await import("node:fs/promises");
   const packageManifest = JSON.parse(
@@ -796,7 +796,6 @@ test("remains dormant with one narrow executor dependency and no real network", 
     "validateArtifactExecutionMaterial",
   ]);
   for (const relative of [
-    "../../cli/package.json",
     "../../probe/package.json",
     "../../catalog/package.json",
     "../../schema/package.json",
@@ -804,6 +803,13 @@ test("remains dormant with one narrow executor dependency and no real network", 
     const manifest = await read(new URL(relative, import.meta.url), "utf8");
     assert.equal(manifest.includes("@qvac-atlas/model-artifact"), false);
   }
+  const cliManifest = JSON.parse(
+    await read(new URL("../../cli/package.json", import.meta.url), "utf8"),
+  );
+  assert.equal(
+    cliManifest.dependencies["@qvac-atlas/model-artifact"],
+    "workspace:*",
+  );
   const executorManifest = JSON.parse(
     await read(
       new URL("../../qvac-executor/package.json", import.meta.url),

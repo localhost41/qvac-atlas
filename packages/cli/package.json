@@ -10,11 +10,14 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" package.json tsconfig.json",
-    "test": "tsx --test test/**/*.test.ts",
+    "test": "pnpm --filter @qvac-atlas/cli... build && tsx --test test/**/*.test.ts",
     "typecheck": "tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
-    "@qvac-atlas/probe": "workspace:*"
+    "@qvac-atlas/model-artifact": "workspace:*",
+    "@qvac-atlas/probe": "workspace:*",
+    "@qvac-atlas/qvac-executor": "workspace:*",
+    "@qvac-atlas/qvac-resolver": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

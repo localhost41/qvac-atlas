@@ -137,6 +137,7 @@ function harness(options: HarnessOptions = {}) {
       writeExclusive: async (bytes) => {
         call("output:write");
         writes.push(bytes);
+        return { status: "written" };
       },
     },
     interaction: {
@@ -178,11 +179,14 @@ function harness(options: HarnessOptions = {}) {
       },
       runDoctor: async () => {
         call("doctor");
-        return selected("doctor", {
-          status: "passed",
-          reason: "completed",
-          duration_ms: 8,
-        }) as never;
+        return {
+          status: "completed",
+          doctor: selected("doctor", {
+            status: "passed",
+            reason: "completed",
+            duration_ms: 8,
+          }),
+        } as never;
       },
       runWorkload: async () => {
         call("runtime");
@@ -386,17 +390,9 @@ test("malformed exact decisions, resolver evidence, runtime evidence, and privat
   }
 });
 
-test("Doctor exceptions and malformed output normalize to unavailable without blocking", async () => {
-  for (const invalid of [
-    Symbol("invalid"),
-    { status: "passed", raw: "/secret" },
-  ]) {
+test("malformed Doctor output normalizes to unavailable without blocking", async () => {
+  for (const invalid of [{ status: "passed", raw: "/secret" }]) {
     const state = harness({ doctor: invalid, write: false });
-    if (typeof invalid === "symbol") {
-      state.dependencies.coordinator.runDoctor = async () => {
-        throw new Error("/Users/private/doctor");
-      };
-    }
     const result = await runRealProbePipeline(
       { signal: new AbortController().signal },
       state.dependencies,
@@ -410,6 +406,77 @@ test("Doctor exceptions and malformed output normalize to unavailable without bl
     });
     assert.equal(JSON.stringify(result).includes("private"), false);
   }
+});
+
+test("hostile outer Doctor envelopes fail before workload disclosure", async () => {
+  for (const hostile of [
+    null,
+    { status: "completed", doctor: {}, extra: true },
+    { status: "bogus" },
+    new Proxy(
+      {},
+      {
+        ownKeys: () => {
+          throw new Error("private-doctor-ownkeys");
+        },
+      },
+    ),
+  ]) {
+    const state = harness();
+    state.dependencies.coordinator.runDoctor = async () => hostile as never;
+    const result = await runRealProbePipeline(
+      { signal: new AbortController().signal },
+      state.dependencies,
+    );
+    assert.equal(result.status, "preflight-failed");
+    assert.equal(state.calls.includes("workload:disclose"), false);
+    assert.deepEqual(state.previews, []);
+    assert.deepEqual(state.writes, []);
+  }
+});
+
+test("Doctor boundary rejection is fatal before workload disclosure", async () => {
+  const state = harness();
+  state.dependencies.coordinator.runDoctor = async () => {
+    throw new Error("/Users/private/doctor-child-survived");
+  };
+  const result = await runRealProbePipeline(
+    { signal: new AbortController().signal },
+    state.dependencies,
+  );
+  assert.equal(result.status, "preflight-failed");
+  assert.equal(state.calls.includes("workload:disclose"), false);
+  assert.deepEqual(state.previews, []);
+  assert.deepEqual(state.writes, []);
+});
+
+test("settled fatal coordinator results take precedence over concurrent abort", async () => {
+  const doctorController = new AbortController();
+  const doctorState = harness();
+  doctorState.dependencies.coordinator.runDoctor = async () => {
+    doctorController.abort();
+    return { status: "preflight-failed" };
+  };
+  const doctorResult = await runRealProbePipeline(
+    { signal: doctorController.signal },
+    doctorState.dependencies,
+  );
+  assert.equal(doctorResult.status, "preflight-failed");
+  assert.equal(doctorState.calls.includes("workload:disclose"), false);
+
+  const workloadController = new AbortController();
+  const workloadState = harness();
+  workloadState.dependencies.coordinator.runWorkload = async () => {
+    workloadController.abort();
+    return { status: "preflight-failed" };
+  };
+  const workloadResult = await runRealProbePipeline(
+    { signal: workloadController.signal },
+    workloadState.dependencies,
+  );
+  assert.equal(workloadResult.status, "preflight-failed");
+  assert.deepEqual(workloadState.previews, []);
+  assert.deepEqual(workloadState.writes, []);
 });
 
 test("external evidence mutation after draft cannot change the detached final report", async () => {
@@ -481,6 +548,7 @@ test("an abort during uncancellable exclusive commit still reports the settled w
   state.dependencies.output.writeExclusive = async (bytes) => {
     state.writes.push(bytes);
     controller.abort();
+    return { status: "written" };
   };
   const result = await runRealProbePipeline(
     { signal: controller.signal },
@@ -708,7 +776,10 @@ test("Doctor timeout is retained, while abort after Doctor stops before workload
   aborted.dependencies.coordinator.runDoctor = async () => {
     aborted.calls.push("doctor");
     controller.abort();
-    return { status: "passed", reason: "completed", duration_ms: 1 };
+    return {
+      status: "completed",
+      doctor: { status: "passed", reason: "completed", duration_ms: 1 },
+    };
   };
   const abortedResult = await runRealProbePipeline(
     { signal: controller.signal },
@@ -740,7 +811,7 @@ test("publication cancellation and write refusal preserve preview-only behavior"
   assert.deepEqual(privateLocal.writes, []);
 });
 
-test("exclusive-write rejection, including concurrent abort, returns fixed write-failed", async () => {
+test("unexpected exclusive-write rejection is cleanup-uncertain even during abort", async () => {
   for (const abort of [false, true]) {
     const controller = new AbortController();
     const state = harness();
@@ -752,8 +823,48 @@ test("exclusive-write rejection, including concurrent abort, returns fixed write
       { signal: controller.signal },
       state.dependencies,
     );
-    assert.equal(result.status, "write-failed");
+    assert.equal(result.status, "cleanup-uncertain");
     assert.equal(JSON.stringify(result).includes("private"), false);
+  }
+});
+
+test("structural write failure and cleanup uncertainty propagate exactly", async () => {
+  for (const status of ["write-failed", "cleanup-uncertain"] as const) {
+    const state = harness();
+    state.dependencies.output.writeExclusive = async () => ({ status });
+    const result = await runRealProbePipeline(
+      { signal: new AbortController().signal },
+      state.dependencies,
+    );
+    assert.equal(result.status, status);
+  }
+});
+
+test("hostile write outcomes become cleanup uncertainty without escaping", async () => {
+  for (const hostile of [
+    new Proxy(
+      {},
+      {
+        ownKeys: () => {
+          throw new Error("private-ownkeys");
+        },
+      },
+    ),
+    Object.defineProperty({}, "status", {
+      enumerable: true,
+      get: () => {
+        throw new Error("private-getter");
+      },
+    }),
+    { status: "written", extra: true },
+  ]) {
+    const state = harness();
+    state.dependencies.output.writeExclusive = async () => hostile as never;
+    const result = await runRealProbePipeline(
+      { signal: new AbortController().signal },
+      state.dependencies,
+    );
+    assert.equal(result.status, "cleanup-uncertain");
   }
 });
 

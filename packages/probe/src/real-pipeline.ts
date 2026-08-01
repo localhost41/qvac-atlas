@@ -122,7 +122,13 @@ export interface RealCoordinatorBoundary {
     | { readonly status: "failed" }
     | { readonly status: "aborted" }
   >;
-  runDoctor(signal: AbortSignal): Promise<CheckEvidence>;
+  runDoctor(
+    signal: AbortSignal,
+  ): Promise<
+    | { readonly status: "completed"; readonly doctor: CheckEvidence }
+    | { readonly status: "preflight-failed" }
+    | { readonly status: "aborted" }
+  >;
   runWorkload(
     signal: AbortSignal,
   ): Promise<
@@ -136,11 +142,17 @@ export interface RealCoordinatorBoundary {
 export interface RealOutputBoundary {
   preflight(signal: AbortSignal): Promise<boolean>;
   /**
-   * Uncancellable after invocation. Resolve means committed. Reject settles only
-   * after cleanup and proves no Atlas-created target or partial remains; a foreign
-   * racer may occupy the private path. Violating this is a boundary bug.
+   * Uncancellable after invocation. Every structural outcome settles after the
+   * attempted transaction. `write-failed` proves Atlas-owned names are absent;
+   * `cleanup-uncertain` makes no such claim.
    */
-  writeExclusive(exactJson: string): Promise<void>;
+  writeExclusive(
+    exactJson: string,
+  ): Promise<
+    | { readonly status: "written" }
+    | { readonly status: "write-failed" }
+    | { readonly status: "cleanup-uncertain" }
+  >;
 }
 
 export interface RealProbeOptions {
@@ -158,7 +170,11 @@ export interface RealProbeDependencies {
 export type RealProbeRunResult =
   | {
       readonly status:
-        "refused" | "aborted" | "preflight-failed" | "write-failed";
+        | "refused"
+        | "aborted"
+        | "preflight-failed"
+        | "write-failed"
+        | "cleanup-uncertain";
       readonly stage: RealProbeStage;
       readonly history: readonly RealProbeStage[];
     }
@@ -412,8 +428,51 @@ function parseWorkload(
   }
 }
 
+function parseDoctorOutcome(
+  value: unknown,
+):
+  | { status: "completed"; doctor: CheckEvidence }
+  | { status: "preflight-failed" }
+  | { status: "aborted" }
+  | null {
+  try {
+    const snapshot: unknown = structuredClone(value);
+    const outcome = record(snapshot);
+    if (outcome === null || typeof outcome.status !== "string") return null;
+    if (outcome.status === "preflight-failed" || outcome.status === "aborted") {
+      return exactKeys(outcome, ["status"]) ? { status: outcome.status } : null;
+    }
+    if (
+      outcome.status !== "completed" ||
+      !exactKeys(outcome, ["doctor", "status"])
+    ) {
+      return null;
+    }
+    return { status: "completed", doctor: snapshotDoctor(outcome.doctor) };
+  } catch {
+    return null;
+  }
+}
+
+function parseWriteOutcome(
+  value: unknown,
+): "written" | "write-failed" | "cleanup-uncertain" | null {
+  try {
+    const snapshot: unknown = structuredClone(value);
+    const outcome = record(snapshot);
+    if (outcome === null || !exactKeys(outcome, ["status"])) return null;
+    return outcome.status === "written" ||
+      outcome.status === "write-failed" ||
+      outcome.status === "cleanup-uncertain"
+      ? outcome.status
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function stopped(
-  status: "refused" | FixedStop | "write-failed",
+  status: "refused" | FixedStop | "write-failed" | "cleanup-uncertain",
   state: RealProbeStateMachine,
 ): RealProbeRunResult {
   return {
@@ -437,6 +496,18 @@ async function guarded<T>(
       ok: false,
       status: signal.aborted ? "aborted" : "preflight-failed",
     };
+  }
+}
+
+async function coordinatorBoundary<T>(
+  signal: AbortSignal,
+  effect: () => Promise<T>,
+): Promise<Guarded<T>> {
+  if (signal.aborted) return { ok: false, status: "aborted" };
+  try {
+    return { ok: true, value: await effect() };
+  } catch {
+    return { ok: false, status: "preflight-failed" };
   }
 }
 
@@ -491,15 +562,16 @@ export async function runRealProbePipeline(
     return stopped("preflight-failed", state);
   }
   state.advance("collected");
-  const resolved = await guarded(signal, () =>
+  const resolved = await coordinatorBoundary(signal, () =>
     dependencies.coordinator.resolve(signal),
   );
   if (!resolved.ok) return stopped(resolved.status, state);
   const parsedResolution = parseResolved(resolved.value);
   if (parsedResolution === null) return stopped("preflight-failed", state);
-  if (parsedResolution.status === "aborted") return stopped("aborted", state);
   if (parsedResolution.status === "failed")
     return stopped("preflight-failed", state);
+  if (parsedResolution.status === "aborted") return stopped("aborted", state);
+  if (signal.aborted) return stopped("aborted", state);
   const qvac = parsedResolution.qvac;
   state.advance("project-resolved");
 
@@ -517,14 +589,17 @@ export async function runRealProbePipeline(
   if (!projectDecision.value) return stopped("refused", state);
   state.advance("project-code-consented");
 
-  const doctorResult = await guarded(signal, () =>
+  const doctorResult = await coordinatorBoundary(signal, () =>
     dependencies.coordinator.runDoctor(signal),
   );
-  if (!doctorResult.ok && doctorResult.status === "aborted")
-    return stopped("aborted", state);
-  const doctor = doctorResult.ok
-    ? snapshotDoctor(doctorResult.value)
-    : snapshotDoctor(undefined);
+  if (!doctorResult.ok) return stopped(doctorResult.status, state);
+  const parsedDoctor = parseDoctorOutcome(doctorResult.value);
+  if (parsedDoctor === null) return stopped("preflight-failed", state);
+  if (parsedDoctor.status === "preflight-failed")
+    return stopped("preflight-failed", state);
+  if (parsedDoctor.status === "aborted") return stopped("aborted", state);
+  const doctor = parsedDoctor.doctor;
+  if (signal.aborted) return stopped("aborted", state);
   state.advance("doctor-complete");
 
   const workloadDisclosure = await guarded(signal, () =>
@@ -541,15 +616,16 @@ export async function runRealProbePipeline(
   if (!workloadDecision.value) return stopped("refused", state);
   state.advance("workload-consented");
 
-  const runtimeResult = await guarded(signal, () =>
+  const runtimeResult = await coordinatorBoundary(signal, () =>
     dependencies.coordinator.runWorkload(signal),
   );
   if (!runtimeResult.ok) return stopped(runtimeResult.status, state);
   const parsedWorkload = parseWorkload(runtimeResult.value);
   if (parsedWorkload === null) return stopped("preflight-failed", state);
-  if (parsedWorkload.status === "aborted") return stopped("aborted", state);
   if (parsedWorkload.status === "preflight-failed")
     return stopped("preflight-failed", state);
+  if (parsedWorkload.status === "aborted") return stopped("aborted", state);
+  if (signal.aborted) return stopped("aborted", state);
   const runner = parsedWorkload.runner;
   state.advance("runtime-complete");
 
@@ -623,12 +699,17 @@ export async function runRealProbePipeline(
   }
   state.advance("write-consented");
   if (signal.aborted) return stopped("aborted", state);
+  let writeResult: unknown;
   try {
-    await dependencies.output.writeExclusive(exactJson);
+    writeResult = await dependencies.output.writeExclusive(exactJson);
   } catch {
-    // Rejection proves no Atlas target/partial remains; a foreign racer may exist.
-    return stopped("write-failed", state);
+    return stopped("cleanup-uncertain", state);
   }
+  const writeStatus = parseWriteOutcome(writeResult);
+  if (writeStatus === "write-failed") return stopped("write-failed", state);
+  if (writeStatus === "cleanup-uncertain")
+    return stopped("cleanup-uncertain", state);
+  if (writeStatus !== "written") return stopped("cleanup-uncertain", state);
   state.advance("written");
   state.advance("complete");
   return {

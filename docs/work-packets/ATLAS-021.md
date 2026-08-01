@@ -294,3 +294,15 @@ waves with no nested orphan topology; no raw approval/capability exposure to UI;
 abort settlement; candidate reports remaining non-claim-producing; or zero effects
 while the release gate is disabled. Stop before any real model fetch, QVAC install,
 profile approval, repository publication, deployment, or external message.
+
+## ATLAS-021C implementation status
+
+Completed behind a literal false shipped gate. The relative-only CLI dispatcher
+owns the injected true test seam and lazily imports real composition only after
+exact syntax, the gate, stdin/stdout TTY, and cwd checks. The concrete coordinator
+holds the canonical resolver handle through Doctor, contained acquisition,
+capability-to-grant conversion, and direct executor settlement. Output publication
+uses a same-directory synced `0600` staging inode, no-clobber hard link, identity
+and link-count validation, identity-guarded cleanup, and one immutable normalized
+path for confirmation and write. ATLAS-021D and ATLAS-013 remain required before
+any release-gate change.

@@ -1,18 +1,19 @@
 # Probe pipeline
 
-Status: ATLAS-021B genuine candidate report and dependency-inverted pipeline are
-implemented but dormant. Real QVAC SDK execution, CLI wiring, and production claim
-admission remain disabled.
+Status: ATLAS-021C composes the genuine candidate pipeline through a CLI-private
+coordinator, but shipped `main()` passes a literal false release gate. Real QVAC
+execution and production claim admission remain disabled.
 
 ## Scope
 
 The probe package owns the local sequence from disclosure through an exclusive
 local report write. It has no network client, uploader, installer, downloader,
-repair action, telemetry, service, or default output path. The CLI exposes only
-fully synthetic fixture execution until the integrated ATLAS-015 resolver is bound
-to a production executor and a hash-verified real lifecycle passes the device gate. Its Doctor result is synthetic
-as well; the separately tested real Doctor adapter is not wired to a user command in
-this packet.
+repair action, telemetry, service, or default output path. The shipped CLI exposes
+only fully synthetic fixture execution until a hash-verified real lifecycle and
+privacy review pass ATLAS-013. Its private real composition binds the exact current
+project resolver handle, normalized Doctor, contained pinned acquisition, opaque
+execution grant, and directly supervised executor, but the literal false gate
+refuses before TTY, cwd, signal, prompt, or real-module effects.
 
 The pipeline is:
 
@@ -117,8 +118,9 @@ never create a registry claim.
 
 ## Dormant genuine candidate pipeline
 
-ATLAS-021B adds a relative-only real state machine and coordinator-facing pipeline;
-neither is exported from the probe package or wired to a command. The output
+ATLAS-021B added the real state machine and coordinator-facing pipeline. ATLAS-021C
+exposes only a narrow `./real` composition subpath to the private CLI coordinator;
+the public probe root remains fixture-only. The output
 boundary privately owns its path and is preflighted before any interaction. The
 coordinator privately retains one continuous resolved-project session and returns
 only exact status unions plus newly snapshotted QVAC, Doctor, and lifecycle
@@ -131,21 +133,23 @@ allowlisted collection and exact-project resolution, project-code disclosure and
 decision, normalized Doctor, combined artifact/workload disclosure and decision,
 runtime, draft preview, publication intent, exact final preview, local-write
 decision, and an uncancellable exclusive write. Every awaited seam checks abort
-before invocation and before interpreting its result. Once the write begins,
-resolve is authoritative commit; rejection settles after owned cleanup and proves
-that no Atlas-created target or partial remains. A foreign no-clobber racer may
-occupy the private path.
+before invocation and before interpreting its result. Once the write begins, its
+exact result is `written`, proven `write-failed`, or `cleanup-uncertain`; an
+unexpected boundary rejection is also uncertain and never claims that no local
+report exists. A foreign no-clobber racer may occupy the private path.
 
-ATLAS-021C must construct the interaction and output closures from one normalized,
-immutable output path. This keeps the hidden-path write confirmation bound to the
+ATLAS-021C constructs the interaction and output closures from one normalized,
+immutable output path. This keeps the local-write confirmation bound to the
 same path that was preflighted and eventually written. The confirmation closure
 may display that path, but it is never passed through generic pipeline arguments or
 results, nor to other interaction callbacks.
 
 Coordinator results and nested evidence use exact-key parsing, detachment, bounded
 enum/code allowlists, schema validation, and privacy scanning before draft preview
-and again before final serialization. Exact normalized Doctor failures and timeouts
-are retained; a throw or malformed result becomes `unknown/unavailable`.
+and again before final serialization. Exact normalized Doctor failures and
+timeouts are retained; ordinary concrete Doctor errors become
+`unknown/unavailable`, while a coordinator-boundary or cleanup-invariant failure
+is fatal and produces no report.
 Acquisition, grant, launch, resolver, or runtime preflight failure produces no
 report. Synthetic tests cover refusal, malformed/proxy values, private path/digest
 canaries, mutation after callbacks, abort settlement, write races, and exact
@@ -172,15 +176,16 @@ The production child receives the audited entry through private IPC, uses a fres
 temporary cwd, removes `NODE_PATH`, `NODE_OPTIONS`, `QVAC_CONFIG_PATH`, and
 `QVAC_WORKER_PATH`, uses `fork` with `execArgv: []`, and imports only the audited file
 URL. SDK paths never enter structured events or reports. No real executor is present
-in the probe package, and ATLAS-021C must compose the dormant resolver, acquisition,
-and executor without exposing their capabilities through this pipeline or the CLI
-interaction layer.
+in the probe package. The CLI-private coordinator composes the dormant resolver,
+acquisition, and executor without exposing their capabilities through this pipeline
+or the CLI interaction layer.
 
 ## Profile candidate
 
 `profiles/candidates/smollm2-360m-instruct-q8.json` records the source-verified
 candidate metadata and explicitly sets `claim_eligible: false`. Contained
-acquisition exists but remains unwired and has performed no real fetch. Promotion
+acquisition is wired only behind the hardcoded-false private gate and has performed
+no real fetch. Promotion
 requires explicit license/size disclosure, opt-in download, local SHA-256
 verification, and a real successful lifecycle. Until then, the exported pipeline
 uses the existing test-only profile and fixture provenance.

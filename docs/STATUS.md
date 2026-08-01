@@ -54,13 +54,21 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-021A: the dormant `./contained` artifact transaction is complete. It owns
   the fixed account cache root, finite manual HTTPS redirects, reserve checks,
   nonce-exact staging/recovery, and a directly supervised fully reaped acquisition
-  child. It remains absent from probe and CLI and performs no real model fetch.
+  child. ATLAS-021C reaches it only behind the hardcoded-false private CLI gate; it
+  remains absent from the public probe API and has performed no real model fetch.
 - ATLAS-021B: genuine candidate report assembly and the dependency-inverted real
   consent/state pipeline are complete. Exact resolved-QVAC and lifecycle evidence
   cross one private coordinator boundary; capabilities and paths do not. Draft and
   final reports pass schema, privacy, and canonical identity gates. The candidate
-  remains nonstandard and claim-ineligible, and the real pipeline is not exported
-  or wired to the CLI.
+  remains nonstandard and claim-ineligible. The public probe root remains
+  fixture-only; only the narrow private composition subpath reaches the CLI's
+  hardcoded-false dispatcher.
+- ATLAS-021C: the CLI-private coordinator now binds the canonical current project,
+  exact SDK handle, normalized abortable Doctor, contained pinned acquisition,
+  opaque grant, and directly supervised executor. Same-directory identity-checked
+  output publication and SIGINT settlement are synthetic-tested. The shipped main
+  passes a literal false gate before TTY, cwd, signal, prompt, real import, model,
+  network, or QVAC effects; fixture behavior and claim admission remain unchanged.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
 - ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
   about 1 GiB free while the QVAC dependency graph plus model requires more than
@@ -68,10 +76,10 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-ATLAS-021C is the next serialized packet: concrete coordinator and CLI composition
-behind a hardcoded false release gate. Production claim admission and user-facing
-real execution stay disabled until a hash-verified ATLAS-013 lifecycle and privacy
-review succeed.
+ATLAS-021D is the next serialized packet: independent activation, containment,
+privacy, UX, and reproducibility acceptance. Production claim admission and
+user-facing real execution stay disabled until a hash-verified ATLAS-013 lifecycle
+and privacy review succeed.
 
 ## Known risks
 

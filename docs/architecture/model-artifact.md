@@ -85,7 +85,8 @@ The narrow `./contained` transaction creates the exact frozen disclosure for the
 OS-account-owned `~/.qvac-atlas-models` root, awaits one callback decision, and
 internally issues and consumes a non-exported consent before any cache or network
 effect. It exposes no cache-root, source, candidate, timeout, runner, nonce, or
-cleanup control. It remains dormant and is not imported by probe or CLI.
+cleanup control. It remains dormant behind the CLI's hardcoded-false private
+composition path and is not imported by the public probe API.
 
 After approval the root process generates one 192-bit lowercase-hex attempt nonce
 and forks only the package-owned acquisition child in a detached POSIX process
@@ -117,8 +118,9 @@ a byte-identical permanent inode replacement across QVAC exposure. D-014's
 same-UID quiescence limitation still applies; this does not claim cryptographic
 binding against swap-and-restore races.
 
-The package is imported only by the dormant QVAC executor, not probe, CLI, catalog,
-or schema. The candidate remains ineligible for claims. ATLAS-021C must compose the
-project/SDK/GPU ceremony and the two directly supervised worker waves behind its
-disabled release gate; neither this contained transaction nor the execution-grant
-wrapper runs the model by itself.
+The package is imported only by the dormant QVAC executor and CLI-private
+coordinator, not the public probe API, catalog, or schema. The candidate remains
+ineligible for claims. The CLI coordinator composes the project/SDK/GPU ceremony
+and the two directly supervised worker waves behind a hardcoded-false release
+gate; neither this contained transaction nor the execution-grant wrapper runs the
+model by itself.

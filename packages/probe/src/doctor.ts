@@ -27,7 +27,7 @@ export type DoctorLocation =
     };
 
 export interface DoctorLocator {
-  locate(projectRoot: string): Promise<DoctorLocation>;
+  locate(projectRoot: string, signal?: AbortSignal): Promise<DoctorLocation>;
 }
 
 export interface DoctorExecution {
@@ -39,7 +39,11 @@ export interface DoctorExecution {
 }
 
 export interface DoctorExecutor {
-  execute(entryPath: string, projectRoot: string): Promise<DoctorExecution>;
+  execute(
+    entryPath: string,
+    projectRoot: string,
+    signal?: AbortSignal,
+  ): Promise<DoctorExecution>;
 }
 
 export interface DoctorResult {
@@ -105,12 +109,18 @@ function isContained(root: string, candidate: string): boolean {
 }
 
 export class ProjectLocalDoctorLocator implements DoctorLocator {
-  async locate(projectRoot: string): Promise<DoctorLocation> {
+  async locate(
+    projectRoot: string,
+    signal?: AbortSignal,
+  ): Promise<DoctorLocation> {
     try {
+      signal?.throwIfAborted();
       const root = await realpath(path.resolve(projectRoot));
+      signal?.throwIfAborted();
       const projectManifest = await readBoundedJson(
         path.join(root, "package.json"),
       );
+      signal?.throwIfAborted();
       if (!declaresCli(projectManifest))
         return { kind: "unavailable", code: "qvac-cli-not-locally-resolvable" };
 
@@ -121,12 +131,14 @@ export class ProjectLocalDoctorLocator implements DoctorLocator {
         "cli",
       );
       const packageRoot = await realpath(logicalPackageRoot);
+      signal?.throwIfAborted();
       if (!isContained(root, packageRoot))
         return { kind: "unavailable", code: "qvac-cli-unsafe" };
 
       const manifest = await readBoundedJson(
         path.join(packageRoot, "package.json"),
       );
+      signal?.throwIfAborted();
       if (manifest.name !== "@qvac/cli" || manifest.version !== "0.9.0") {
         return { kind: "unavailable", code: "qvac-cli-unsafe" };
       }
@@ -146,12 +158,14 @@ export class ProjectLocalDoctorLocator implements DoctorLocator {
       const entryPath = await realpath(
         path.resolve(packageRoot, relativeEntry),
       );
+      signal?.throwIfAborted();
       if (!isContained(packageRoot, entryPath))
         return { kind: "unavailable", code: "qvac-cli-unsafe" };
       const entryInfo = await stat(entryPath);
       if (!entryInfo.isFile())
         return { kind: "unavailable", code: "qvac-cli-unsafe" };
       await access(entryPath, constants.R_OK);
+      signal?.throwIfAborted();
       return { kind: "resolved", entryPath };
     } catch {
       return { kind: "unavailable", code: "qvac-cli-not-locally-resolvable" };
@@ -205,6 +219,33 @@ async function terminateTree(
   });
 }
 
+function processGroupExists(child: ChildProcess): boolean {
+  if (process.platform === "win32" || child.pid === undefined) return false;
+  try {
+    process.kill(-child.pid, 0);
+    return true;
+  } catch (error) {
+    return !(
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ESRCH"
+    );
+  }
+}
+
+async function settleTerminatedTree(
+  child: ChildProcess,
+  hardSettleMs: number,
+): Promise<void> {
+  await terminateTree(child, "SIGKILL");
+  const expiresAt = Date.now() + hardSettleMs;
+  while (processGroupExists(child) && Date.now() < expiresAt) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  if (processGroupExists(child)) throw new Error("doctor-cleanup-failed");
+}
+
 export class NodeDoctorExecutor implements DoctorExecutor {
   constructor(
     private readonly options: {
@@ -218,9 +259,11 @@ export class NodeDoctorExecutor implements DoctorExecutor {
   async execute(
     entryPath: string,
     projectRoot: string,
+    signal?: AbortSignal,
   ): Promise<DoctorExecution> {
+    signal?.throwIfAborted();
     const started = Date.now();
-    return await new Promise<DoctorExecution>((resolve) => {
+    return await new Promise<DoctorExecution>((resolve, reject) => {
       const child = spawn(process.execPath, [entryPath, "doctor", "--json"], {
         cwd: projectRoot,
         detached: process.platform !== "win32",
@@ -232,17 +275,27 @@ export class NodeDoctorExecutor implements DoctorExecutor {
       let bytes = 0;
       let timedOut = false;
       let overflowed = false;
+      let aborted = false;
       let settled = false;
       let stopping = false;
       let forceTimer: NodeJS.Timeout | undefined;
-      let settleTimer: NodeJS.Timeout | undefined;
+      const hardSettleMs = this.options.hardSettleMs ?? 1_500;
+      const abort = (): void => void stop("abort");
 
-      const finish = (exitCode: number | null): void => {
+      const finish = (exitCode: number | null, cleanupFailed = false): void => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         if (forceTimer !== undefined) clearTimeout(forceTimer);
-        if (settleTimer !== undefined) clearTimeout(settleTimer);
+        signal?.removeEventListener("abort", abort);
+        if (cleanupFailed || aborted) {
+          reject(
+            new Error(
+              cleanupFailed ? "doctor-cleanup-failed" : "doctor-aborted",
+            ),
+          );
+          return;
+        }
         resolve({
           exitCode,
           stdout: Buffer.concat(chunks).toString("utf8"),
@@ -251,28 +304,31 @@ export class NodeDoctorExecutor implements DoctorExecutor {
           overflowed,
         });
       };
-      const stop = async (reason: "timeout" | "overflow"): Promise<void> => {
+      const stop = async (
+        reason: "timeout" | "overflow" | "abort",
+      ): Promise<void> => {
         if (stopping || settled) return;
         stopping = true;
         if (reason === "timeout") timedOut = true;
-        else overflowed = true;
+        else if (reason === "overflow") overflowed = true;
+        else aborted = true;
         await terminateTree(child, "SIGTERM");
-        forceTimer = setTimeout(
-          () => void terminateTree(child, "SIGKILL"),
-          this.options.graceMs ?? 250,
-        );
+        if (settled) return;
+        forceTimer = setTimeout(() => {
+          void settleTerminatedTree(child, hardSettleMs).then(
+            () => finish(null),
+            () => finish(null, true),
+          );
+        }, this.options.graceMs ?? 250);
         forceTimer.unref();
-        settleTimer = setTimeout(
-          () => finish(null),
-          this.options.hardSettleMs ?? 1_500,
-        );
-        settleTimer.unref();
       };
       const timer = setTimeout(
         () => void stop("timeout"),
         this.options.timeoutMs ?? DOCTOR_TIMEOUT_MS,
       );
       timer.unref();
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) abort();
 
       child.stdout?.on("data", (chunk: Buffer) => {
         if (overflowed) return;
@@ -285,12 +341,21 @@ export class NodeDoctorExecutor implements DoctorExecutor {
       });
       child.stderr?.resume();
 
-      child.once("error", () => finish(null));
+      child.once("error", () => {
+        if (child.pid === undefined) finish(null);
+        else
+          void settleTerminatedTree(child, hardSettleMs).then(
+            () => finish(null),
+            () => finish(null, true),
+          );
+      });
       child.once("close", (code) => {
         // Sweep the process group even after nominal root exit so a probe tool
         // cannot leave a descendant behind.
-        void terminateTree(child, "SIGKILL");
-        finish(code);
+        void settleTerminatedTree(child, hardSettleMs).then(
+          () => finish(code),
+          () => finish(code, true),
+        );
       });
     });
   }
@@ -446,8 +511,10 @@ export class ProjectLocalDoctorAdapter {
     private readonly executor: DoctorExecutor = new NodeDoctorExecutor(),
   ) {}
 
-  async run(projectRoot: string): Promise<DoctorResult> {
-    const location = await this.locator.locate(projectRoot);
+  async run(projectRoot: string, signal?: AbortSignal): Promise<DoctorResult> {
+    signal?.throwIfAborted();
+    const location = await this.locator.locate(projectRoot, signal);
+    signal?.throwIfAborted();
     if (location.kind === "unavailable") {
       return {
         evidence: {
@@ -458,8 +525,12 @@ export class ProjectLocalDoctorAdapter {
         diagnostic: location.code,
       };
     }
-    return normalizeDoctor(
-      await this.executor.execute(location.entryPath, projectRoot),
+    const execution = await this.executor.execute(
+      location.entryPath,
+      projectRoot,
+      signal,
     );
+    signal?.throwIfAborted();
+    return normalizeDoctor(execution);
   }
 }

@@ -8,6 +8,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./real": {
+      "types": "./src/real-api.ts",
+      "default": "./dist/real-api.js"
     }
   },
   "scripts": {

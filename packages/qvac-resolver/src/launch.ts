@@ -36,6 +36,7 @@ export interface LaunchResolvedSdkChildOptions {
   handle: ResolvedSdkHandle;
   runnerPath: string;
   tempCwd: string;
+  signal?: AbortSignal;
   sourceEnv?: NodeJS.ProcessEnv;
   beforeBootstrap: (child: ChildProcess) => void | Promise<void>;
   afterSdkBootstrapSent?: (child: ChildProcess) => void | Promise<void>;
@@ -194,8 +195,11 @@ export async function launchResolvedSdkChild(
   options: LaunchResolvedSdkChildOptions,
 ): Promise<ChildProcess> {
   try {
+    options.signal?.throwIfAborted();
     const runnerPath = await requireRegularRunner(options.runnerPath);
+    options.signal?.throwIfAborted();
     const tempCwd = await requireCleanTemporaryCwd(options.tempCwd);
+    options.signal?.throwIfAborted();
     const material = internalGetSdkBootstrapMaterial(options.handle);
     const message: SdkBootstrapMessage = {
       type: "qvac-atlas-sdk-bootstrap-v1",
@@ -215,6 +219,7 @@ export async function launchResolvedSdkChild(
     const settled = observeExit(child);
     try {
       await options.beforeBootstrap(child);
+      options.signal?.throwIfAborted();
       await new Promise<void>((resolve, reject) => {
         child.send(message, (error) => {
           if (!error) {
@@ -224,7 +229,9 @@ export async function launchResolvedSdkChild(
           reject(new SdkChildLaunchError("qvac-child-launch-failed"));
         });
       });
+      options.signal?.throwIfAborted();
       await options.afterSdkBootstrapSent?.(child);
+      options.signal?.throwIfAborted();
     } catch {
       await terminateFailedBootstrap(child, settled);
       throw new SdkChildLaunchError("qvac-child-launch-failed");

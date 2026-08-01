@@ -211,7 +211,7 @@ async function sweepGroup(child: ChildProcess): Promise<void> {
   while (groupExists(child) && performance.now() < expiresAt) {
     await delay(20);
   }
-  if (groupExists(child)) throw new ArtifactError("artifact-worker-failed");
+  if (groupExists(child)) throw new ArtifactError("artifact-cleanup-failed");
 }
 
 async function awaitBoundedExit(
@@ -220,7 +220,7 @@ async function awaitBoundedExit(
   const deadline = cancelableDeadline(KILL_SETTLE_MS, undefined);
   const result = await Promise.race([observation.rootExited, deadline.promise]);
   deadline.cancel();
-  if (result === undefined) throw new ArtifactError("artifact-worker-failed");
+  if (result === undefined) throw new ArtifactError("artifact-cleanup-failed");
   return result;
 }
 
@@ -230,7 +230,7 @@ async function awaitBoundedClose(
   const deadline = cancelableDeadline(KILL_SETTLE_MS, undefined);
   const result = await Promise.race([observation.closed, deadline.promise]);
   deadline.cancel();
-  if (result === undefined) throw new ArtifactError("artifact-worker-failed");
+  if (result === undefined) throw new ArtifactError("artifact-cleanup-failed");
   return result;
 }
 
@@ -586,7 +586,7 @@ export async function internalRunAcquisitionSupervisor(
       try {
         await terminateAndReap(child, observation);
       } catch {
-        throw new ArtifactError("artifact-worker-failed");
+        throw new ArtifactError("artifact-cleanup-failed");
       }
       await recoverOnce();
     }
