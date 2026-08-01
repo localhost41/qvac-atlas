@@ -6,10 +6,39 @@ import { extname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { validateSiteReleaseCatalog } from "../../../scripts/validate-site-release-catalog.mjs";
+import type { CatalogData } from "../src/types/catalog.js";
 
 const run = promisify(execFile);
 const siteRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+
+function catalogWithIsolatedGenuineEvidence(catalog: CatalogData): CatalogData {
+  const digest = "b".repeat(64);
+  const reportId = `sha256:${digest}`;
+  const report = structuredClone(catalog.fixtures[0]);
+  report.reportId = reportId;
+  report.slug = digest;
+  report.sourceKey = `source:${"a".repeat(32)}`;
+  report.sourcePath = `reports/v1/sha256-${digest}.json`;
+  report.report.report_id = reportId;
+  report.report.provenance = { kind: "probe", fixture_id: null };
+  report.claim = {
+    actual_backend_claim: "observed-success",
+    claim: "observed-success",
+    observation: "success",
+    reasons: ["requested-backend-observed", "workload-completed"],
+  };
+  const claim = {
+    claim: structuredClone(report.claim),
+    claimId: `claim-${"c".repeat(64)}`,
+    compatibilityKey: "isolated-genuine-test-key",
+    facets: structuredClone(report.facets),
+    reportIds: [reportId],
+    sourceCount: 1,
+  };
+  return { ...structuredClone(catalog), claims: [claim], reports: [report] };
+}
 
 async function buildAtBase(base: string): Promise<string> {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "qvac-atlas-site-base-"));
@@ -182,10 +211,50 @@ test("site release workflow is pinned, least-privilege, main-only, and manual-de
     /actions\/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e/u,
   );
   assert.doesNotMatch(workflow, /uses:\s+[^\s@]+@v\d/u);
-  assert.match(workflow, /catalog\.claims\.length !== 0/u);
-  assert.match(workflow, /catalog\.reports\.length !== 0/u);
-  assert.match(workflow, /catalog\.fixtures\.length === 0/u);
+  assert.match(
+    workflow,
+    /node scripts\/validate-site-release-catalog\.mjs apps\/site\/src\/generated\/catalog\.json/u,
+  );
+  assert.doesNotMatch(workflow, /catalog\.(?:claims|reports)\.length !== 0/u);
   assert.doesNotMatch(ordinaryCi, /site-release|deploy-pages/u);
+});
+
+test("site release catalog gate permits genuine evidence but rejects fixture crossover", async () => {
+  const current = JSON.parse(
+    await readFile(
+      new URL("../src/generated/catalog.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(validateSiteReleaseCatalog(current), {
+    claims: 0,
+    fixtures: 2,
+    reports: 0,
+  });
+
+  const genuine = catalogWithIsolatedGenuineEvidence(current);
+  assert.deepEqual(validateSiteReleaseCatalog(genuine), {
+    claims: 1,
+    fixtures: 2,
+    reports: 1,
+  });
+
+  const fixtureInReports = structuredClone(genuine);
+  fixtureInReports.reports[0].report.provenance = {
+    kind: "fixture",
+    fixture_id: "crossed-boundary",
+  };
+  assert.throws(
+    () => validateSiteReleaseCatalog(fixtureInReports),
+    /genuine-report-boundary/u,
+  );
+
+  const fixtureInClaims = structuredClone(genuine);
+  fixtureInClaims.claims[0].reportIds = [current.fixtures[0].reportId];
+  assert.throws(
+    () => validateSiteReleaseCatalog(fixtureInClaims),
+    /claim-references-non-genuine-report/u,
+  );
 });
 
 test("walkthrough and launch kit remain executable, unsent, and fixture-only", async () => {

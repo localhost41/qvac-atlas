@@ -55,16 +55,10 @@ jobs:
         env:
           ATLAS_SITE_BASE: ${{ steps.site-base.outputs.base }}
         run: pnpm --filter @qvac-atlas/site build
-      - name: Reject generated-data drift and non-fixture launch state
+      - name: Reject generated-data drift and evidence-boundary crossover
         run: |
           git diff --exit-code -- apps/site/src/generated/catalog.json
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          const catalog = JSON.parse(fs.readFileSync("apps/site/src/generated/catalog.json", "utf8"));
-          if (catalog.claims.length !== 0 || catalog.reports.length !== 0 || catalog.fixtures.length === 0) {
-            throw new Error("site-release-requires-reviewed-fixture-only-catalog");
-          }
-          NODE
+          node scripts/validate-site-release-catalog.mjs apps/site/src/generated/catalog.json
       - name: Package a Pages-compatible artifact
         run: |
           first_link="$(find apps/site/dist -type l -print -quit)"
