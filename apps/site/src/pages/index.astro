@@ -1,12 +1,52 @@
 ---
+import generatedCatalog from "../generated/catalog.json";
+import CatalogList from "../components/CatalogList.astro";
 import Base from "../layouts/Base.astro";
+import type { CatalogData } from "../types/catalog.js";
+
+const catalog = generatedCatalog as unknown as CatalogData;
+const slugs = new Map(
+  catalog.reports.map((entry) => [entry.reportId, entry.slug]),
+);
+const claims = catalog.claims.map((entry) => ({
+  ...entry,
+  links: entry.reportIds.flatMap((reportId) => {
+    const slug = slugs.get(reportId);
+    return slug === undefined
+      ? []
+      : [{ href: `/reports/${slug}/`, label: reportId }];
+  }),
+  title: entry.facets.hardware,
+}));
 ---
 
-<Base title="QVAC Atlas">
-  <h1>QVAC Atlas</h1>
-  <p>Evidence-backed QVAC hardware compatibility registry.</p>
-  <p>
-    This scaffold contains no real reports. See the
-    <a href="/fixtures/raspberry-pi-5/">clearly labelled fixture page</a>.
-  </p>
+<Base title="QVAC Atlas — compatibility registry">
+  <section class="hero">
+    <p class="eyebrow">Observed evidence, scoped exactly</p>
+    <h1>Has QVAC actually run on hardware like yours?</h1>
+    <p>
+      Atlas publishes reviewed observations for one exact QVAC version,
+      workload, operating system, and hardware configuration. It does not
+      predict compatibility across versions or devices.
+    </p>
+  </section>
+
+  {
+    claims.length === 0 && (
+      <aside class="notice" aria-labelledby="empty-registry-title">
+        <h2 id="empty-registry-title">The genuine registry is not open yet</h2>
+        <p>
+          Production profile admission is disabled until a hash-verified QVAC
+          lifecycle succeeds on real hardware. Fixture data remains isolated in
+          the fixture lab.
+        </p>
+      </aside>
+    )
+  }
+
+  <CatalogList
+    entries={claims}
+    heading="Compatibility evidence"
+    id="genuine-catalog"
+  />
 </Base>

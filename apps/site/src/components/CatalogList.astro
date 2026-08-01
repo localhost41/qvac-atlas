@@ -1,0 +1,125 @@
+---
+interface Facets {
+  hardware: string;
+  observedDevice: string;
+  os: string;
+  outcome: string;
+  qvac: string;
+  requestedDevice: string;
+}
+
+interface Link {
+  href: string;
+  label: string;
+}
+
+interface Entry {
+  facets: Facets;
+  links: Link[];
+  title: string;
+}
+
+interface Props {
+  entries: Entry[];
+  heading: string;
+  id: string;
+}
+
+const { entries, heading, id } = Astro.props;
+const filterDefinitions = [
+  ["hardware", "Hardware"],
+  ["os", "Operating system"],
+  ["qvac", "QVAC version"],
+  ["requestedDevice", "Requested device"],
+  ["observedDevice", "Observed device"],
+  ["outcome", "Outcome"],
+] as const;
+const values = Object.fromEntries(
+  filterDefinitions.map(([key]) => [
+    key,
+    [...new Set(entries.map((entry) => entry.facets[key]))].sort(),
+  ]),
+) as Record<(typeof filterDefinitions)[number][0], string[]>;
+---
+
+<section class="catalog" id={id} data-catalog>
+  <h2>{heading}</h2>
+  <form class="filters" data-filters aria-label={`${heading} filters`}>
+    {
+      filterDefinitions.map(([key, label]) => (
+        <label>
+          <span>{label}</span>
+          <select name={key} data-filter={key}>
+            <option value="">All</option>
+            {values[key]!.map((value) => (
+              <option value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+      ))
+    }
+    <button type="reset">Clear filters</button>
+  </form>
+
+  <p class="result-count" aria-live="polite" data-count>
+    Showing {entries.length}
+    {entries.length === 1 ? "result" : "results"}
+  </p>
+  <p class="empty" data-empty hidden>
+    No evidence matches all selected filters.
+  </p>
+
+  <ul class="results" data-results>
+    {
+      entries.map((entry) => (
+        <li
+          class="result-card"
+          data-record
+          data-hardware={entry.facets.hardware}
+          data-os={entry.facets.os}
+          data-qvac={entry.facets.qvac}
+          data-requested-device={entry.facets.requestedDevice}
+          data-observed-device={entry.facets.observedDevice}
+          data-outcome={entry.facets.outcome}
+        >
+          <h3>{entry.title}</h3>
+          <dl class="summary">
+            <div>
+              <dt>OS</dt>
+              <dd>{entry.facets.os}</dd>
+            </div>
+            <div>
+              <dt>QVAC</dt>
+              <dd>{entry.facets.qvac}</dd>
+            </div>
+            <div>
+              <dt>Requested</dt>
+              <dd>{entry.facets.requestedDevice}</dd>
+            </div>
+            <div>
+              <dt>Observed</dt>
+              <dd>{entry.facets.observedDevice}</dd>
+            </div>
+            <div>
+              <dt>Outcome</dt>
+              <dd>
+                <span class={`badge badge-${entry.facets.outcome}`}>
+                  {entry.facets.outcome}
+                </span>
+              </dd>
+            </div>
+          </dl>
+          <p class="evidence-links">
+            {entry.links.map((link) => (
+              <a href={link.href}>
+                View exact report <span class="sr-only">{link.label}</span>
+              </a>
+            ))}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<script is:inline src="/catalog-filter.js" defer></script>

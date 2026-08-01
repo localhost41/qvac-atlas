@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "productionProfiles": [],
+  "fixtureProfiles": [
+    {
+      "id": "atlas-small-llm-lifecycle-test",
+      "version": "1.0.0",
+      "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "requested_backend": "gpu",
+      "test_only": true
+    }
+  ],
+  "sources": [
+    {
+      "kind": "fixture",
+      "path": "packages/schema/fixtures/fallback.json",
+      "sourceKey": "fixture:fallback"
+    },
+    {
+      "kind": "fixture",
+      "path": "packages/schema/fixtures/success.json",
+      "sourceKey": "fixture:success"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+---
+import generatedCatalog from "../../generated/catalog.json";
+import CatalogList from "../../components/CatalogList.astro";
+import Base from "../../layouts/Base.astro";
+import type { CatalogData } from "../../types/catalog.js";
+
+const catalog = generatedCatalog as unknown as CatalogData;
+const fixtures = catalog.fixtures.map((entry) => ({
+  facets: entry.facets,
+  links: [{ href: `/reports/${entry.slug}/`, label: entry.reportId }],
+  title: entry.facets.hardware,
+}));
+---
+
+<Base title="Fixture lab — QVAC Atlas">
+  <section class="hero compact">
+    <p class="eyebrow">Demonstration data only</p>
+    <h1>Fixture lab</h1>
+    <p>
+      These records exercise validation and presentation. They are not real
+      device observations, never enter aggregate claims, and cannot establish
+      QVAC compatibility.
+    </p>
+  </section>
+  <aside class="warning" aria-label="Fixture limitation">
+    <strong>Every result on this page is synthetic.</strong> Fixture provenance forces
+    its derived claim to <code>unknown</code>, even if the simulated workload
+    succeeds.
+  </aside>
+  <CatalogList
+    entries={fixtures}
+    heading="Synthetic report fixtures"
+    id="fixture-catalog"
+  />
+</Base>
