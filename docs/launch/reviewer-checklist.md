@@ -50,9 +50,10 @@ Inspect `.github/workflows/site-release.yml` and require all of the following:
 The reviewer re-resolves every action commit against its documented upstream tag.
 The host operator must configure GitHub Pages for workflow deployment and the
 `github-pages` environment for one named independent reviewer, self-review
-prevention, and protected-branch-only deployment before ever selecting
-`deploy: true`. The read-only host verifier must confirm those settings and a
-successful GitHub-Actions-bound workspace check on the exact release commit.
+prevention, administrator bypass disabled, and protected-branch-only deployment
+before ever selecting `deploy: true`. The read-only host verifier must confirm
+those settings and the newest GitHub-Actions-bound workspace check on the exact
+release commit is successful.
 
 ## Usability and evidence review
 

@@ -129,15 +129,31 @@ M1 — Local probe and registry vertical slice.
   ambiguous macOS kernel labeling, incomplete workload disclosure, floating
   workflow actions, and release-sequencing contradictions. The real gate remains
   false; independent human review and a new ATLAS-013 ceremony remain pending.
+- ATLAS-034: all local community-launch preparation is complete. The deterministic
+  `qvac-atlas@0.1.0` artifact is 118,506 bytes with SHA-256
+  `1fdd4024ed78aa35219ee4c53b058edfb71dae0a0e03436000b02150ac20c6f7`.
+  A fresh no-local clone passed its offline frozen install, all 471 tests, package
+  recreation/audit, and clean-tree checks. The static site passed root/subpath and
+  responsive visual review. A time-bound full dependency audit reported zero
+  known advisories. Repository controls, public-host verification, reviewer
+  handoff, private-beta, rollback, release, and unsent announcement materials are
+  present. No remote, package, deployment, report, or message was published.
 
 ## Next integration gate
 
-The ATLAS-033 independent review is complete and the reviewer-released enabled
-clone was destroyed. ATLAS-034 now prepares installable distribution, repository
-governance, static deployment, contributor onboarding, and beta/release operations
-in parallel. The previous physical attempt remains engineering evidence with a
-formal `STOP / MANUAL REVIEW`; production profile/report admission and user-facing
-real execution stay disabled unless a conforming ATLAS-013 gate is later accepted.
+The local ATLAS-034 candidate is ready to freeze onto `main`. Community launch then
+requires human license selection, named GitHub owners, an independent reviewer,
+explicit authority to create and protect the public host, npm publisher authority,
+and separate deployment, release, and announcement approvals. Each exact action and
+acceptance check is recorded in `docs/reviews/ATLAS-034-launch-readiness.md` and
+`docs/operations/public-host-bootstrap.md`.
+
+At the project owner's direction, this launch path skips a new physical ceremony.
+It therefore remains a fixture-only developer preview: zero production profiles,
+zero genuine reports, zero production claims, and a literal-false real gate. The
+previous physical attempt remains private engineering evidence with formal
+`STOP / MANUAL REVIEW`; ATLAS-013, production admission, and activation remain
+separate future gates.
 
 ## Known risks
 

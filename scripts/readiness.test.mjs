@@ -33,6 +33,18 @@ async function json(path) {
   return JSON.parse(await text(path));
 }
 
+function assertCompleteOwnershipState(codeowners, placeholders) {
+  const presentPlaceholders = new Set(
+    codeowners.match(/@[A-Z][A-Z0-9_]*_HANDLE_REQUIRED\b/gu) ?? [],
+  );
+  assert.ok(
+    presentPlaceholders.size === 0 ||
+      (presentPlaceholders.size === placeholders.size &&
+        [...placeholders].every((value) => presentPlaceholders.has(value))),
+    "CODEOWNERS must contain either every launch placeholder or none of them",
+  );
+}
+
 function workflowUses(source, label) {
   const values = [];
   const visited = new WeakSet();
@@ -201,7 +213,7 @@ test("release controls pin every workflow and refuse unsupported real platforms"
   assert.match(checklist, /still performs no\s+upload/iu);
 });
 
-test("repository ownership is complete but placeholders remain launch-blocking", async () => {
+test("repository ownership supports only complete preparation or launch states", async () => {
   const [codeowners, security, release, bootstrap, protection] =
     await Promise.all([
       text(".github/CODEOWNERS"),
@@ -251,8 +263,19 @@ test("repository ownership is complete but placeholders remain launch-blocking",
       );
     }
   }
-  for (const placeholder of placeholders)
-    assert.match(codeowners, new RegExp(placeholder, "u"));
+  assertCompleteOwnershipState(codeowners, placeholders);
+  assertCompleteOwnershipState(
+    "* @primary-owner\n/reports/v1/ @evidence-owner\n/SECURITY.md @security-owner\n",
+    placeholders,
+  );
+  assert.throws(
+    () =>
+      assertCompleteOwnershipState(
+        "* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED\n/reports/v1/ @evidence-owner\n/SECURITY.md @SECURITY_CODE_OWNER_HANDLE_REQUIRED\n",
+        placeholders,
+      ),
+    /either every launch placeholder or none/u,
+  );
   assert.match(security, /launch-blocking placeholder/u);
   assert.match(release, /local preparation only/u);
   assert.match(bootstrap, /performs authenticated `GET` requests only/u);

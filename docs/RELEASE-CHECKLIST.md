@@ -113,7 +113,7 @@ hardware, privacy, and repository-trust gates below.
 - [ ] The required workspace check is bound to the GitHub Actions app and succeeds
       on the exact release commit. Pages uses workflow deployment, and its
       protected environment prevents self-review, names an independent required
-      reviewer, and accepts only protected branches.
+      reviewer, disallows administrator bypass, and accepts only protected branches.
 - [ ] Maintainers, not contributors or report content, assign stable source
       independence keys.
 - [ ] A production profile change is reviewed separately from a report submission.

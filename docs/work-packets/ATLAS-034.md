@@ -1,6 +1,6 @@
 # ATLAS-034 — Community-launch preparation program
 
-Status: in progress
+Status: local work complete; external launch gates pending
 
 ## Objective
 
@@ -91,3 +91,19 @@ performing an unauthorized external publication.
   report-empty unless the separate formal gates are later satisfied.
 - Every remaining human/external decision has an exact owner, command, and
   acceptance check rather than a vague launch TODO.
+
+## Completion record
+
+All locally executable ATLAS-034A–D work is complete. The implementation candidate
+`4a711ce6fdc670b46460e05d8887f9c9a0bbde73` passed a frozen offline clean-room
+install, the complete readiness suite, deterministic package recreation and audit,
+dependency audit, static-site tests, responsive visual inspection, and independent
+architecture/security and operations/release review after remediation. The
+durable verdict and reviewer handoff are in
+`docs/reviews/ATLAS-034-launch-readiness.md`.
+
+No external action was taken. License choice, named GitHub owners, public-host
+creation/protection, human review, npm authority, site deployment, release/tagging,
+and announcements remain explicit gates. At the project owner's direction, the
+physical ceremony was not repeated; ATLAS-013 remains `rerun required`, the shipped
+real gate remains false, and the accepted launch scope is fixture-only.

@@ -47,6 +47,7 @@ function protectedHost() {
     vulnerabilityReporting: { enabled: true },
     pages: { build_type: "workflow" },
     pagesEnvironment: {
+      can_admins_bypass: false,
       protection_rules: [
         {
           type: "required_reviewers",
@@ -67,7 +68,9 @@ function protectedHost() {
     checkRuns: {
       check_runs: [
         {
+          id: 100,
           name: "Validate workspace and contribution data",
+          head_sha: head,
           status: "completed",
           conclusion: "success",
           app: { id: 15368 },
@@ -131,15 +134,22 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
 });
 
 test("placeholder ownership is explicit and launch-blocking", async () => {
-  const codeowners = await readFile(
-    new URL("../.github/CODEOWNERS", import.meta.url),
-    "utf8",
-  );
-  assert.deepEqual(unresolvedCodeOwnerPlaceholders(codeowners), [
+  const placeholders = `
+* @PRIMARY_CODE_OWNER_HANDLE_REQUIRED
+/reports/v1/ @EVIDENCE_CODE_OWNER_HANDLE_REQUIRED
+/SECURITY.md @SECURITY_CODE_OWNER_HANDLE_REQUIRED
+`;
+  assert.deepEqual(unresolvedCodeOwnerPlaceholders(placeholders), [
     "@EVIDENCE_CODE_OWNER_HANDLE_REQUIRED",
     "@PRIMARY_CODE_OWNER_HANDLE_REQUIRED",
     "@SECURITY_CODE_OWNER_HANDLE_REQUIRED",
   ]);
+  assert.deepEqual(
+    unresolvedCodeOwnerPlaceholders(
+      "* @accepted-owner\n/SECURITY.md @security-owner\n",
+    ),
+    [],
+  );
 });
 
 test("the complete protected host shape passes", () => {
@@ -160,6 +170,7 @@ test("weak or stale host controls fail every release boundary", () => {
   state.protection.required_status_checks.checks[0].app_id = 1;
   state.checkRuns.check_runs[0].conclusion = "failure";
   state.pages.build_type = "legacy";
+  state.pagesEnvironment.can_admins_bypass = true;
   state.pagesEnvironment.protection_rules[0].prevent_self_review = false;
   state.pagesEnvironment.protection_rules[0].reviewers = [];
   state.pagesEnvironment.deployment_branch_policy.protected_branches = false;
@@ -185,7 +196,34 @@ test("weak or stale host controls fail every release boundary", () => {
   assert.match(failures.join("\n"), /bypass/u);
   assert.match(failures.join("\n"), /GitHub Actions app/u);
   assert.match(failures.join("\n"), /Pages deployment reviewer/u);
-  assert.match(failures.join("\n"), /successful GitHub Actions/u);
+  assert.match(failures.join("\n"), /newest reviewed-commit GitHub Actions/u);
+  assert.match(failures.join("\n"), /administrators can bypass/u);
+});
+
+test("a newer failed rerun cannot be masked by an older success", () => {
+  const state = protectedHost();
+  state.checkRuns.check_runs = [
+    {
+      id: 900,
+      name: "Validate workspace and contribution data",
+      head_sha: head,
+      status: "completed",
+      conclusion: "success",
+      app: { id: 15368 },
+    },
+    {
+      id: 901,
+      name: "Validate workspace and contribution data",
+      head_sha: head,
+      status: "completed",
+      conclusion: "failure",
+      app: { id: 15368 },
+    },
+  ];
+  assert.match(
+    repositoryProtectionFailures(state).join("\n"),
+    /newest reviewed-commit GitHub Actions/u,
+  );
 });
 
 test("host verifier source is read-only and absent from ordinary readiness", async () => {
@@ -196,7 +234,10 @@ test("host verifier source is read-only and absent from ordinary readiness", asy
   assert.match(verifier, /"--method",\s*"GET"/u);
   assert.doesNotMatch(verifier, /"(?:POST|PUT|PATCH|DELETE)"/u);
   assert.match(verifier, /environments\/github-pages/u);
-  assert.match(verifier, /commits\/\$\{encodedHead\}\/check-runs/u);
+  assert.match(
+    verifier,
+    /commits\/\$\{encodedHead\}\/check-runs\?check_name=/u,
+  );
   assert.match(verifier, /repos\/\$\{encodedRepository\}\/pages/u);
   assert.doesNotMatch(readiness, /verify-host-protection/u);
 });

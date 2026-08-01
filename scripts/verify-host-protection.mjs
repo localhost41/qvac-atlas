@@ -79,6 +79,23 @@ function allowanceCount(allowances) {
   }, 0);
 }
 
+function newestMatchingCheck(checkRuns, requiredContext, actionsAppId) {
+  const matches = (
+    Array.isArray(checkRuns?.check_runs) ? checkRuns.check_runs : []
+  ).filter(
+    (check) =>
+      check?.name === requiredContext &&
+      check?.app?.id === actionsAppId &&
+      Number.isSafeInteger(check?.id) &&
+      check.id > 0,
+  );
+  return matches.reduce(
+    (newest, check) =>
+      newest === null || check.id > newest.id ? check : newest,
+    null,
+  );
+}
+
 export function repositoryProtectionFailures({
   repository,
   branch,
@@ -126,24 +143,24 @@ export function repositoryProtectionFailures({
       "required workspace status check is not bound to the GitHub Actions app",
     );
 
-  const completedChecks = Array.isArray(checkRuns?.check_runs)
-    ? checkRuns.check_runs
-    : [];
+  const latestCheck = newestMatchingCheck(
+    checkRuns,
+    requiredContext,
+    actionsAppId,
+  );
   if (
-    !completedChecks.some(
-      (check) =>
-        check?.name === requiredContext &&
-        check?.status === "completed" &&
-        check?.conclusion === "success" &&
-        check?.app?.id === actionsAppId,
-    )
+    latestCheck?.status !== "completed" ||
+    latestCheck?.conclusion !== "success" ||
+    latestCheck?.head_sha !== expectedHead
   )
     failures.push(
-      "reviewed commit lacks a successful GitHub Actions workspace check",
+      "newest reviewed-commit GitHub Actions workspace check is not successful",
     );
 
   if (pages?.build_type !== "workflow")
     failures.push("GitHub Pages is not configured for workflow deployment");
+  if (pagesEnvironment?.can_admins_bypass !== false)
+    failures.push("Pages administrators can bypass deployment protection");
   const environmentRules = Array.isArray(pagesEnvironment?.protection_rules)
     ? pagesEnvironment.protection_rules
     : [];
@@ -255,6 +272,7 @@ export async function verifyHostProtection({
     .join("/");
   const encodedBranch = encodeURIComponent(branch);
   const encodedHead = encodeURIComponent(expectedHead);
+  const encodedContext = encodeURIComponent(REQUIRED_CONTEXT);
   const [
     repositoryState,
     branchState,
@@ -276,7 +294,9 @@ export async function verifyHostProtection({
     githubGet(`repos/${encodedRepository}/private-vulnerability-reporting`),
     githubGet(`repos/${encodedRepository}/pages`),
     githubGet(`repos/${encodedRepository}/environments/github-pages`),
-    githubGet(`repos/${encodedRepository}/commits/${encodedHead}/check-runs`),
+    githubGet(
+      `repos/${encodedRepository}/commits/${encodedHead}/check-runs?check_name=${encodedContext}&app_id=${String(GITHUB_ACTIONS_APP_ID)}&filter=all&per_page=100`,
+    ),
   ]);
 
   const failures = repositoryProtectionFailures({

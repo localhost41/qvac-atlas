@@ -136,6 +136,7 @@ const id = Number(process.argv[1]);
 process.stdout.write(JSON.stringify({
   wait_timer: 0,
   prevent_self_review: true,
+  can_admins_bypass: false,
   reviewers: [{ type: "User", id }],
   deployment_branch_policy: {
     protected_branches: true,
@@ -151,9 +152,14 @@ bound to the GitHub Actions application, at least one approval, code-owner revie
 stale-approval dismissal, approval by someone other than the latest pusher,
 resolved conversations, administrator enforcement, no PR bypass actors, no force
 pushes or deletion, and linear history. Pages must use workflow deployment; its
-environment prevents self-review, requires the named independent reviewer, and
-accepts only protected branches. Do not add bypass users, teams, apps, or a
-direct-push exception.
+environment prevents self-review, disallows administrator bypass, requires the
+named independent reviewer, and accepts only protected branches. Do not add bypass
+users, teams, apps, or a direct-push exception. GitHub enables administrator
+deployment bypass by default, so the operator must confirm in the environment UI
+that **Allow administrators to bypass configured protection rules** is off. The
+read-only verifier below must also observe `can_admins_bypass: false`; if the API
+payload is rejected or ignored, use that GitHub environment control and rerun the
+verifier rather than weakening this requirement.
 
 ## Read-only verification
 
@@ -171,10 +177,12 @@ node scripts/verify-host-protection.mjs \
 It fails unless the repository is public, `main` is the default branch at the
 exact reviewed commit, GitHub reports no CODEOWNERS errors, private vulnerability
 reporting is enabled, the exact commit has a successful GitHub Actions check, every
-required branch-protection field matches, Pages uses workflow mode, and the
-protected environment has the named reviewer, self-review prevention, and
-protected-branch-only deployment. Preserve the sanitized pass/fail output and exact
-commit in the private release record; do not preserve tokens or raw API responses.
+required branch-protection field matches, the newest matching GitHub Actions check
+run on the exact commit is successful, Pages uses workflow mode, and the protected
+environment has the named reviewer, self-review prevention, administrator bypass
+disabled, and protected-branch-only deployment. Preserve the sanitized pass/fail
+output and exact commit in the private release record; do not preserve tokens or
+raw API responses.
 
 After verification, the next change must be a pull request from the exact trusted
 baseline and pass the normal base/target append-only audit. If any host setting
