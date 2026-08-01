@@ -49,6 +49,35 @@ const CONTENT_RULES = [
 const ASSIGNMENT_CANDIDATE =
   /(?<![A-Za-z0-9_])([A-Za-z0-9_]{1,1024})[ \t]*=[ \t]*\S/gi;
 const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
+const PLURAL_ASSIGNMENT_SEGMENTS = new Map([
+  ["ADDRESSES", "ADDRESS"],
+  ["AUTHORIZATIONS", "AUTHORIZATION"],
+  ["COOKIES", "COOKIE"],
+  ["CREDENTIALS", "CREDENTIAL"],
+  ["DIRECTORIES", "DIRECTORY"],
+  ["EMAILS", "EMAIL"],
+  ["ENVIRONMENTS", "ENVIRONMENT"],
+  ["HISTORIES", "HISTORY"],
+  ["HOSTS", "HOST"],
+  ["HOSTNAMES", "HOSTNAME"],
+  ["IDS", "ID"],
+  ["IPS", "IP"],
+  ["KEYS", "KEY"],
+  ["LISTS", "LIST"],
+  ["LOGS", "LOG"],
+  ["MACS", "MAC"],
+  ["NUMBERS", "NUMBER"],
+  ["ORGANIZATIONS", "ORGANIZATION"],
+  ["OUTPUTS", "OUTPUT"],
+  ["PASSWORDS", "PASSWORD"],
+  ["PROCESSES", "PROCESS"],
+  ["PROMPTS", "PROMPT"],
+  ["SECRETS", "SECRET"],
+  ["SERIALS", "SERIAL"],
+  ["SSIDS", "SSID"],
+  ["TOKENS", "TOKEN"],
+  ["USERNAMES", "USERNAME"],
+]);
 
 const EXACT_ENTROPY_EXEMPT_PATHS = new Set([
   "/report_id",
@@ -97,17 +126,22 @@ function hasSensitiveAssignment(value) {
     // still expose a TOKEN segment and remain sensitive.
     if (name === "NOT_TOKEN") continue;
     const segments = name.split("_").filter(Boolean);
+    const policySegments = segments.map(
+      (segment) => PLURAL_ASSIGNMENT_SEGMENTS.get(segment) ?? segment,
+    );
+    const policyName = policySegments.join("_");
     if (
       FORBIDDEN_KEY.test(name) ||
-      /(?:API_?KEY|AUTHORIZATION|COOKIE|CREDENTIALS?|PASSWORD|SECRET|TOKEN)$/u.test(
+      FORBIDDEN_KEY.test(policyName) ||
+      /(?:API_?KEYS?|AUTHORIZATIONS?|COOKIES?|CREDENTIALS?|PASSWORDS?|SECRETS?|TOKENS?)$/u.test(
         name,
       )
     )
       return true;
-    for (let index = 0; index + 1 < segments.length; index += 1) {
+    for (let index = 0; index + 1 < policySegments.length; index += 1) {
       if (
-        SENSITIVE_KEY_PREFIXES.has(segments[index]) &&
-        segments[index + 1] === "KEY"
+        SENSITIVE_KEY_PREFIXES.has(policySegments[index]) &&
+        policySegments[index + 1] === "KEY"
       )
         return true;
     }

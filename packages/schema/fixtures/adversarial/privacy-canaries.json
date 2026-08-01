@@ -308,5 +308,75 @@
     "name": "organization assignment",
     "value": "ORGANIZATION=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural credential assignment",
+    "value": "CREDENTIALS_FILE=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural cookie assignment",
+    "value": "COOKIES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural API key assignment",
+    "value": "API_KEYS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural token assignment",
+    "value": "TOKENS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural username assignment",
+    "value": "USERNAMES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural network address assignment",
+    "value": "IP_ADDRESSES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural home directory assignment",
+    "value": "HOME_DIRECTORIES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural shell history assignment",
+    "value": "SHELL_HISTORIES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural process list assignment",
+    "value": "PROCESS_LISTS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural serial number assignment",
+    "value": "SERIAL_NUMBERS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural full log assignment",
+    "value": "FULL_LOGS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural environment assignment",
+    "value": "ENVIRONMENTS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural organization assignment",
+    "value": "ORGANIZATIONS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural wireless identifier assignment",
+    "value": "SSIDS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
