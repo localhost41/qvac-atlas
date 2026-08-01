@@ -11,7 +11,7 @@
     "build": "tsc --project tsconfig.json",
     "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" package.json tsconfig.json",
     "test": "pnpm --filter @qvac-atlas/cli... build && tsx --test test/**/*.test.ts",
-    "typecheck": "tsc --noEmit --project tsconfig.json"
+    "typecheck": "pnpm --filter @qvac-atlas/cli... build && tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
     "@qvac-atlas/model-artifact": "workspace:*",
