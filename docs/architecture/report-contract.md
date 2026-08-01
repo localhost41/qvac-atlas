@@ -160,9 +160,9 @@ facets into a stronger compatibility claim.
 Production claim derivation receives a trusted allowlist of immutable profile
 descriptors. A report cannot make its own profile standard merely by naming it.
 `profiles/fixtures/atlas-small-llm-lifecycle-test.json` exists only for contract
-tests. The production V1 profile remains absent until ATLAS-013 physical validation
-succeeds and separate protected production-profile admission and repository-trust
-reviews approve it.
+tests. The production V1 profile remains absent until an accepted conforming
+ATLAS-013 physical verdict and independent privacy review exist, repository trust
+is active, and a separate protected production-profile change is approved.
 
 ## Validation layers
 

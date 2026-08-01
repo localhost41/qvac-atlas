@@ -29,6 +29,9 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
 
   if (!evidence.trustedProfile) reasons.push("nonstandard-profile");
   if (!evidence.supportedRuntime) reasons.push("unsupported-node-runtime");
+  if (!evidence.supportedPlatform) reasons.push("unsupported-platform");
+  if (!evidence.hardwareIdentitySatisfied)
+    reasons.push("hardware-identity-unavailable");
   if (report.qvac.sdk_version === null)
     reasons.push("qvac-version-unavailable");
   else if (!evidence.supportedQvac) reasons.push("unsupported-qvac-evidence");

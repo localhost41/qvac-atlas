@@ -93,4 +93,24 @@ test("incident and first-admission runbooks retain trust boundaries", async () =
     admission,
     /bidirectional report-to-registry checks remain unchanged/u,
   );
+  assert.match(admission, /Initial public-host trust bootstrap/u);
+  assert.match(admission, /`before` value is all zero/u);
+  assert.match(admission, /exact already-reviewed repository commit/u);
+});
+
+test("release controls pin CI and refuse unsupported real platforms", async () => {
+  const [workflow, decisions, checklist] = await Promise.all([
+    text(".github/workflows/ci.yml"),
+    text("docs/DECISIONS.md"),
+    text("docs/RELEASE-CHECKLIST.md"),
+  ]);
+  assert.match(workflow, /runs-on: ubuntu-24\.04/u);
+  assert.doesNotMatch(workflow, /uses:\s+[^\s@]+@v\d/u);
+  assert.match(workflow, /actions\/checkout@[a-f0-9]{40} # v4\.4\.0/u);
+  assert.match(workflow, /pnpm\/action-setup@[a-f0-9]{40} # v4\.3\.0/u);
+  assert.match(workflow, /actions\/setup-node@[a-f0-9]{40} # v4\.4\.0/u);
+  assert.match(decisions, /V1 real execution is macOS arm64 only/u);
+  assert.match(decisions, /before project canonicalization or resolution/u);
+  assert.match(checklist, /first-production-report ceremony/u);
+  assert.match(checklist, /still performs no\s+upload/iu);
 });

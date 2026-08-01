@@ -4,7 +4,7 @@ Updated: 2026-08-01
 
 ## Verified state
 
-- Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
+- Local Git repository initialized for QVAC Atlas.
 - V1 scope, versioned pre-release contract, non-goals, decision log, task board, and worker protocol exist.
 - The designated release line is `main`; protection remains pending ATLAS-018,
   while current milestone integration occurs on `integration`.
@@ -12,7 +12,7 @@ Updated: 2026-08-01
   verified-artifact bridge, contained acquisition, genuine candidate pipeline, and
   private hard-gated CLI composition are integrated through ATLAS-021C.
 - The complete workspace passes lint, typecheck, the full package test suite,
-  five runtime isolation tests, static build, strict schema compilation,
+  runtime isolation and parent-death tests, static build, strict schema compilation,
   deterministic catalog regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
 - The technical-truth verdict is **NARROW**: published QVAC SDK 0.16.0 directly
@@ -59,7 +59,9 @@ M1 — Local probe and registry vertical slice.
   the fixed account cache root, finite manual HTTPS redirects, reserve checks,
   nonce-exact staging/recovery, and a directly supervised fully reaped acquisition
   child. ATLAS-021C reaches it only behind the hardcoded-false private CLI gate; it
-  remains absent from the public probe API and has performed no real model fetch.
+  remains absent from the public probe API. A private nonconforming engineering
+  attempt exercised its pinned download and cache path; no production admission
+  followed.
 - ATLAS-021B: genuine candidate report assembly and the dependency-inverted real
   consent/state pipeline are complete. Exact resolved-QVAC and lifecycle evidence
   cross one private coordinator boundary; capabilities and paths do not. Draft and
@@ -70,7 +72,8 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-021C: the CLI-private coordinator now binds the canonical current project,
   exact SDK handle, normalized abortable Doctor, contained pinned acquisition,
   opaque grant, and directly supervised executor. Same-directory identity-checked
-  output publication and SIGINT settlement are synthetic-tested. The shipped main
+  output publication, persistent INT/TERM/HUP cancellation, and parent-loss
+  process-group termination are tested. The shipped main
   passes a literal false gate before TTY, cwd, signal, prompt, real import, model,
   network, or QVAC effects; fixture behavior and claim admission remain unchanged.
 - ATLAS-021D: independent architecture, quality, and operations reviews accept the
@@ -82,9 +85,11 @@ M1 — Local probe and registry vertical slice.
   `docs/work-packets/ATLAS-013.md`. Execution remains capacity- and
   human-approval-gated: the protocol requires at least 10 GiB of headroom on every
   relevant volume, and capacity must be rechecked immediately before any ceremony.
-  One private disposable run completed with the exact pinned model and clean
-  lifecycle; independent report/privacy review, production admission, and activation
-  remain pending.
+  One private attempt completed the exact pinned model lifecycle with a clean exit,
+  but it used a non-Git disposable QVAC project, lacked pre-run independent review,
+  and had publication intent corrected after the final preview. It is retained as
+  private engineering evidence and receives `STOP / MANUAL REVIEW`, not an accepted
+  ATLAS-013 verdict. A fresh conforming ceremony is required.
 - ATLAS-023: candidate metadata now truthfully records implemented, contained,
   dormant consent while retaining runtime-unverified status, candidate version,
   claim ineligibility, and the empty production allowlist.
@@ -118,27 +123,38 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-032: exact contribution auditing traverses each relevant introduced Git
   edge and rejects intermediate report mutation, deletion, type, or mode drift even
   when the final endpoint restores the trusted blob. Traversal is exact and bounded.
+- ATLAS-033: three Sol xhigh reviews found and remediated activation-signal orphan
+  risk, raw-versus-normalized official Doctor manifest handling,
+  unsupported-platform claim admission, missing GPU hardware specificity,
+  ambiguous macOS kernel labeling, incomplete workload disclosure, floating
+  workflow actions, and release-sequencing contradictions. The real gate remains
+  false; independent human review and a new ATLAS-013 ceremony remain pending.
 
 ## Next integration gate
 
-ATLAS-021D and the bounded ATLAS-013 physical-run packet are independently accepted.
-The next serialized gate is explicit human approval and, on a suitable consenting
-macOS host, the hash-verified lifecycle and privacy review. Production claim
-admission and user-facing real execution stay disabled until that physical gate
-succeeds and a separate activation decision is reviewed.
+The next serialized gate is the independent human review of the private engineering
+report and enabled disposable clone. If the reviewer releases the clone from
+forensic hold, destroy it; then restore at least 10 GiB of ceremony headroom,
+prepare a clean commit-pinned Git QVAC project using the official package manifest,
+and conduct a fresh pre-approved ATLAS-013 run. Production profile/report admission
+and user-facing real execution stay disabled until that physical gate and the later
+repository-trust and activation gates succeed.
 
 ## Known risks
 
 - Exact graphics backend name is not public evidence; UI/schema must say only CPU
   or GPU device class.
 - The standardized model is a 386,404,992-byte Apache-2.0 artifact. Atlas-private
-  acquisition and cache behavior are implemented against synthetic byte sources
-  but still need real validation. QVAC-managed registry downloading is not an
-  accepted production path.
+  acquisition, cache verification, and lifecycle behavior worked in one real but
+  formally nonconforming engineering attempt; a fresh conforming ATLAS-013 run is
+  still required. QVAC-managed registry downloading is not an accepted production
+  path.
 - QVAC passes a model path to its native addon after verification; a private,
   quiescent Atlas directory narrows but cannot cryptographically eliminate the
   verify-to-open interval.
-- Windows process-tree cleanup needs a Job Object or equivalent verified design.
+- Linux, Windows, and non-arm64 macOS execution are post-V1. The V1 coordinator and
+  claim evaluator reject them; future Windows support still needs durable Job
+  Object-style containment and real hardware validation.
 - Real launch evidence requires volunteer physical devices; CI runners are not GPU compatibility evidence.
 - QVAC SDK 0.16.0 has a multi-gigabyte native dependency footprint, so Atlas must
   resolve an existing project-local SDK and never silently install it.
@@ -146,6 +162,7 @@ succeeds and a separate activation decision is reviewed.
   not properties CI can derive from contributor JSON. The production allowlist is
   empty, and release remains blocked until the eventual host repository enforces
   maintainer ownership and protected review for that metadata.
-- Workflow actions still use floating major tags. Immutable action pinning remains
-  a release-checklist item because this local repository contains no authoritative
-  commit-SHA evidence from which to pin them without guessing.
+- Workflow actions are pinned to upstream-resolved immutable commits, but no public
+  host, named code owners, protected branch, or required fresh approval exists yet.
+- Current free space is below ATLAS-013's 10 GiB ceremony-time minimum and must be
+  remeasured immediately before the next ceremony.

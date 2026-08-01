@@ -147,7 +147,9 @@ export class ProjectLocalDoctorLocator implements DoctorLocator {
         typeof manifest.bin !== "object" ||
         Array.isArray(manifest.bin) ||
         Object.keys(manifest.bin).length !== 1 ||
-        (manifest.bin as Record<string, unknown>).qvac !== "dist/index.js"
+        !["./dist/index.js", "dist/index.js"].includes(
+          (manifest.bin as Record<string, unknown>).qvac as string,
+        )
       ) {
         return { kind: "unavailable", code: "qvac-cli-unsafe" };
       }

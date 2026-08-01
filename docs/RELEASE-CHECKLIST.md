@@ -43,16 +43,17 @@ hardware, privacy, and repository-trust gates below.
 
 ## Real-device gate
 
-- [ ] A Node 22/macOS run uses an already-present exact project-local
+- [ ] A Node 22/macOS arm64 run uses an already-present exact project-local
       `@qvac/sdk` 0.16.0 and has ample disk headroom for the dependency graph,
       model, temporary files, and failure cleanup.
 - [ ] The complete report is reviewed for paths, identifiers, credentials, prompts,
       generated content, and overly precise fingerprint fields before submission.
 - [ ] The observed `cpu|gpu` value comes only from public completion statistics;
       no Metal, CUDA, Vulkan, or OpenCL backend name is inferred.
-- [ ] Windows process containment is proven with a Job Object or equivalent durable
-      mechanism on real Windows hardware; unsupported Windows execution refuses
-      before spawn.
+- [ ] Focused tests prove Linux, Windows, and non-arm64 macOS real execution refuses
+      before project resolution, Doctor, cache or network access, temporary-file
+      creation, or process spawn. Future Windows durable containment and hardware
+      validation are post-V1 work, not a V1 release condition.
 - [ ] At least two genuinely independent volunteer sources are reviewed before any
       `reproduced-success` badge is allowed.
 
@@ -60,13 +61,36 @@ hardware, privacy, and repository-trust gates below.
 
 - [ ] The accepted ATLAS-013 record contains a passing, commit-pinned physical
       verdict and the required human lifecycle and privacy approval.
+- [ ] Repository trust is established before profile or report admission: named
+      owners, protected pull-request review, immutable workflow pins, and exact
+      base/target history enforcement are active on the release branch.
 - [ ] Immediately before activation work starts, the shipped entry point is
       rechecked to remain behind the literal hardcoded-false gate; no environment,
       configuration, input, or hidden flag can enable it.
 - [ ] A production profile is admitted in its own reviewed change only after the
       model-artifact and physical gates pass; it is not added to make a report pass.
-- [ ] At least one manually submitted genuine report is admitted through the
-      maintainer-owned workflow with exact source metadata and protected CI.
+- [ ] A separate reviewed, still-disabled production-probe binding commit replaces
+      the candidate profile identity and candidate-only publication warning with
+      the exact admitted production profile and truthful submission eligibility.
+      Tests must prove the disclosure, assembled report, admitted profile, and
+      central claim evaluator agree. This status transition is committed before
+      the ceremony and is not hidden inside its temporary activation diff.
+- [ ] A separately authorized **first-production-report ceremony** runs from the
+      exact reviewed production-probe binding commit in a disposable clone whose
+      only source change is the independently approved literal `false` to `true`
+      release seam.
+      This is not ATLAS-013 and does not retroactively change its private-only
+      authority. The host operator personally repeats every collection,
+      project-code, artifact/workload, publication-intent, and local-write decision;
+      publication intent may be Yes only under this separate authority. The CLI
+      previews and writes exact canonical bytes locally but still performs no
+      upload, issue, pull request, or submission. The enabled clone and build are
+      destroyed after local privacy review, with only the reviewed report and
+      allowlisted ceremony record retained.
+- [ ] At least one manually submitted genuine report—the exact locally reviewed
+      ceremony report—is then admitted through the maintainer-owned workflow with
+      exact source metadata, fresh human approval, and protected CI. No ceremony
+      consent authorizes that later Git publication step.
 - [ ] The deterministic rebuild reports a nonempty genuine registry, and the site
       exposes that genuine evidence without allowing fixtures into claims.
 - [ ] A distinct activation diff, based on the accepted physical, profile, and

@@ -1,7 +1,9 @@
 # Private model artifact boundary
 
-Status: ATLAS-021A dormant contained-acquisition foundation. No CLI command, probe
-binding, report field, candidate eligibility, or profile allowlist is enabled.
+Status: dormant contained acquisition is wired into the CLI-private real
+composition, while the shipped release gate remains hardcoded false. No public
+command, automatic upload, candidate eligibility, or production-profile allowlist
+is enabled.
 
 ## Candidate and disclosure
 

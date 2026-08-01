@@ -1,6 +1,6 @@
 # ATLAS-013 — macOS physical-validation run packet
 
-Status: protocol defined; one private disposable run completed; independent review pending
+Status: protocol defined; a private attempt occurred, but no verdict is accepted
 
 This packet turns the dormant real path into a bounded, human-operated validation
 event. It does not activate or release that path. The release candidate checklist
@@ -24,8 +24,19 @@ The event is deliberately narrower than a release:
   below; it is never merged, packaged, copied back, or reused.
 - A successful run is private physical evidence for later review. It is not profile
   admission, a production claim, real-mode activation, or release approval.
-- Windows containment and physical validation remain ATLAS-014. Repository trust,
-  protected ownership, and source-independence assignment remain ATLAS-018.
+- Linux, Windows, and non-arm64 macOS real execution are deferred until after V1.
+  The V1 coordinator must refuse them before project resolution or any other real
+  probe effect. Future Windows durable containment and physical validation remain
+  separate post-V1 work. Repository trust, protected ownership, and
+  source-independence assignment remain ATLAS-018.
+
+The private report produced here must retain publication intent `false` and cannot
+be admitted as a genuine report. If this packet receives an accepted passing
+verdict, repository trust is established, and a production profile is separately
+admitted, the release checklist requires a new first-production-report ceremony.
+That later event needs its own explicit human authorization and fresh consents; it
+does not inherit publication authority from ATLAS-013 and Atlas still uploads
+nothing automatically.
 
 ## People and authority
 
@@ -155,8 +166,9 @@ The cache directory is mode `0700` and owned files are mode `0600`. An invalid f
 entry is never repaired, overwritten, or deleted by Atlas. A cache hit and a cache
 miss both require fresh workload/model consent for this event.
 
-They must also acknowledge the exact executor workload that is pinned in the
-reviewed code but is intentionally not all repeated by the CLI disclosure:
+They must also acknowledge the exact executor workload pinned in the reviewed
+code. The CLI repeats these values in its authoritative in-program disclosure so
+the later artifact/workload decision does not depend on this external run sheet:
 
 - call `loadModel` with model type `llamacpp-completion`, context size 512,
   requested device class `gpu`, and 999 GPU layers;
@@ -232,7 +244,7 @@ The one top-level invocation then preserves this exact order:
 1. **Fingerprint/local-collection consent.** Show the privacy disclosure and ask
    whether Atlas may collect the coarse local fingerprint. Refusal stops before
    resolution, project-code execution, cache access, network, model, or output.
-2. Atlas resolves only the exact current project-local SDK and checks macOS,
+2. Atlas resolves only the exact current project-local SDK and checks macOS arm64,
    Node 22, package declaration, physical containment, version, manifest
    fingerprint, and entrypoint. Resolution is still read-only.
 3. **Project-code consent.** Separately disclose that Doctor and the SDK are
@@ -243,12 +255,12 @@ The one top-level invocation then preserves this exact order:
    evidence vocabulary; an invariant or cleanup failure stops the event.
 5. The CLI's in-program artifact/workload disclosure value is exactly the canonical
    `COMBINED_WORKLOAD_DISCLOSURE`: its pinned artifact fields and policies,
-   candidate profile/version, requested `gpu`, five lifecycle labels, and excluded
-   effects. The existing interaction renders its standard label and JSON
-   serialization of that value only. Engine, context size, GPU-layer count, and
-   fixed prompt were mandatory pre-ceremony acknowledgments above; they are not
-   falsely attributed to this CLI output. Do not interleave, prepend, append, or
-   manually print supplementary disclosure during the invocation.
+   candidate profile/version, engine, requested `gpu`, context size, GPU-layer
+   count, fixed prompt, streaming and generation parameters, shutdown behavior,
+   five lifecycle labels, and excluded effects. The existing interaction renders
+   its standard label and JSON serialization of that value only. Do not interleave,
+   prepend, append, or manually print supplementary disclosure during the
+   invocation.
 6. **Artifact/workload consent.** Ask separately whether Atlas may verify/reuse or
    download the pinned artifact and execute that workload. Refusal stops before
    cache access, network, worker/model start, or report output.
@@ -437,10 +449,15 @@ macOS real-device, model-artifact, and probe/executor observations. It leaves at
 least these separate gates open:
 
 - another genuinely independent volunteer source before `reproduced-success`;
-- ATLAS-014 durable Windows containment and a real Windows hardware run;
+- tested pre-effect refusal for Linux, Windows, and non-arm64 macOS; future Windows
+  durable containment and hardware validation remain post-V1 work;
 - ATLAS-018 repository ownership, protected review, and maintainer-assigned source
   independence;
 - a separate reviewed production-profile proposal and admission decision;
+- a separate reviewed, still-disabled binding of the probe and disclosure to that
+  admitted profile;
+- a separately authorized first-production-report ceremony after that binding,
+  followed by manual report submission and maintainer admission;
 - a separate activation change proving the shipped gate is deliberately changed;
   and
 - explicit human authority for any external repository, package, deployment,

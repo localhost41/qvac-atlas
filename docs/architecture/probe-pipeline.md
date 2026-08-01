@@ -9,11 +9,11 @@ execution and production claim admission remain disabled.
 The probe package owns the local sequence from disclosure through an exclusive
 local report write. It has no network client, uploader, installer, downloader,
 repair action, telemetry, service, or default output path. The shipped CLI exposes
-only fully synthetic fixture execution until a hash-verified real lifecycle and
-privacy review pass ATLAS-013. Its private real composition binds the exact current
-project resolver handle, normalized Doctor, contained pinned acquisition, opaque
-execution grant, and directly supervised executor, but the literal false gate
-refuses before TTY, cwd, signal, prompt, or real-module effects.
+only fully synthetic fixture execution until an accepted, conforming ATLAS-013
+physical verdict and independent privacy review exist. Its private real composition
+binds the exact current project resolver handle, normalized Doctor, contained pinned
+acquisition, opaque execution grant, and directly supervised executor, but the
+literal false gate refuses before TTY, cwd, signal, prompt, or real-module effects.
 
 The pipeline is:
 
@@ -39,6 +39,13 @@ before platform collection, Doctor, runner, preview, or write.
 
 Noninteractive use is refused. V1 does not provide a `--yes`, environment-variable,
 or configuration bypass for these decisions.
+
+During real execution the root keeps persistent handlers for `SIGINT`, `SIGTERM`,
+and `SIGHUP` until the complete coordinator and output transaction settle. The
+first signal requests bounded cancellation; repeated signals remain handled rather
+than restoring default termination during child cleanup. Handlers are removed only
+after settlement. Unexpected hard parent loss is separately contained by the
+executor child's process-group disconnect fail-safe.
 
 ## Exact preview and write
 
@@ -74,17 +81,20 @@ review rather than invoking arbitrary system inventory commands.
 ## Official Doctor adapter
 
 Doctor is an input, not a replacement target. The adapter accepts only an exact
-project-local `@qvac/cli` 0.9.0 installation with the verified package name and
-`{ "qvac": "dist/index.js" }` bin shape. The selected project must directly
-declare it. Resolution uses the logical project `node_modules` path, realpaths, file
-checks, and containment. It never searches PATH, executes a package-manager shim,
-runs `npx`, or installs a package.
+project-local `@qvac/cli` 0.9.0 installation with the verified package name. The
+raw published tarball declares `{ "qvac": "./dist/index.js" }`; registry and
+package-manager normalization may expose the path as `dist/index.js`. Atlas accepts
+only those two path-equivalent known forms. The selected project must directly
+declare it. Resolution uses the logical project `node_modules` path, realpaths,
+file checks, and containment. It never searches PATH, executes a package-manager
+shim, runs `npx`, or installs a package.
 
 The executor uses `process.execPath`, the audited entry, `doctor --json`, a bounded
 environment, a 30-second outer timeout, a 256 KiB stdout cap, and process-tree
 termination. POSIX termination escalates from the process-group SIGTERM to SIGKILL
-and has a hard-settle bound. Windows uses the explicit System32 `taskkill.exe` tree
-operation; real Windows containment remains a release gate.
+and has a hard-settle bound. The Doctor adapter retains an explicit System32
+`taskkill.exe` tree operation for its portable package boundary, but V1 real
+execution refuses every non-macOS-arm64 host before project resolution.
 
 Raw JSON never enters a report. Normalization requires the exact documented root
 shape, all five unique Doctor sections, nonempty strictly shaped checks, allowlisted
@@ -117,6 +127,12 @@ timeout scenarios. Every assembled report therefore has fixture provenance and c
 never create a registry claim.
 
 ## Dormant genuine candidate pipeline
+
+The interactive artifact/workload disclosure includes the exact engine, local-path
+use, context size, requested device, GPU-layer count, fixed user prompt, streaming
+mode, generation parameters, unload/close behavior, post-run artifact verification,
+and lifecycle phases before workload consent. The prompt and generated output never
+enter the report.
 
 ATLAS-021B added the real state machine and coordinator-facing pipeline. ATLAS-021C
 exposes only a narrow `./real` composition subpath to the private CLI coordinator;
@@ -184,11 +200,12 @@ or the CLI interaction layer.
 
 `profiles/candidates/smollm2-360m-instruct-q8.json` records the source-verified
 candidate metadata and explicitly sets `claim_eligible: false`. Contained
-acquisition is wired only behind the hardcoded-false private gate and has performed
-no real fetch. Promotion
-requires explicit license/size disclosure, opt-in download, local SHA-256
-verification, and a real successful lifecycle. Until then, the exported pipeline
-uses the existing test-only profile and fixture provenance.
+acquisition is wired only behind the hardcoded-false private gate. It has been
+exercised in a private human-operated attempt, but that fact is not an accepted
+ATLAS-013 verdict or publication authority. Promotion requires the accepted
+physical and privacy reviews, active repository trust, and a separate protected
+profile-admission decision. Until then, the exported pipeline uses the existing
+test-only profile and fixture provenance.
 The dormant relative-only pipeline can assemble probe provenance with candidate
 profile `atlas-smollm2-360m-lifecycle@1.0.0-candidate.1`, but central claim
 evaluation with the empty production-profile allowlist remains ineligible for both

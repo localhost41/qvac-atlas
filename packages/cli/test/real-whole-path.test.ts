@@ -131,6 +131,8 @@ test("private true seam completes the synthetic real path without enabling produ
       ["probe", "--real", "--output", rawOutput],
       {
         interactive: false,
+        platform: () => "darwin",
+        architecture: () => "arm64",
         isInteractive: () => {
           events.push("tty");
           return true;
@@ -173,7 +175,7 @@ test("private true seam completes the synthetic real path without enabling produ
           else assert.fail(`unexpected stdout shape: ${value.slice(0, 40)}`);
         },
         stderr: (value) => errors.push(value),
-        onSigint: () => {
+        onCancellationSignal: () => {
           events.push("signal:add");
           return () => events.push("signal:remove");
         },

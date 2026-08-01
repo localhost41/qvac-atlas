@@ -17,10 +17,12 @@ interface RealModule {
 }
 
 export interface InternalCliDependencies extends CliDependencies {
+  platform(): string;
+  architecture(): string;
   isInteractive(): boolean;
   askReal(question: string, signal: AbortSignal): Promise<string>;
   loadRealCli?(): Promise<RealModule>;
-  onSigint?(listener: () => void): () => void;
+  onCancellationSignal?(listener: () => void): () => void;
 }
 
 function validRealOutput(value: unknown): value is string {
@@ -102,6 +104,24 @@ export async function dispatchCli(
     return 2;
   }
 
+  let platform: string;
+  let architecture: string;
+  try {
+    platform = dependencies.platform();
+    architecture = dependencies.architecture();
+  } catch {
+    dependencies.stderr(
+      "QVAC Atlas could not verify the supported host. Nothing was uploaded.\n",
+    );
+    return 1;
+  }
+  if (platform !== "darwin" || architecture !== "arm64") {
+    dependencies.stderr(
+      "QVAC Atlas V1 real probing requires macOS on arm64. Nothing was uploaded.\n",
+    );
+    return 2;
+  }
+
   let interactive: boolean;
   try {
     interactive = dependencies.isInteractive();
@@ -129,7 +149,9 @@ export async function dispatchCli(
   }
 
   const controller = new AbortController();
-  const removeSigint = dependencies.onSigint?.(() => controller.abort());
+  const removeCancellationSignals = dependencies.onCancellationSignal?.(() =>
+    controller.abort(),
+  );
   try {
     const module = await (dependencies.loadRealCli?.() ??
       import("./real-cli.js"));
@@ -149,6 +171,6 @@ export async function dispatchCli(
     );
     return controller.signal.aborted ? 130 : 1;
   } finally {
-    removeSigint?.();
+    removeCancellationSignals?.();
   }
 }

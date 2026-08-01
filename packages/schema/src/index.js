@@ -12,9 +12,12 @@ export {
 } from "./claims.js";
 export {
   evaluateV1ClaimEvidence,
+  hasV1ClaimHardwareIdentity,
+  isV1SupportedPlatform,
   PHASE_ORDER,
   SUPPORTED_NODE_MAJOR,
   SUPPORTED_QVAC_SDK_VERSION,
+  usesAppleSiliconSocGpuIdentity,
 } from "./evidence.js";
 export { scanPrivacy } from "./privacy.js";
 export {

@@ -926,7 +926,7 @@ test("abort waits for an in-flight runtime boundary to settle before returning",
   assert.equal((await pending).status, "aborted");
 });
 
-test("authoritative disclosures are deeply frozen and contain no runtime capability", () => {
+test("authoritative disclosures are deeply frozen and match the fixed executor workload", async () => {
   const disclosures = [
     REAL_PRIVACY_DISCLOSURE,
     PROJECT_CODE_DISCLOSURE,
@@ -947,6 +947,69 @@ test("authoritative disclosures are deeply frozen and contain no runtime capabil
     COMBINED_WORKLOAD_DISCLOSURE.artifact.approximateSize,
     "about 368.5 MiB",
   );
+  assert.deepEqual(COMBINED_WORKLOAD_DISCLOSURE.workload, {
+    profileId: "atlas-smollm2-360m-lifecycle",
+    profileVersion: "1.0.0-candidate.1",
+    engine: "llamacpp-completion",
+    requestedBackend: "gpu",
+    localPathPassedToProjectQvac: true,
+    modelConfig: { ctx_size: 512, device: "gpu", gpu_layers: 999 },
+    inference: {
+      history: [{ role: "user", content: "Reply with exactly: atlas" }],
+      streaming: true,
+      generationParams: { predict: 8, seed: 1, temp: 0 },
+    },
+    shutdown: {
+      unloadModel: { clearStorage: false },
+      close: true,
+      postRunArtifactVerification: true,
+    },
+    lifecycle: [
+      "qvac-import",
+      "worker-start",
+      "model-load",
+      "inference",
+      "clean-shutdown",
+    ],
+  });
+  const executorSource = await readFile(
+    new URL("../../qvac-executor/src/child-runner.ts", import.meta.url),
+    "utf8",
+  );
+  for (const exactSource of [
+    'modelType: "llamacpp-completion"',
+    'modelConfig: { ctx_size: 512, device: "gpu", gpu_layers: 999 }',
+    'history: [{ role: "user", content: "Reply with exactly: atlas" }]',
+    "stream: true",
+    "generationParams: { predict: 8, seed: 1, temp: 0 }",
+    "unloadModel({ modelId, clearStorage: false }",
+    "await close()",
+  ]) {
+    assert.equal(
+      executorSource.includes(exactSource),
+      true,
+      `executor workload drifted from disclosed value: ${exactSource}`,
+    );
+  }
+  const verification = "await validateArtifactExecutionMaterial(artifact)";
+  const verificationOffsets = [
+    ...executorSource.matchAll(
+      new RegExp(verification.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    ),
+  ].map(({ index }) => index ?? -1);
+  assert.equal(
+    verificationOffsets.length,
+    2,
+    "disclosure requires one pre-load and one post-run artifact verification",
+  );
+  const loadOffset = executorSource.indexOf("await loadModel(");
+  const closeOffset = executorSource.indexOf("await close()");
+  const shutdownSuccessOffset = executorSource.indexOf(
+    'await phase("clean-shutdown", cleanupFailed ? "failed" : "succeeded")',
+  );
+  assert.equal(verificationOffsets[0]! < loadOffset, true);
+  assert.equal(closeOffset < verificationOffsets[1]!, true);
+  assert.equal(verificationOffsets[1]! < shutdownSuccessOffset, true);
 });
 
 test("candidate metadata remains non-production and real machinery stays dormant", async () => {

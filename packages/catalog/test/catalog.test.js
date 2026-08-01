@@ -200,8 +200,10 @@ test("compatible success and failure evidence produce a mixed claim", async () =
 });
 
 test("a failed fallback remains an observation, not a requested-device failure claim", async () => {
-  const raw = await fixture("fallback.json");
-  const failure = failedAfterBackend(asProbe(raw));
+  const raw = await fixture("success.json");
+  const fallback = asProbe(raw);
+  fallback.execution.backend_observation.backend = "cpu";
+  const failure = failedAfterBackend(fallback);
   assert.equal(failure.profile.requested_backend, "gpu");
   assert.equal(failure.execution.backend_observation.backend, "cpu");
   assert.equal(validatePublishableReport(failure).valid, true);
@@ -220,6 +222,28 @@ test("a failed fallback remains an observation, not a requested-device failure c
   assert.equal(catalog.claims[0].claim.claim, "unknown");
   assert.notEqual(catalog.claims[0].claim.claim, "observed-failure");
   assert.notEqual(catalog.claims[0].claim.claim, "mixed");
+});
+
+test("Apple SoC GPU identity and kernel release are explicit catalog facets", async () => {
+  const raw = await fixture("success.json");
+  const report = asProbe(raw);
+  report.platform.gpus = [];
+  report.platform.os.version = "24.5.0";
+  const adjusted = withReportId(report);
+  const catalog = buildCatalog({
+    productionProfiles: [profileOf(raw)],
+    sources: [source(adjusted, SOURCE_A, "reports/v1/apple-soc.json")],
+  });
+
+  assert.equal(catalog.reports[0].claim.claim, "observed-success");
+  assert.equal(
+    catalog.reports[0].facets.hardware,
+    "Apple M3 Pro · integrated GPU keyed by Apple SoC identity",
+  );
+  assert.equal(
+    catalog.reports[0].facets.os,
+    "macos · kernel release 24.5.0 · arm64",
+  );
 });
 
 test("withdrawn and superseded evidence cannot influence current output", async () => {

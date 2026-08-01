@@ -154,16 +154,10 @@ test("static aggregate cards render the complete claim and observation state mat
     "<script data-atlas-state-canary>globalThis.atlasStatePwned=true</script>";
 
   try {
-    const [successFixture, fallbackFixture] = await Promise.all([
-      readFile(
-        join(repositoryRoot, "packages/schema/fixtures/success.json"),
-        "utf8",
-      ).then(JSON.parse),
-      readFile(
-        join(repositoryRoot, "packages/schema/fixtures/fallback.json"),
-        "utf8",
-      ).then(JSON.parse),
-    ]);
+    const successFixture = await readFile(
+      join(repositoryRoot, "packages/schema/fixtures/success.json"),
+      "utf8",
+    ).then(JSON.parse);
     const observed = asProbe(successFixture, {
       cpuModel: canary,
       createdAt: "2026-08-01T01:00:00.000Z",
@@ -176,10 +170,12 @@ test("static aggregate cards render the complete claim and observation state mat
       cpuModel: "Reproduced state CPU",
       createdAt: "2026-08-01T02:00:01.000Z",
     });
-    const fallback = asProbe(fallbackFixture, {
+    const fallbackShape = asProbe(successFixture, {
       cpuModel: "Fallback state CPU",
       createdAt: "2026-08-01T03:00:00.000Z",
     });
+    fallbackShape.execution.backend_observation.backend = "cpu";
+    const fallback = withReportId(fallbackShape);
     const mixedSuccess = asProbe(successFixture, {
       cpuModel: "Mixed state CPU",
       createdAt: "2026-08-01T04:00:00.000Z",
@@ -196,10 +192,11 @@ test("static aggregate cards render the complete claim and observation state mat
       failureSuccessShape,
       "2026-08-01T05:00:01.000Z",
     );
-    const failedFallbackShape = asProbe(fallbackFixture, {
+    const failedFallbackShape = asProbe(successFixture, {
       cpuModel: "Failed fallback state CPU",
       createdAt: "2026-08-01T05:30:00.000Z",
     });
+    failedFallbackShape.execution.backend_observation.backend = "cpu";
     const failedFallback = failedAfterBackend(
       failedFallbackShape,
       "2026-08-01T05:30:01.000Z",
@@ -359,7 +356,7 @@ test("static aggregate cards render the complete claim and observation state mat
     );
     assert.match(index, /default-src 'self'; script-src 'self'/);
     const fallbackStart = index.indexOf(
-      'data-hardware="Fallback state CPU · GeForce RTX 3060"',
+      'data-hardware="Fallback state CPU · M3 Pro Integrated"',
     );
     assert.notEqual(fallbackStart, -1);
     const fallbackCard = index.slice(
@@ -378,7 +375,7 @@ test("static aggregate cards render the complete claim and observation state mat
     assert.match(fallbackCard, /Actual-device evidence/);
     assert.match(fallbackCard, /badge-observed-success"> Observed success/);
     const failedFallbackStart = index.indexOf(
-      'data-hardware="Failed fallback state CPU · GeForce RTX 3060"',
+      'data-hardware="Failed fallback state CPU · M3 Pro Integrated"',
     );
     assert.notEqual(failedFallbackStart, -1);
     const failedFallbackCard = index.slice(

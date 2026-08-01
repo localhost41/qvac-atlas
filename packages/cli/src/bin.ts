@@ -4,6 +4,7 @@ import { createInterface } from "node:readline/promises";
 
 import { runFixtureProbe } from "@qvac-atlas/probe";
 
+import { installCancellationSignalHandlers } from "./cancellation-signals.js";
 import { dispatchCli } from "./internal-dispatcher.js";
 
 let reader: ReturnType<typeof createInterface> | undefined;
@@ -12,6 +13,8 @@ try {
     process.argv.slice(2),
     {
       interactive: false,
+      platform: () => process.platform,
+      architecture: () => process.arch,
       isInteractive: () => Boolean(process.stdin.isTTY && process.stdout.isTTY),
       cwd: () => process.cwd(),
       ask: (question) => {
@@ -30,10 +33,8 @@ try {
       },
       stdout: (value) => process.stdout.write(value),
       stderr: (value) => process.stderr.write(value),
-      onSigint: (listener) => {
-        process.once("SIGINT", listener);
-        return () => process.off("SIGINT", listener);
-      },
+      onCancellationSignal: (listener) =>
+        installCancellationSignalHandlers(process, listener),
       runProbe: (options, interaction) =>
         runFixtureProbe(options, {
           interaction,

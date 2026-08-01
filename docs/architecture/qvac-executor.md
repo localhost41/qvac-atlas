@@ -1,8 +1,8 @@
 # QVAC executor boundary
 
-Status: ATLAS-020 dormant verified-artifact integration. The executor has no
-acquisition-consent issuer, probe-pipeline binding, CLI command, downloader,
-uploader, profile approval, or claim-producing path.
+Status: the verified-artifact executor is wired into the dormant CLI-private real
+composition. The shipped release gate remains hardcoded false, and the executor
+has no public CLI command, uploader, profile approval, or claim-producing path.
 
 ## Package boundary
 
@@ -47,8 +47,19 @@ sends group `SIGTERM`, waits 250 ms, sends group `SIGKILL`, and has a bounded
 two-second root settle. Every root exit, including a clean exit, is followed by a
 short TERM-to-KILL group sweep so a surviving nested Bare worker cannot be orphaned.
 The resolver performs the same group sweep when bootstrap setup or send fails,
-including when the root has already exited. Windows refuses before temporary cwd
-creation or spawn; durable Job Object containment remains ATLAS-014.
+including when the root has already exited. The production coordinator refuses
+every non-macOS-arm64 host before project resolution can reach this package; the
+executor also retains defense-in-depth Windows refusal before temporary cwd
+creation or spawn. Durable Windows descendant containment remains post-V1 work.
+
+Before either private bootstrap begins, the executor child synchronously arms a
+parent-IPC disconnect fail-safe. It remains armed while both bootstraps settle.
+Unexpected supervisor loss sends `SIGKILL` to the complete
+detached POSIX process group so the QVAC/Bare descendants cannot continue without
+their owner. A normal lifecycle disarms the fail-safe only after shutdown and
+post-run artifact verification, immediately before deliberately closing IPC.
+SIGKILL, kernel failure, and power loss cannot produce graceful cleanup evidence;
+the fail-safe exists to contain survivors, not to fabricate a clean result.
 
 Stdout and stderr are always drained into separate 16 KiB in-memory tails. The
 tails are zeroed after the child is reaped and have no getter, log, event, error, or

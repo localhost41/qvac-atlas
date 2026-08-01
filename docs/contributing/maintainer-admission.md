@@ -2,6 +2,22 @@
 
 Treat every report pull request as publication of permanent, untrusted data.
 
+## Initial public-host trust bootstrap
+
+The workflow deliberately rejects a push event whose `before` value is all zero,
+because there is no trusted base from which to prove append-only history. Do not add
+a bypass input, special branch name, fallback ref, or weaker first-push path.
+
+Creating the public host is a separate, explicitly human-authorized bootstrap. The
+host operator imports the exact already-reviewed repository commit while genuine
+reports and the production-profile allowlist are empty, records that full commit as
+the initial trusted baseline in the host administration record, and immediately
+configures the named code owners, protected release branch, required current
+approval, and required checks. No report, profile, or activation change belongs in
+that import. The next repository change must use a pull request based on that exact
+baseline and pass the ordinary exact base/target audit. If the host cannot establish
+those controls before accepting changes, report admission stays closed.
+
 ## Maintainer-owned first-report admission branch
 
 A report-only contribution cannot pass the bidirectional registry audit, while a

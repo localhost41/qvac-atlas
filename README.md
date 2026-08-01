@@ -26,6 +26,10 @@ project-local QVAC SDK, enough disk for its multi-gigabyte dependency graph and 
 386,404,992-byte pinned model, then explicit human review. Do not describe the
 current fixture registry as hardware compatibility evidence.
 
+V1 real execution is limited to macOS arm64. Linux, Windows, and non-arm64 macOS
+must refuse before project resolution or any cache, network, temporary-file, or
+process effect; support for those hosts is post-V1 work.
+
 See [`docs/PROJECT.md`](docs/PROJECT.md) for the immutable V1 boundary and [`docs/STATUS.md`](docs/STATUS.md) for the current verified state.
 
 ## Genuine report submissions are closed

@@ -63,7 +63,9 @@ Canonical parent aliases such as macOS `/var` to `/private/var` are permitted.
 On POSIX the child is created as the leader of a detached process group. Failed
 bootstrap cleanup targets that group rather than only the Node root and performs a
 final KILL sweep even after the root has exited, so an audited runner cannot leave a
-pre-bootstrap descendant behind. Windows remains a separate containment gate.
+pre-bootstrap descendant behind. The V1 production coordinator reaches this
+resolver only on macOS arm64; future Windows support requires a separately reviewed
+durable-containment design after V1.
 
 The required `beforeBootstrap(child)` boundary runs after the sanitized child is
 spawned but before any SDK path is sent. The caller registers IPC, exit, error,

@@ -9,6 +9,8 @@ import {
 function dependencies(calls: string[]): InternalCliDependencies {
   return {
     interactive: false,
+    platform: () => "darwin",
+    architecture: () => "arm64",
     isInteractive: () => {
       calls.push("tty");
       return true;
@@ -27,7 +29,7 @@ function dependencies(calls: string[]): InternalCliDependencies {
     },
     stdout: () => calls.push("stdout"),
     stderr: () => calls.push("stderr"),
-    onSigint: (listener) => {
+    onCancellationSignal: (listener) => {
       void listener;
       calls.push("signal");
       return () => calls.push("remove-signal");
@@ -154,13 +156,35 @@ test("enabled non-TTY refusal precedes cwd, signal, and real import", async () =
   assert.deepEqual(calls, ["tty", "stderr"]);
 });
 
-test("enabled SIGINT is delivered and listener remains until cleanup settles", async () => {
+test("enabled unsupported hosts refuse before TTY, cwd, signals, or real import", async () => {
+  for (const [platform, architecture] of [
+    ["linux", "arm64"],
+    ["darwin", "x64"],
+    ["win32", "arm64"],
+  ]) {
+    const calls: string[] = [];
+    const deps = dependencies(calls);
+    deps.platform = () => platform;
+    deps.architecture = () => architecture;
+    assert.equal(
+      await dispatchCli(
+        ["probe", "--real", "--output", "report.json"],
+        deps,
+        true,
+      ),
+      2,
+    );
+    assert.deepEqual(calls, ["stderr"]);
+  }
+});
+
+test("enabled cancellation remains handled until cleanup settles", async () => {
   const calls: string[] = [];
   let interrupt: (() => void) | undefined;
   let releaseCleanup!: () => void;
   let dispatchSettled = false;
   const deps = dependencies(calls);
-  deps.onSigint = (listener) => {
+  deps.onCancellationSignal = (listener) => {
     calls.push("signal");
     interrupt = listener;
     return () => calls.push("remove-signal");

@@ -5,6 +5,7 @@ import {
 } from "@qvac-atlas/model-artifact/executor-bridge";
 
 import { receiveArtifactBootstrap } from "./artifact-bootstrap.js";
+import { installParentDisconnectFailSafe } from "./parent-disconnect.js";
 import type { ChildEvent, LifecyclePhase } from "./protocol.js";
 
 let sequence = 0;
@@ -57,6 +58,10 @@ function requireLoadedInfo(
     throw new TypeError("loaded-model-info-mismatch");
   }
 }
+
+// The parent-death boundary is installed synchronously before bootstrap and
+// remains armed after the bootstrap-specific listeners remove themselves.
+const disarmParentDisconnectFailSafe = installParentDisconnectFailSafe(process);
 
 // Both listeners and a non-rejecting aggregate exist before the first await.
 const bootstrapResult = Promise.allSettled([
@@ -176,5 +181,6 @@ try {
   if (cleanupFailed) workloadFailed = true;
 }
 
+disarmParentDisconnectFailSafe();
 if (process.connected) process.disconnect();
 if (workloadFailed) process.exitCode = 1;

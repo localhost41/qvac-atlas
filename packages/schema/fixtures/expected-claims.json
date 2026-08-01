@@ -25,6 +25,7 @@
       "insufficient-evidence",
       "nonstandard-profile",
       "qvac-version-unavailable",
+      "unsupported-platform",
       "workload-skipped"
     ]
   },
@@ -36,9 +37,14 @@
   },
   "timeout.json": {
     "observation": "failure",
-    "claim": "observed-failure",
+    "claim": "unknown",
     "actual_backend_claim": null,
-    "reasons": ["backend-not-directly-observed", "defined-runtime-failure"]
+    "reasons": [
+      "backend-not-directly-observed",
+      "insufficient-evidence",
+      "unsupported-platform",
+      "workload-not-completed"
+    ]
   },
   "worker-crash.json": {
     "observation": "failure",
@@ -48,6 +54,7 @@
       "backend-not-directly-observed",
       "insufficient-evidence",
       "nonstandard-profile",
+      "unsupported-platform",
       "workload-not-completed"
     ]
   }

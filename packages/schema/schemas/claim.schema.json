@@ -30,6 +30,8 @@
           "workload-skipped",
           "workload-state-unknown",
           "nonstandard-profile",
+          "unsupported-platform",
+          "hardware-identity-unavailable",
           "insufficient-evidence",
           "success-and-failure-evidence",
           "independently-reproduced",

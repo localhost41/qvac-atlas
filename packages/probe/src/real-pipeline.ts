@@ -62,8 +62,33 @@ export const COMBINED_WORKLOAD_DISCLOSURE = Object.freeze({
   workload: Object.freeze({
     profileId: "atlas-smollm2-360m-lifecycle",
     profileVersion: "1.0.0-candidate.1",
+    engine: "llamacpp-completion" as const,
     requestedBackend: "gpu" as const,
     localPathPassedToProjectQvac: true,
+    modelConfig: Object.freeze({
+      ctx_size: 512,
+      device: "gpu" as const,
+      gpu_layers: 999,
+    }),
+    inference: Object.freeze({
+      history: Object.freeze([
+        Object.freeze({
+          role: "user" as const,
+          content: "Reply with exactly: atlas" as const,
+        }),
+      ]),
+      streaming: true,
+      generationParams: Object.freeze({
+        predict: 8,
+        seed: 1,
+        temp: 0,
+      }),
+    }),
+    shutdown: Object.freeze({
+      unloadModel: Object.freeze({ clearStorage: false }),
+      close: true,
+      postRunArtifactVerification: true,
+    }),
     lifecycle: Object.freeze([
       "qvac-import",
       "worker-start",

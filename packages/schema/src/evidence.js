@@ -55,6 +55,74 @@ function directlyObservedBackend(report) {
   );
 }
 
+function hasConcreteHardwareLabel(value) {
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.trim().toLowerCase() !== "unknown"
+  );
+}
+
+function hasConcreteAppleSiliconSocModel(value) {
+  return (
+    typeof value === "string" &&
+    /^Apple M[1-9][0-9]*(?: (?:Pro|Max|Ultra))?$/.test(value)
+  );
+}
+
+export function isV1SupportedPlatform(report) {
+  return (
+    report?.platform?.os?.family === "macos" &&
+    report?.platform?.architecture === "arm64"
+  );
+}
+
+/**
+ * Apple silicon exposes one SoC identity for its integrated CPU/GPU. When the
+ * generic collector has no separate GPU inventory, the collector's bounded
+ * Apple M-series model shape is therefore the V1 hardware identity for GPU
+ * evidence. Arbitrary Apple-vendor strings fail closed.
+ */
+export function usesAppleSiliconSocGpuIdentity(report) {
+  return (
+    isV1SupportedPlatform(report) &&
+    Array.isArray(report?.platform?.gpus) &&
+    report.platform.gpus.length === 0 &&
+    report.platform.cpu?.vendor === "Apple" &&
+    hasConcreteAppleSiliconSocModel(report.platform.cpu.model)
+  );
+}
+
+function hasConcreteGpuInventory(report) {
+  return (
+    Array.isArray(report?.platform?.gpus) &&
+    report.platform.gpus.length > 0 &&
+    report.platform.gpus.every(
+      (gpu) =>
+        hasConcreteHardwareLabel(gpu?.vendor) &&
+        hasConcreteHardwareLabel(gpu?.model),
+    )
+  );
+}
+
+export function hasV1ClaimHardwareIdentity(report) {
+  const cpuRelevant =
+    report?.profile?.requested_backend === "cpu" ||
+    report?.execution?.backend_observation?.backend === "cpu";
+  const gpuRelevant =
+    report?.profile?.requested_backend === "gpu" ||
+    report?.execution?.backend_observation?.backend === "gpu";
+  const cpuIdentitySatisfied =
+    !cpuRelevant ||
+    (hasConcreteHardwareLabel(report?.platform?.cpu?.vendor) &&
+      hasConcreteHardwareLabel(report?.platform?.cpu?.model));
+  const gpuIdentitySatisfied =
+    !gpuRelevant ||
+    hasConcreteGpuInventory(report) ||
+    usesAppleSiliconSocGpuIdentity(report);
+  return cpuIdentitySatisfied && gpuIdentitySatisfied;
+}
+
 function phasesAreExactSuccess(phases) {
   return (
     phases.length === PHASE_ORDER.length &&
@@ -179,12 +247,19 @@ export function evaluateV1ClaimEvidence(
   const trustedProfile = hasExactlyOneTrustedProfile(report, standardProfiles);
   const supportedRuntime = hasSupportedRuntime(report);
   const supportedQvac = hasSupportedQvac(report);
+  const supportedPlatform = isV1SupportedPlatform(report);
+  const hardwareIdentitySatisfied = hasV1ClaimHardwareIdentity(report);
   const backendObserved = directlyObservedBackend(report);
   const privacySafe =
     report.provenance.kind !== "probe" ||
     report.result.failure.sanitized_excerpt === null;
   const boundarySatisfied =
-    trustedProfile && supportedRuntime && supportedQvac && privacySafe;
+    trustedProfile &&
+    supportedRuntime &&
+    supportedQvac &&
+    supportedPlatform &&
+    hardwareIdentitySatisfied &&
+    privacySafe;
   const successLifecycle =
     phasesAreExactSuccess(report.execution.phases) &&
     report.result.workload_status === "passed" &&
@@ -201,6 +276,8 @@ export function evaluateV1ClaimEvidence(
     trustedProfile,
     supportedRuntime,
     supportedQvac,
+    supportedPlatform,
+    hardwareIdentitySatisfied,
     privacySafe,
     backendObserved,
     successEligible: boundarySatisfied && successLifecycle,

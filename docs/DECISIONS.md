@@ -130,3 +130,37 @@ Real reports use probe provenance and the candidate profile, but production prof
 admission and `claim_eligible` remain disabled. The complete path stays behind a
 hardcoded false release gate until a separate ATLAS-013 physical run and privacy
 review succeed.
+
+## D-017 — V1 real execution is macOS arm64 only
+
+Atlas V1 may execute the real QVAC lifecycle only when the root process observes
+Node's exact `darwin` platform and `arm64` architecture. Every other operating
+system or architecture refuses before project canonicalization or resolution,
+Doctor, cache inspection or mutation, network access, temporary-file creation, and
+process spawn. Portable fixture, schema, catalog, and site checks may continue on
+the explicitly pinned Linux CI image; that does not make Linux a supported real
+probe platform.
+
+Linux, Windows, and non-arm64 macOS real execution are deferred until after V1 and
+must not produce compatibility claims. A future Windows implementation still needs
+durable descendant containment such as a Job Object and real Windows validation,
+but that work is not a V1 launch gate. V1 instead requires focused tests proving
+that every unsupported platform/architecture combination fails before effects.
+
+## D-018 — Apple silicon SoC identity scopes V1 GPU claims
+
+V1 production claims require macOS arm64 plus concrete hardware identity. A
+CPU-relevant claim requires a concrete CPU vendor and model. A GPU-relevant claim
+normally requires a concrete GPU vendor and model; on Apple silicon only, a
+concrete Apple SoC model may stand as the integrated-GPU hardware key when Node's
+portable collector has no separate GPU inventory. For V1, that model must match
+the bounded collector form `Apple M<positive integer>` with an optional `Pro`,
+`Max`, or `Ultra` suffix; arbitrary Apple-vendor strings fail closed. The site must
+say that the GPU is keyed by Apple SoC identity and must not imply an exact GPU
+model, core count, driver, Metal version, or other backend detail.
+
+The genuine macOS collector's `platform.os.version` value comes from Node
+`os.release()` and is therefore a Darwin kernel release, not the macOS marketing
+version. Public rendering labels it as a kernel release. Changing to a product
+version or adding a separate GPU inventory requires a versioned collection,
+privacy, schema, and compatibility-key review.

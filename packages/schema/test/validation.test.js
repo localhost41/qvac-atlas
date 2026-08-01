@@ -63,7 +63,7 @@ test("schema rejects fabricated OS-specific execution backends", async () => {
 });
 
 test("semantic validator enforces canonical arrays and explicit durations", async () => {
-  const report = await jsonFixture("fallback.json");
+  const report = await jsonFixture("timeout.json");
   report.platform.cpu.feature_flags.reverse();
   report.execution.phases[0].duration_ms = null;
   const validation = validateReport(withReportId(report));
@@ -258,7 +258,7 @@ test("workload errors may exit cleanly but failure phase order remains mandatory
 
 test("a failure on a different observed device is not attributed to the requested device", async () => {
   const cases = [
-    { fixture: "fallback.json", requested: "gpu", observed: "cpu" },
+    { fixture: "success.json", requested: "gpu", observed: "cpu" },
     { fixture: "success.json", requested: "cpu", observed: "gpu" },
   ];
 
@@ -415,4 +415,118 @@ test("fixture reports never contribute to aggregate claims", async () => {
   );
   assert.equal(claim.claim, "unknown");
   assert.equal(claim.reasons.includes("fixture-evidence"), false);
+});
+
+test("V1 production claims are limited to macOS arm64", async () => {
+  const profiles = await standardProfiles();
+  const cases = [
+    { family: "linux", architecture: "arm64" },
+    { family: "windows", architecture: "arm64" },
+    { family: "macos", architecture: "x64" },
+  ];
+
+  for (const { family, architecture } of cases) {
+    const report = asProbe(await jsonFixture("success.json"));
+    report.platform.os.family = family;
+    report.platform.architecture = architecture;
+    const adjusted = withReportId(report);
+    assert.equal(validateReport(adjusted).valid, true);
+    const claim = deriveReportClaim(adjusted, { standardProfiles: profiles });
+    assert.equal(claim.claim, "unknown");
+    assert.equal(claim.reasons.includes("unsupported-platform"), true);
+  }
+});
+
+test("Apple silicon SoC identity supports missing integrated-GPU inventory", async () => {
+  const profiles = await standardProfiles();
+  const report = asProbe(await jsonFixture("success.json"));
+  report.platform.gpus = [];
+  const adjusted = withReportId(report);
+  assert.equal(validateReport(adjusted).valid, true);
+  const claim = deriveReportClaim(adjusted, { standardProfiles: profiles });
+  assert.equal(claim.claim, "observed-success");
+  assert.equal(claim.reasons.includes("hardware-identity-unavailable"), false);
+});
+
+test("unspecified GPU hardware cannot produce a V1 claim", async () => {
+  const profiles = await standardProfiles();
+  const mutations = [
+    (report) => {
+      report.platform.gpus = [];
+      report.platform.cpu.vendor = "Intel";
+    },
+    (report) => {
+      report.platform.gpus = [];
+      report.platform.cpu.model = "unknown";
+    },
+    (report) => {
+      report.platform.gpus = [];
+      report.platform.cpu.model = "Banana";
+    },
+    (report) => {
+      report.platform.gpus = [];
+      report.platform.cpu.model = "Apple M0";
+    },
+    (report) => {
+      report.platform.gpus = [];
+      report.platform.cpu.model = "Apple M4 Banana";
+    },
+    (report) => {
+      report.platform.gpus = [
+        {
+          index: 0,
+          vendor: "unknown",
+          model: "unknown",
+          device_id: null,
+          driver_version: null,
+        },
+      ];
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const report = asProbe(await jsonFixture("success.json"));
+    mutate(report);
+    const adjusted = withReportId(report);
+    assert.equal(validateReport(adjusted).valid, true);
+    const claim = deriveReportClaim(adjusted, { standardProfiles: profiles });
+    assert.equal(claim.claim, "unknown");
+    assert.equal(claim.reasons.includes("hardware-identity-unavailable"), true);
+  }
+});
+
+test("unknown CPU identity cannot produce a CPU-relevant V1 claim", async () => {
+  const report = asProbe(await jsonFixture("success.json"));
+  report.profile.requested_backend = "cpu";
+  report.execution.backend_observation.backend = "cpu";
+  report.platform.cpu.vendor = "unknown";
+  report.platform.cpu.model = "unknown";
+  const profiles = (await standardProfiles()).map((profile) => ({
+    ...profile,
+    requested_backend: "cpu",
+  }));
+  const adjusted = withReportId(report);
+  assert.equal(validateReport(adjusted).valid, true);
+  const claim = deriveReportClaim(adjusted, { standardProfiles: profiles });
+  assert.equal(claim.claim, "unknown");
+  assert.equal(claim.reasons.includes("hardware-identity-unavailable"), true);
+});
+
+test("missing-GPU non-Apple reports cannot aggregate into reproduced success", async () => {
+  const profiles = await standardProfiles();
+  const first = asProbe(await jsonFixture("success.json"));
+  first.platform.gpus = [];
+  first.platform.cpu.vendor = "Intel";
+  first.platform.cpu.model = "Core Ultra 9";
+  const second = structuredClone(first);
+  second.created_at = "2026-08-01T00:00:01.000Z";
+  const claim = deriveAggregateClaim(
+    [
+      { report: withReportId(first), sourceKey: "reviewed-source-a" },
+      { report: withReportId(second), sourceKey: "reviewed-source-b" },
+    ],
+    { standardProfiles: profiles },
+  );
+  assert.equal(claim.claim, "unknown");
+  assert.deepEqual(claim.reasons, ["insufficient-evidence"]);
 });

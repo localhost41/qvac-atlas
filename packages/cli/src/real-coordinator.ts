@@ -40,6 +40,7 @@ interface ExecutorLike {
 
 export interface RealCoordinatorPorts {
   readonly platform: NodeJS.Platform;
+  readonly architecture: NodeJS.Architecture;
   canonicalizeRoot(root: string): Promise<string>;
   resolveSdk(root: string): Promise<SdkResolutionResult>;
   getSdkBinding(handle: ResolvedSdkHandle): {
@@ -62,6 +63,7 @@ export interface RealCoordinatorPorts {
 
 const defaultPorts: RealCoordinatorPorts = {
   platform: process.platform,
+  architecture: process.arch,
   canonicalizeRoot: (root) => realpath(root),
   resolveSdk: resolveProjectLocalSdk,
   getSdkBinding: (handle) => internalGetSdkBootstrapMaterial(handle),
@@ -188,7 +190,12 @@ export class ProductionRealCoordinator implements RealCoordinatorBoundary {
     if (this.#stage !== "created") return { status: "failed" };
     this.#stage = "resolving";
     if (signal.aborted) return { status: "aborted" };
-    if (this.#ports.platform === "win32") return { status: "failed" };
+    if (
+      this.#ports.platform !== "darwin" ||
+      this.#ports.architecture !== "arm64"
+    ) {
+      return { status: "failed" };
+    }
     const startedAt = this.#ports.now();
     try {
       const root = await this.#ports.canonicalizeRoot(this.#requestedRoot);

@@ -58,6 +58,7 @@ function harness(overrides: Partial<RealCoordinatorPorts> = {}) {
   let clock = 10;
   const ports: RealCoordinatorPorts = {
     platform: "darwin",
+    architecture: "arm64",
     canonicalizeRoot: async () => {
       calls.push("canonicalize");
       return root;
@@ -112,6 +113,36 @@ function harness(overrides: Partial<RealCoordinatorPorts> = {}) {
   };
   return { calls, ports };
 }
+
+test("unsupported operating systems and architectures refuse before effects", async () => {
+  for (const [platform, architecture] of [
+    ["linux", "arm64"],
+    ["darwin", "x64"],
+    ["win32", "arm64"],
+  ] as const) {
+    let clockCalls = 0;
+    const state = harness({
+      platform,
+      architecture,
+      now: () => {
+        clockCalls += 1;
+        return 10;
+      },
+    });
+    const coordinator = new ProductionRealCoordinator(root, state.ports);
+    const signal = new AbortController().signal;
+
+    assert.deepEqual(await coordinator.resolve(signal), { status: "failed" });
+    assert.deepEqual(await coordinator.runDoctor(signal), {
+      status: "preflight-failed",
+    });
+    assert.deepEqual(await coordinator.runWorkload(signal), {
+      status: "preflight-failed",
+    });
+    assert.deepEqual(state.calls, []);
+    assert.equal(clockCalls, 0);
+  }
+});
 
 test("coordinator preserves one continuous private authority chain", async () => {
   const state = harness();

@@ -25,8 +25,10 @@ Claims are scoped to:
 - QVAC SDK version.
 - Probe version.
 - Immutable workload profile version and artifact hash.
-- OS family/version and architecture.
-- CPU/GPU identity and relevant driver/backend version.
+- OS family/kernel release and architecture for genuine V1 probes.
+- Concrete CPU/GPU hardware identity. On Apple silicon, the concrete SoC model is
+  the integrated-GPU key when no separate GPU inventory is available; it does not
+  claim an exact GPU core count or backend name.
 - Requested and directly observed backend.
 
 No success is inferred across QVAC versions.
@@ -76,21 +78,30 @@ The hardware/OS combination may itself be identifying. Publication therefore req
 
 ## Resolved feasibility boundary
 
-- V1 targets Node 22 and exact project-local `@qvac/sdk` 0.16.0 only.
+- V1 real execution targets macOS arm64, Node 22, and exact project-local
+  `@qvac/sdk` 0.16.0 only. Every other operating system or architecture refuses
+  before project resolution, Doctor, cache or network activity, temporary-file
+  creation, or process spawn. Cross-platform fixture and static-build checks do
+  not expand that production boundary.
 - The source-verified candidate is SmolLM2 360M Instruct Q8, pinned by revision,
   386,404,992-byte size, SHA-256, and Apache-2.0 license. It is not claim-eligible
   until a local hash-verified lifecycle succeeds.
 - Published QVAC 0.16.0 directly reports only actual `cpu|gpu` device class for LLM
   completion, not Metal, CUDA, Vulkan, OpenCL, or another exact backend name.
+- V1 claim derivation requires concrete hardware identity. CPU evidence requires a
+  concrete vendor/model; GPU evidence requires a concrete GPU inventory or the
+  reviewed Apple-silicon SoC identity rule in D-018.
 - `heartbeat()` is the worker-start boundary; terminal nonempty completion plus
   `stats.backendDevice` is the inference/device observation boundary.
-- Atlas never installs QVAC. Any future model download requires a separate size,
-  license, destination, and cache disclosure plus explicit consent and local hash
-  verification. No such production downloader is currently enabled.
+- Atlas never installs QVAC. Its contained candidate-model acquisition path
+  discloses size, license, destination, cache behavior, immutable source, and hash
+  before explicit consent, then verifies the local bytes. The implementation is
+  unreachable in the shipped CLI while the release gate remains hardcoded false.
 - The dormant local-model bridge consumes one verified pinned-artifact capability
   into an opaque single-use executor grant. Only exact frozen path/size/hash/type
   material crosses a private parent-to-child IPC bootstrap; the supervised child
   fully verifies it before local-path load, confirms QVAC reports that exact local
   model, and fully verifies it again after unload and close. This bridge is wired
-  only to the CLI-private hardcoded-false composition, not the public probe API,
-  reports, profiles, enabled downloads, or claims.
+  only to the CLI-private hardcoded-false composition. It does not admit a
+  production profile, create a claim, upload a report, or make real execution
+  available through the shipped CLI.

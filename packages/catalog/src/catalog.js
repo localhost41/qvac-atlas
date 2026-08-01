@@ -4,6 +4,7 @@ import {
   compatibilityKey,
   deriveAggregateClaim,
   deriveReportClaim,
+  usesAppleSiliconSocGpuIdentity,
   validatePublishableReport,
 } from "@qvac-atlas/schema";
 
@@ -154,13 +155,20 @@ function admittedProfiles(report, profiles, label) {
 
 function hardwareLabel(report) {
   const gpus = report.platform.gpus.map((gpu) => gpu.model).join(", ");
-  return gpus.length > 0
-    ? `${report.platform.cpu.model} · ${gpus}`
-    : `${report.platform.cpu.model} · no GPU recorded`;
+  if (gpus.length > 0) return `${report.platform.cpu.model} · ${gpus}`;
+  if (usesAppleSiliconSocGpuIdentity(report)) {
+    return `${report.platform.cpu.model} · integrated GPU keyed by Apple SoC identity`;
+  }
+  return `${report.platform.cpu.model} · GPU inventory not recorded`;
 }
 
 function osLabel(report) {
-  return `${report.platform.os.family} ${report.platform.os.version} · ${report.platform.architecture}`;
+  const { family, version } = report.platform.os;
+  const release =
+    family === "macos" && report.provenance.kind === "probe"
+      ? `${family} · kernel release ${version}`
+      : `${family} ${version}`;
+  return `${release} · ${report.platform.architecture}`;
 }
 
 function facets(report, outcome) {

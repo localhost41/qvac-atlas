@@ -103,7 +103,7 @@ test("unavailable local CLI is unknown evidence, not a compatibility failure", a
   });
 });
 
-test("locator accepts only directly declared exact @qvac/cli 0.9.0 with its known bin", async (context) => {
+test("locator accepts the raw and package-manager-normalized official CLI bin shapes", async (context) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "atlas-doctor-"));
   context.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(path.join(root, "node_modules", "@qvac", "cli", "dist"), {
@@ -136,6 +136,32 @@ test("locator accepts only directly declared exact @qvac/cli 0.9.0 with its know
     (await new ProjectLocalDoctorLocator().locate(root)).kind,
     "resolved",
   );
+
+  await writeFile(
+    cliManifest,
+    JSON.stringify({
+      name: "@qvac/cli",
+      version: "0.9.0",
+      bin: { qvac: "./dist/index.js" },
+    }),
+  );
+  assert.equal(
+    (await new ProjectLocalDoctorLocator().locate(root)).kind,
+    "resolved",
+  );
+
+  await writeFile(
+    cliManifest,
+    JSON.stringify({
+      name: "@qvac/cli",
+      version: "0.9.0",
+      bin: { qvac: "./dist/other.js" },
+    }),
+  );
+  assert.deepEqual(await new ProjectLocalDoctorLocator().locate(root), {
+    kind: "unavailable",
+    code: "qvac-cli-unsafe",
+  });
 
   await writeFile(
     cliManifest,
