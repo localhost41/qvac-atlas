@@ -60,6 +60,15 @@ component must be a real directory, and the canonical cwd plus its ancestors mus
 contain no project manifest, QVAC config candidate, or default QVAC worker entry.
 Canonical parent aliases such as macOS `/var` to `/private/var` are permitted.
 
+The required `beforeBootstrap(child)` boundary runs after the sanitized child is
+spawned but before any SDK path is sent. The caller registers IPC, exit, error,
+stdio, deadline, and process-tree supervision there, so even an immediate child
+response cannot race listener installation. The callback receives only the child
+process capability, never SDK path material. If supervision setup throws or the
+private bootstrap send fails, launch waits for the child process to exit after
+`SIGTERM`, escalates to `SIGKILL` after a bounded grace, and rejects only after the
+OS process has been reaped. Caller-owned stdio draining remains part of supervision.
+
 The child receives only an explicit environment allowlist. In particular,
 `NODE_OPTIONS`, `NODE_PATH`, `QVAC_CONFIG_PATH`, and `QVAC_WORKER_PATH` cannot
 cross the boundary, and `execArgv` is always empty. SDK paths are absent from argv
@@ -80,5 +89,7 @@ They cover valid npm and contained pnpm layouts; absent, undeclared, ancestor-on
 `NODE_PATH`-only, and PnP cases; malformed and oversized manifests; wrong package,
 version, and export fingerprints; external package and entry symlinks; inherited
 loader and QVAC override suppression; canonical temporary paths; and JSON path
-leakage. A fixture entry writes a marker if an unsupported SDK is imported, proving
-that version detection itself does not execute contributor code.
+leakage. Fast-response, disconnected-IPC, and SIGTERM-resistant runners verify
+pre-bootstrap supervision and awaited TERM-to-KILL cleanup. A fixture entry writes
+a marker if an unsupported SDK is imported, proving that version detection itself
+does not execute contributor code.

@@ -25,6 +25,24 @@ const runnerPath = path.join(
   "fixtures",
   "bootstrap-runner.mjs",
 );
+const fastRunnerPath = path.join(
+  packageRoot,
+  "test",
+  "fixtures",
+  "fast-bootstrap-runner.mjs",
+);
+const sendFailureRunnerPath = path.join(
+  packageRoot,
+  "test",
+  "fixtures",
+  "send-failure-runner.mjs",
+);
+const stubbornSendFailureRunnerPath = path.join(
+  packageRoot,
+  "test",
+  "fixtures",
+  "stubborn-send-failure-runner.mjs",
+);
 
 function childMessage(child) {
   return new Promise((resolve, reject) => {
@@ -93,6 +111,7 @@ test("launches from a clean cwd and bootstraps the exact SDK only over IPC", asy
 
   const resolution = await resolveProjectLocalSdk(fixture.root);
   assert.equal(resolution.status, "resolved");
+  let receivedMessage;
   const child = await launchResolvedSdkChild({
     handle: resolution.handle,
     runnerPath,
@@ -104,6 +123,9 @@ test("launches from a clean cwd and bootstraps the exact SDK only over IPC", asy
       QVAC_CONFIG_PATH: hostileConfig,
       QVAC_WORKER_PATH: hostileWorker,
     },
+    beforeBootstrap(spawnedChild) {
+      receivedMessage = childMessage(spawnedChild);
+    },
   });
 
   const spawnSurface = JSON.stringify({
@@ -113,7 +135,7 @@ test("launches from a clean cwd and bootstraps the exact SDK only over IPC", asy
   assert.equal(spawnSurface.includes(fixture.sdkRoot), false);
   assert.equal(spawnSurface.includes("@qvac/sdk"), false);
 
-  const message = await childMessage(child);
+  const message = await receivedMessage;
   assert.deepEqual(message, {
     type: "fixture-result",
     fixtureValue: "accepted-exact-sdk",
@@ -135,12 +157,16 @@ test("accepts a clean cwd reached through a canonicalized parent alias", async (
   const resolution = await resolveProjectLocalSdk(fixture.root);
   assert.equal(resolution.status, "resolved");
 
-  const child = await launchResolvedSdkChild({
+  let receivedMessage;
+  await launchResolvedSdkChild({
     handle: resolution.handle,
     runnerPath,
     tempCwd,
+    beforeBootstrap(spawnedChild) {
+      receivedMessage = childMessage(spawnedChild);
+    },
   });
-  const message = await childMessage(child);
+  const message = await receivedMessage;
   assert.equal(message.type, "fixture-result");
   assert.equal(message.cwd, await realpath(tempCwd));
 });
@@ -161,6 +187,7 @@ test("rejects a cwd with project/config discovery surfaces using path-free error
         handle: resolution.handle,
         runnerPath,
         tempCwd: unsafeCwd,
+        beforeBootstrap() {},
       }),
     (error) => {
       assert.ok(error instanceof SdkChildLaunchError);
@@ -191,6 +218,7 @@ test("maps runner filesystem failures to a stable path-free error", async (t) =>
         handle: resolution.handle,
         runnerPath: missingRunner,
         tempCwd,
+        beforeBootstrap() {},
       }),
     (error) => {
       assert.deepEqual(JSON.parse(JSON.stringify(error)), {
@@ -233,3 +261,162 @@ test("child bootstrap rejects unaudited file URLs without leaking them", async (
   assert.equal(JSON.stringify(message).includes(secretRoot), false);
   assert.equal(JSON.stringify(message).includes(secretEntry), false);
 });
+
+test("registers supervision before a fast child can answer bootstrap", async (t) => {
+  const fixture = await createProject();
+  const tempCwd = await makeTemporaryDirectory("qvac-resolver-fast-bootstrap-");
+  t.after(() =>
+    Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+  );
+  const resolution = await resolveProjectLocalSdk(fixture.root);
+  assert.equal(resolution.status, "resolved");
+
+  let receivedMessage;
+  let responseArrivedBeforeLaunchReturned = false;
+  await launchResolvedSdkChild({
+    handle: resolution.handle,
+    runnerPath: fastRunnerPath,
+    tempCwd,
+    beforeBootstrap(spawnedChild) {
+      receivedMessage = childMessage(spawnedChild).then((message) => {
+        responseArrivedBeforeLaunchReturned = true;
+        return message;
+      });
+      const originalSend = spawnedChild.send.bind(spawnedChild);
+      spawnedChild.send = (message, callback) =>
+        originalSend(message, (error) => setTimeout(() => callback(error), 75));
+    },
+  });
+
+  assert.equal(responseArrivedBeforeLaunchReturned, true);
+  assert.deepEqual(await receivedMessage, { type: "fast-bootstrap-received" });
+});
+
+test("a failing supervision hook is terminated and reaped with a path-free error", async (t) => {
+  const fixture = await createProject();
+  const tempCwd = await makeTemporaryDirectory("qvac-resolver-setup-failure-");
+  t.after(() =>
+    Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+  );
+  const resolution = await resolveProjectLocalSdk(fixture.root);
+  assert.equal(resolution.status, "resolved");
+  let exitObserved = false;
+
+  await assert.rejects(
+    () =>
+      launchResolvedSdkChild({
+        handle: resolution.handle,
+        runnerPath: sendFailureRunnerPath,
+        tempCwd,
+        beforeBootstrap(child) {
+          child.once("error", () => {});
+          child.once("exit", () => {
+            exitObserved = true;
+          });
+          throw new Error(`private setup failure at ${fixture.root}`);
+        },
+      }),
+    (error) => {
+      assert.ok(error instanceof SdkChildLaunchError);
+      assert.deepEqual(JSON.parse(JSON.stringify(error)), {
+        code: "qvac-child-launch-failed",
+      });
+      assert.equal(error.message.includes(fixture.root), false);
+      assert.equal(JSON.stringify(error).includes(fixture.root), false);
+      return true;
+    },
+  );
+  assert.equal(exitObserved, true);
+});
+
+async function expectFailedBootstrapCleanup({
+  fixture,
+  tempCwd,
+  failureRunnerPath,
+  expectedSignals,
+}) {
+  const resolution = await resolveProjectLocalSdk(fixture.root);
+  assert.equal(resolution.status, "resolved");
+  let supervisedChild;
+  const sentSignals = [];
+  let exitObserved;
+  let childExited = false;
+
+  await assert.rejects(
+    () =>
+      launchResolvedSdkChild({
+        handle: resolution.handle,
+        runnerPath: failureRunnerPath,
+        tempCwd,
+        async beforeBootstrap(child) {
+          supervisedChild = child;
+          const originalKill = child.kill.bind(child);
+          child.kill = (signal) => {
+            sentSignals.push(signal);
+            return originalKill(signal);
+          };
+          const ready = childMessage(child);
+          assert.deepEqual(await ready, { type: "ready-to-disconnect" });
+          exitObserved = new Promise((resolve) =>
+            child.once("exit", (...event) => {
+              childExited = true;
+              resolve(event);
+            }),
+          );
+          child.disconnect();
+        },
+      }),
+    (error) => {
+      assert.ok(error instanceof SdkChildLaunchError);
+      assert.equal(error.code, "qvac-child-launch-failed");
+      assert.deepEqual(JSON.parse(JSON.stringify(error)), {
+        code: "qvac-child-launch-failed",
+      });
+      assert.equal(JSON.stringify(error).includes(tempCwd), false);
+      assert.equal(JSON.stringify(error).includes(fixture.root), false);
+      return true;
+    },
+  );
+
+  assert.deepEqual(sentSignals, expectedSignals);
+  assert.equal(childExited, true);
+  await exitObserved;
+  assert.notEqual(supervisedChild.signalCode, null);
+  assert.equal(supervisedChild.exitCode, null);
+}
+
+test("bootstrap send failure is terminated and reaped before rejection", async (t) => {
+  const fixture = await createProject();
+  const tempCwd = await makeTemporaryDirectory("qvac-resolver-send-failure-");
+  t.after(() =>
+    Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+  );
+
+  await expectFailedBootstrapCleanup({
+    fixture,
+    tempCwd,
+    failureRunnerPath: sendFailureRunnerPath,
+    expectedSignals: ["SIGTERM"],
+  });
+});
+
+test(
+  "a stubborn bootstrap child escalates from SIGTERM to SIGKILL and is reaped",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const fixture = await createProject();
+    const tempCwd = await makeTemporaryDirectory(
+      "qvac-resolver-stubborn-send-",
+    );
+    t.after(() =>
+      Promise.all([fixture.root, tempCwd].map(removeTemporaryDirectory)),
+    );
+
+    await expectFailedBootstrapCleanup({
+      fixture,
+      tempCwd,
+      failureRunnerPath: stubbornSendFailureRunnerPath,
+      expectedSignals: ["SIGTERM", "SIGKILL"],
+    });
+  },
+);

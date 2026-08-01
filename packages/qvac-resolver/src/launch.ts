@@ -37,6 +37,7 @@ export interface LaunchResolvedSdkChildOptions {
   runnerPath: string;
   tempCwd: string;
   sourceEnv?: NodeJS.ProcessEnv;
+  beforeBootstrap: (child: ChildProcess) => void | Promise<void>;
 }
 
 export interface SdkBootstrapMessage {
@@ -106,10 +107,83 @@ async function requireCleanTemporaryCwd(tempCwd: string): Promise<string> {
   }
 }
 
+const BOOTSTRAP_TERM_GRACE_MS = 250;
+const BOOTSTRAP_KILL_SETTLE_MS = 2_000;
+
+function hasExited(child: ChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function observeExit(child: ChildProcess): Promise<void> {
+  if (hasExited(child)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const finish = (): void => {
+      child.off("exit", finish);
+      child.off("error", onError);
+      resolve();
+    };
+    const onError = (): void => {
+      // A process that never spawned has nothing to terminate or reap. Send and
+      // kill errors for a live pid do not satisfy cleanup.
+      if (child.pid === undefined) finish();
+    };
+    child.once("exit", finish);
+    child.on("error", onError);
+  });
+}
+
+async function settlesWithin(
+  settled: Promise<void>,
+  timeoutMs: number,
+): Promise<boolean> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      settled.then(() => true),
+      new Promise<false>((resolve) => {
+        timer = setTimeout(() => resolve(false), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/**
+ * The child has not received contributor SDK code when this runs. Wait for the
+ * process to be reaped after TERM, escalate to KILL after a bounded grace, and
+ * never expose the child back to the caller on a failed launch.
+ */
+async function terminateFailedBootstrap(
+  child: ChildProcess,
+  settled: Promise<void>,
+): Promise<void> {
+  if (!hasExited(child)) {
+    try {
+      child.kill("SIGTERM");
+    } catch {
+      // A concurrent exit is settled by the observer below.
+    }
+  }
+  if (await settlesWithin(settled, BOOTSTRAP_TERM_GRACE_MS)) return;
+
+  if (!hasExited(child)) {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // A concurrent exit is settled by the observer below.
+    }
+  }
+  if (!(await settlesWithin(settled, BOOTSTRAP_KILL_SETTLE_MS))) {
+    throw new SdkChildLaunchError("qvac-child-launch-failed");
+  }
+}
+
 /**
  * Launch a pre-audited runner with no inherited loader/config hooks. The SDK
  * location is transmitted after spawn over the private IPC channel, never in
- * argv or the environment.
+ * argv or the environment. `beforeBootstrap` completes before that send so the
+ * caller cannot miss fast IPC, exit, error, or stream events.
  */
 export async function launchResolvedSdkChild(
   options: LaunchResolvedSdkChildOptions,
@@ -132,7 +206,9 @@ export async function launchResolvedSdkChild(
       serialization: "json",
       silent: true,
     });
+    const settled = observeExit(child);
     try {
+      await options.beforeBootstrap(child);
       await new Promise<void>((resolve, reject) => {
         child.send(message, (error) => {
           if (!error) {
@@ -143,9 +219,7 @@ export async function launchResolvedSdkChild(
         });
       });
     } catch {
-      if (child.exitCode === null && child.signalCode === null) {
-        child.kill();
-      }
+      await terminateFailedBootstrap(child, settled);
       throw new SdkChildLaunchError("qvac-child-launch-failed");
     }
     return child;
