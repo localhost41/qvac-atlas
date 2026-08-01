@@ -168,9 +168,9 @@ reviewed code but is intentionally not all repeated by the CLI disclosure:
 The acknowledgment must occur before the physical ceremony and must not copy the
 prompt, paths, or URL into the event log.
 
-The candidate profile is still candidate-only and claim-ineligible. If its prose
-still says explicit consent is not implemented, that is a metadata follow-up after
-this validation; do not edit the profile as part of ATLAS-013.
+The candidate profile is still candidate-only and claim-ineligible. Its
+`download_policy` is `explicit-consent-contained-dormant`: consent and contained
+acquisition are implemented, but remain unreachable behind the shipped false gate.
 
 ## Proposed, reviewable one-shot true-seam procedure
 

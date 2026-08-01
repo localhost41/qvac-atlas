@@ -11,5 +11,5 @@
   "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
   "license": "Apache-2.0",
   "engine": "llamacpp-completion",
-  "download_policy": "explicit-consent-only-not-implemented"
+  "download_policy": "explicit-consent-contained-dormant"
 }

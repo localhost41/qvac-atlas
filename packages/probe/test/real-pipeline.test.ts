@@ -936,6 +936,7 @@ test("candidate metadata remains non-production and real machinery stays dormant
   assert.equal(candidate.sha256, CANDIDATE_PROFILE.artifact_sha256);
   assert.equal(CANDIDATE_PROFILE.requested_backend, "gpu");
   assert.equal(candidate.claim_eligible, false);
+  assert.equal(candidate.download_policy, "explicit-consent-contained-dormant");
   assert.deepEqual(registry.productionProfiles, []);
 
   const index = await readFile(
