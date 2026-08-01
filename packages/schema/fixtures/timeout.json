@@ -1,26 +1,47 @@
 {
   "schema_version": "1.0.0",
   "probe_version": "0.1.0",
-  "report_id": "sha256:e4dccb94e0f2fb69470e85faad390347dc3fa4562ebd2886d1efd809a3163fc6",
+  "report_id": "sha256:6147cd14d60903a0910be6e3064daa31dfcf002d95e0c989ebea3acf2a84e3ee",
   "created_at": "2026-07-31T12:03:00.000Z",
   "provenance": { "kind": "fixture", "fixture_id": "timeout" },
   "consent": { "fingerprint_acknowledged": true, "publication": true },
   "platform": {
     "os": { "family": "windows", "version": "11", "build": "26100" },
     "architecture": "x64",
-    "cpu": { "vendor": "AMD", "model": "Ryzen 9 7900X", "family": "Zen 4", "feature_flags": ["avx", "avx2"] },
+    "cpu": {
+      "vendor": "AMD",
+      "model": "Ryzen 9 7900X",
+      "family": "Zen 4",
+      "feature_flags": ["avx", "avx2"]
+    },
     "memory_bucket": "32-63-gib",
-    "gpus": [{ "index": 0, "vendor": "AMD", "model": "Radeon RX 7800 XT", "device_id": "0x747e", "driver_version": "32.0.21025.1024" }]
+    "gpus": [
+      {
+        "index": 0,
+        "vendor": "AMD",
+        "model": "Radeon RX 7800 XT",
+        "device_id": "0x747e",
+        "driver_version": "32.0.21025.1024"
+      }
+    ]
   },
   "runtime": { "node_version": "22.17.0" },
   "qvac": {
-    "discovery": { "status": "passed", "reason": "completed", "duration_ms": 22 },
+    "discovery": {
+      "status": "passed",
+      "reason": "completed",
+      "duration_ms": 22
+    },
     "sdk_version": "0.16.0",
     "packages": [{ "name": "@qvac/sdk", "version": "0.16.0" }]
   },
   "official_checks": {
     "doctor": { "status": "passed", "reason": "completed", "duration_ms": 450 },
-    "bundle_verification": { "status": "passed", "reason": "completed", "duration_ms": 112 }
+    "bundle_verification": {
+      "status": "passed",
+      "reason": "completed",
+      "duration_ms": 112
+    }
   },
   "profile": {
     "id": "atlas-small-llm-lifecycle-test",
@@ -34,17 +55,36 @@
       { "name": "worker-start", "status": "passed", "duration_ms": 290 },
       { "name": "model-load", "status": "failed", "duration_ms": 60000 }
     ],
-    "backend_observation": { "status": "observed", "backend": "gpu", "method": "runner-event" },
-    "termination": { "kind": "timeout", "exit_code": null, "signal": null, "last_completed_phase": "worker-start" }
+    "backend_observation": {
+      "status": "not-reached",
+      "backend": null,
+      "method": "unavailable"
+    },
+    "termination": {
+      "kind": "timeout",
+      "exit_code": null,
+      "signal": null,
+      "last_completed_phase": "worker-start"
+    }
   },
   "result": {
     "workload_status": "failed",
     "completion_observed": false,
-    "failure": { "category": "timeout", "phase": "model-load", "code": "MODEL_LOAD_TIMEOUT", "sanitized_excerpt": "Model load exceeded the bounded phase deadline." }
+    "failure": {
+      "category": "timeout",
+      "phase": "model-load",
+      "code": "MODEL_LOAD_TIMEOUT",
+      "sanitized_excerpt": "Model load exceeded the bounded phase deadline."
+    }
   },
   "privacy": {
     "collection_policy": "allowlist-v1",
     "sanitizer_version": "0.1.0",
-    "redaction_counts": { "credentials": 0, "identifiers": 0, "network": 0, "paths": 0 }
+    "redaction_counts": {
+      "credentials": 0,
+      "identifiers": 0,
+      "network": 0,
+      "paths": 0
+    }
   }
 }

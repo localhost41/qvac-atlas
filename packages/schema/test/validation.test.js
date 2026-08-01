@@ -13,7 +13,12 @@ test("contributors cannot author public claim state", async () => {
   report.claim_status = "reproduced-success";
   const validation = validateReport(withReportId(report));
   assert.equal(validation.valid, false);
-  assert.equal(validation.errors.some(({ code }) => code === "schema:additionalProperties"), true);
+  assert.equal(
+    validation.errors.some(
+      ({ code }) => code === "schema:additionalProperties",
+    ),
+    true,
+  );
 });
 
 test("schema rejects fabricated OS-specific execution backends", async () => {
@@ -21,7 +26,12 @@ test("schema rejects fabricated OS-specific execution backends", async () => {
   report.execution.backend_observation.backend = "metal";
   const validation = validateReport(withReportId(report));
   assert.equal(validation.valid, false);
-  assert.equal(validation.errors.some(({ path }) => path.includes("backend_observation/backend")), true);
+  assert.equal(
+    validation.errors.some(({ path }) =>
+      path.includes("backend_observation/backend"),
+    ),
+    true,
+  );
 });
 
 test("semantic validator enforces canonical arrays and explicit durations", async () => {
@@ -30,8 +40,14 @@ test("semantic validator enforces canonical arrays and explicit durations", asyn
   report.execution.phases[0].duration_ms = null;
   const validation = validateReport(withReportId(report));
   assert.equal(validation.valid, false);
-  assert.equal(validation.errors.some(({ code }) => code === "canonical-order"), true);
-  assert.equal(validation.errors.some(({ code }) => code === "phase-duration"), true);
+  assert.equal(
+    validation.errors.some(({ code }) => code === "canonical-order"),
+    true,
+  );
+  assert.equal(
+    validation.errors.some(({ code }) => code === "phase-duration"),
+    true,
+  );
 });
 
 test("semantic validator enforces check and termination consistency", async () => {
@@ -41,8 +57,162 @@ test("semantic validator enforces check and termination consistency", async () =
   report.execution.termination.last_completed_phase = "worker-start";
   const validation = validateReport(withReportId(report));
   assert.equal(validation.valid, false);
-  assert.equal(validation.errors.some(({ code }) => code === "check-reason"), true);
-  assert.equal(validation.errors.filter(({ code }) => code === "termination").length >= 2, true);
+  assert.equal(
+    validation.errors.some(({ code }) => code === "check-reason"),
+    true,
+  );
+  assert.equal(
+    validation.errors.filter(({ code }) => code === "termination").length >= 2,
+    true,
+  );
+});
+
+test("partial success and unreached failures cannot produce claims", async () => {
+  const profiles = await standardProfiles();
+  const partial = asProbe(await jsonFixture("success.json"));
+  partial.execution.phases = [
+    { name: "qvac-import", status: "passed", duration_ms: 1 },
+  ];
+  partial.execution.backend_observation = {
+    status: "not-reached",
+    backend: null,
+    method: "unavailable",
+  };
+  partial.execution.termination.last_completed_phase = "qvac-import";
+  const partialReport = withReportId(partial);
+  assert.equal(validateReport(partialReport).valid, false);
+  assert.equal(
+    deriveReportClaim(partialReport, { standardProfiles: profiles }).claim,
+    "unknown",
+  );
+
+  const unreached = asProbe(await jsonFixture("timeout.json"));
+  unreached.execution.phases = [
+    { name: "qvac-import", status: "unknown", duration_ms: null },
+  ];
+  unreached.execution.termination.last_completed_phase = null;
+  const unreachedReport = withReportId(unreached);
+  const validation = validateReport(unreachedReport);
+  assert.equal(validation.valid, false);
+  assert.equal(
+    validation.errors.some(({ code }) => code === "failure-lifecycle"),
+    true,
+  );
+  assert.equal(
+    deriveReportClaim(unreachedReport, { standardProfiles: profiles }).claim,
+    "unknown",
+  );
+
+  const prematureBackend = asProbe(await jsonFixture("worker-crash.json"));
+  prematureBackend.execution.backend_observation = {
+    status: "observed",
+    backend: "cpu",
+    method: "runner-event",
+  };
+  const prematureReport = withReportId(prematureBackend);
+  assert.equal(
+    validateReport(prematureReport).errors.some(
+      ({ code }) => code === "backend-before-inference",
+    ),
+    true,
+  );
+  assert.equal(
+    deriveReportClaim(prematureReport, { standardProfiles: profiles }).claim,
+    "unknown",
+  );
+});
+
+test("unsupported or undiscovered QVAC runtimes remain inconclusive", async () => {
+  const profiles = await standardProfiles();
+  const mutations = [
+    (report) => {
+      report.runtime.node_version = "20.19.0";
+    },
+    (report) => {
+      report.qvac.sdk_version = "99.0.0";
+      report.qvac.packages = [{ name: "@qvac/sdk", version: "99.0.0" }];
+    },
+    (report) => {
+      report.qvac.discovery = {
+        status: "unknown",
+        reason: "unavailable",
+        duration_ms: null,
+      };
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const report = asProbe(await jsonFixture("success.json"));
+    mutate(report);
+    const adjusted = withReportId(report);
+    assert.equal(validateReport(adjusted).valid, true);
+    assert.equal(
+      deriveReportClaim(adjusted, { standardProfiles: profiles }).claim,
+      "unknown",
+    );
+  }
+});
+
+test("aggregate claims reuse the V1 evidence boundary", async () => {
+  const profiles = await standardProfiles();
+  const first = asProbe(await jsonFixture("success.json"));
+  first.runtime.node_version = "20.19.0";
+  const second = structuredClone(first);
+  second.created_at = "2026-08-01T00:00:01.000Z";
+  const claim = deriveAggregateClaim(
+    [
+      { report: withReportId(first), sourceKey: "reviewed-source-a" },
+      { report: withReportId(second), sourceKey: "reviewed-source-b" },
+    ],
+    { standardProfiles: profiles },
+  );
+  assert.equal(claim.claim, "unknown");
+  assert.deepEqual(claim.reasons, ["insufficient-evidence"]);
+});
+
+test("workload errors may exit cleanly but failure phase order remains mandatory", async () => {
+  const profiles = await standardProfiles();
+  const report = asProbe(await jsonFixture("success.json"));
+  report.execution.phases = [
+    { name: "qvac-import", status: "passed", duration_ms: 1 },
+    { name: "worker-start", status: "passed", duration_ms: 1 },
+    { name: "model-load", status: "passed", duration_ms: 1 },
+    { name: "inference", status: "failed", duration_ms: 1 },
+  ];
+  report.execution.termination = {
+    kind: "clean-exit",
+    exit_code: 0,
+    signal: null,
+    last_completed_phase: "model-load",
+  };
+  report.result = {
+    workload_status: "failed",
+    completion_observed: false,
+    failure: {
+      category: "workload-failed",
+      phase: "inference",
+      code: "WORKLOAD_FAILED",
+      sanitized_excerpt: null,
+    },
+  };
+  const adjusted = withReportId(report);
+  assert.equal(validateReport(adjusted).valid, true);
+  assert.equal(
+    deriveReportClaim(adjusted, { standardProfiles: profiles }).claim,
+    "observed-failure",
+  );
+
+  const reordered = structuredClone(adjusted);
+  [reordered.execution.phases[0], reordered.execution.phases[1]] = [
+    reordered.execution.phases[1],
+    reordered.execution.phases[0],
+  ];
+  const reorderedReport = withReportId(reordered);
+  assert.equal(validateReport(reorderedReport).valid, false);
+  assert.equal(
+    deriveReportClaim(reorderedReport, { standardProfiles: profiles }).claim,
+    "unknown",
+  );
 });
 
 test("32-bit Windows native exit codes remain representable", async () => {
@@ -91,14 +261,30 @@ test("mixed compatible evidence is derived, never report-authored", async () => 
   const failure = structuredClone(success);
   failure.execution.phases = [
     { name: "qvac-import", status: "passed", duration_ms: 35 },
-    { name: "worker-start", status: "failed", duration_ms: 21 },
+    { name: "worker-start", status: "passed", duration_ms: 21 },
+    { name: "model-load", status: "passed", duration_ms: 42 },
+    { name: "inference", status: "failed", duration_ms: 10 },
   ];
-  failure.execution.backend_observation = { status: "observed", backend: "gpu", method: "runner-event" };
-  failure.execution.termination = { kind: "signal", exit_code: null, signal: "SIGSEGV", last_completed_phase: "qvac-import" };
+  failure.execution.backend_observation = {
+    status: "observed",
+    backend: "gpu",
+    method: "runner-event",
+  };
+  failure.execution.termination = {
+    kind: "signal",
+    exit_code: null,
+    signal: "SIGSEGV",
+    last_completed_phase: "model-load",
+  };
   failure.result = {
     workload_status: "failed",
     completion_observed: false,
-    failure: { category: "worker-crash", phase: "worker-start", code: "WORKER_SIGSEGV", sanitized_excerpt: null },
+    failure: {
+      category: "worker-crash",
+      phase: "inference",
+      code: "WORKER_SIGSEGV",
+      sanitized_excerpt: null,
+    },
   };
   const claim = deriveAggregateClaim(
     [
@@ -115,7 +301,11 @@ test("aggregation refuses reports from different compatibility keys", async () =
   const other = structuredClone(success);
   other.qvac.sdk_version = "0.17.0";
   assert.throws(
-    () => deriveAggregateClaim([{ report: success, sourceKey: "a" }, { report: withReportId(other), sourceKey: "b" }]),
+    () =>
+      deriveAggregateClaim([
+        { report: success, sourceKey: "a" },
+        { report: withReportId(other), sourceKey: "b" },
+      ]),
     /compatibility key/,
   );
 });
@@ -124,7 +314,9 @@ test("a nonstandard profile cannot produce a public failure claim", async () => 
   const profiles = await standardProfiles();
   const report = asProbe(await jsonFixture("worker-crash.json"));
   report.profile.artifact_sha256 = "b".repeat(64);
-  const claim = deriveReportClaim(withReportId(report), { standardProfiles: profiles });
+  const claim = deriveReportClaim(withReportId(report), {
+    standardProfiles: profiles,
+  });
   assert.equal(claim.observation, "failure");
   assert.equal(claim.claim, "unknown");
   assert.equal(claim.reasons.includes("nonstandard-profile"), true);

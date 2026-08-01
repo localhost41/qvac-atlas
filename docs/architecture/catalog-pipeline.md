@@ -26,6 +26,26 @@ semantic checks, privacy scanning, fingerprint acknowledgement, and publication
 consent. Admission errors expose only paths and rule identifiers, not rejected
 values.
 
+Claim derivation additionally passes every genuine report through one schema-owned
+V1 evidence evaluator. A success requires Node 22, passed QVAC discovery, exact
+`@qvac/sdk` 0.16.0 evidence, exactly one trusted profile, the five complete passed
+lifecycle phases, directly observed generic `cpu|gpu` execution after inference,
+and clean shutdown/termination. A defined failure requires that same runtime and
+profile boundary plus a present failed phase, all prior phases passed, no later
+attempted phase, and correlated failure category, phase, and termination. Missing,
+unsupported, unsafe, or incomplete evidence remains `unknown`; aggregate claims
+reuse the same report evaluator and cannot promote it.
+
+`workload-failed` may correlate with a nonzero exit or a clean process exit because
+the QVAC API can directly return a workload error. Worker crashes still require a
+signal/nonzero exit, timeouts require timeout termination, and spawn failures
+require spawn-error termination.
+
+Genuine reports cannot retain a failure excerpt. Fixtures may retain synthetic
+excerpts to exercise rendering, but production runner IPC accepts only `null`.
+Privacy scanning also rejects generic POSIX, drive-letter, and UNC absolute paths
+as defense in depth.
+
 ## Profile admission
 
 Production and fixture profile allowlists are separate trusted metadata. Every

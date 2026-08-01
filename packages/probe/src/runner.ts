@@ -126,13 +126,7 @@ function parseFailure(
     (typeof item.code !== "string" || !/^[A-Z][A-Z0-9_]{1,63}$/.test(item.code))
   )
     return null;
-  if (
-    item.sanitized_excerpt !== null &&
-    (typeof item.sanitized_excerpt !== "string" ||
-      item.sanitized_excerpt.length < 1 ||
-      item.sanitized_excerpt.length > 1024)
-  )
-    return null;
+  if (item.sanitized_excerpt !== null) return null;
   return item as unknown as RunnerEvidence["result"]["failure"];
 }
 
@@ -283,6 +277,14 @@ export class StructuredRunnerAdapter {
         name === "inference" && (status === "passed" || status === "failed"),
     );
     if (backends.length === 1 && !inferenceAttempted) return rejectedEvidence();
+    const inferenceEventIndex = events.findIndex(
+      (event) => event?.type === "phase" && event.name === "inference",
+    );
+    const backendEventIndex = events.findIndex(
+      (event) => event?.type === "backend",
+    );
+    if (backendEventIndex >= 0 && backendEventIndex <= inferenceEventIndex)
+      return rejectedEvidence();
 
     return {
       phases: phases.map(({ name, status, duration_ms }) => ({

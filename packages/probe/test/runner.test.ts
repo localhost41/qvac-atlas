@@ -64,6 +64,21 @@ test("hostile extra fields and private paths are replaced with fixed unknown evi
       ],
     },
     {
+      execute: async () => [
+        {
+          type: "result",
+          workload_status: "unknown",
+          completion_observed: false,
+          failure: {
+            category: "unknown",
+            phase: null,
+            code: null,
+            sanitized_excerpt: "normalized but still contributor-controlled",
+          },
+        },
+      ],
+    },
+    {
       execute: async () => {
         throw new Error("/Users/private/sdk.js");
       },
@@ -75,4 +90,41 @@ test("hostile extra fields and private paths are replaced with fixed unknown evi
     assert.equal(evidence.result.failure.code, "RUNNER_EVENT_REJECTED");
     assert.equal(JSON.stringify(evidence).includes("private"), false);
   }
+});
+
+test("a backend event before inference is rejected", async () => {
+  const evidence = await new StructuredRunnerAdapter({
+    execute: async () => [
+      { type: "phase", name: "qvac-import", status: "passed", duration_ms: 1 },
+      { type: "backend", backend: "gpu" },
+      { type: "phase", name: "worker-start", status: "passed", duration_ms: 1 },
+      { type: "phase", name: "model-load", status: "passed", duration_ms: 1 },
+      { type: "phase", name: "inference", status: "passed", duration_ms: 1 },
+      {
+        type: "phase",
+        name: "clean-shutdown",
+        status: "passed",
+        duration_ms: 1,
+      },
+      {
+        type: "termination",
+        kind: "clean-exit",
+        exit_code: 0,
+        signal: null,
+        last_completed_phase: "clean-shutdown",
+      },
+      {
+        type: "result",
+        workload_status: "passed",
+        completion_observed: true,
+        failure: {
+          category: "none",
+          phase: null,
+          code: null,
+          sanitized_excerpt: null,
+        },
+      },
+    ],
+  }).run();
+  assert.equal(evidence.result.failure.code, "RUNNER_EVENT_REJECTED");
 });

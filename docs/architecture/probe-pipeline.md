@@ -105,9 +105,10 @@ IPC-like events. It accepts only exact allowlisted event keys and enum values fo
 
 An extra field, malformed shape, private-data canary, excessive event count,
 non-array result, or executor exception becomes fixed inconclusive evidence. Raw
-errors and paths never propagate. A missing backend is `not-reached` unless an
-inference phase was actually attempted; it is never inferred from hardware or the
-requested device.
+errors, excerpts, and paths never propagate. Failure excerpts must be `null`, and a
+backend event is accepted only after an attempted inference event. A missing
+backend is `not-reached` unless an inference phase was actually attempted; it is
+never inferred from hardware or the requested device.
 
 ATLAS-009 supplies only a fake executor for success, missing-QVAC, worker-crash, and
 timeout scenarios. Every assembled report therefore has fixture provenance and can

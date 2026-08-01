@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "node scripts/check-schema.js",
-    "lint": "node --check src/canonicalize.js && node --check src/claims.js && node --check src/privacy.js && node --check src/validate.js && node --check src/index.js",
+    "lint": "node --check src/canonicalize.js && node --check src/evidence.js && node --check src/claims.js && node --check src/privacy.js && node --check src/validate.js && node --check src/index.js",
     "test": "node --test",
     "typecheck": "node --check src/index.js"
   },

@@ -1,20 +1,5 @@
 import { canonicalize } from "./canonicalize.js";
-
-const PHASE_ORDER = ["qvac-import", "worker-start", "model-load", "inference", "clean-shutdown"];
-
-function profileIdentity(profile) {
-  return `${profile.id}@${profile.version}:${profile.artifact_sha256}`;
-}
-
-function trustedProfile(report, standardProfiles) {
-  const identity = profileIdentity(report.profile);
-  return standardProfiles.some((profile) => profileIdentity(profile) === identity);
-}
-
-function directlyObservedBackend(report) {
-  const observation = report.execution.backend_observation;
-  return observation.status === "observed" && observation.backend !== "unknown" && observation.backend !== null;
-}
+import { evaluateV1ClaimEvidence, PHASE_ORDER } from "./evidence.js";
 
 /**
  * Derives report-level observation and claim. There is intentionally no input
@@ -30,20 +15,26 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
     };
   }
 
+  const evidence = evaluateV1ClaimEvidence(report, { standardProfiles });
   const reasons = [];
-  const isStandard = trustedProfile(report, standardProfiles);
-  const backendObserved = directlyObservedBackend(report);
-  const completed = report.result.workload_status === "passed" && report.result.completion_observed === true;
+  const completed =
+    report.result.workload_status === "passed" &&
+    report.result.completion_observed === true;
   const actualBackend = report.execution.backend_observation.backend;
   const requestedBackend = report.profile.requested_backend;
 
-  if (!isStandard) reasons.push("nonstandard-profile");
-  if (report.qvac.sdk_version === null) reasons.push("qvac-version-unavailable");
-  if (!backendObserved) reasons.push("backend-not-directly-observed");
+  if (!evidence.trustedProfile) reasons.push("nonstandard-profile");
+  if (!evidence.supportedRuntime) reasons.push("unsupported-node-runtime");
+  if (report.qvac.sdk_version === null)
+    reasons.push("qvac-version-unavailable");
+  else if (!evidence.supportedQvac) reasons.push("unsupported-qvac-evidence");
+  if (!evidence.privacySafe) reasons.push("private-failure-excerpt");
+  if (!evidence.backendObserved) reasons.push("backend-not-directly-observed");
 
-  if (completed && isStandard && report.qvac.sdk_version !== null && backendObserved) {
+  if (evidence.successEligible) {
     reasons.push("standard-workload-completed");
-    const fellBack = requestedBackend !== "auto" && requestedBackend !== actualBackend;
+    const fellBack =
+      requestedBackend !== "auto" && requestedBackend !== actualBackend;
     if (fellBack) {
       reasons.push("different-backend-observed");
       return {
@@ -62,13 +53,7 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
     };
   }
 
-  const definedFailure =
-    isStandard &&
-    report.qvac.sdk_version !== null &&
-    report.result.workload_status === "failed" &&
-    ["native-runtime", "worker-crash", "timeout", "workload-failed", "spawn-error"].includes(report.result.failure.category);
-
-  if (definedFailure) {
+  if (evidence.failureEligible) {
     reasons.push("defined-runtime-failure");
     return {
       observation: "failure",
@@ -78,12 +63,15 @@ export function deriveReportClaim(report, { standardProfiles = [] } = {}) {
     };
   }
 
-  if (report.result.workload_status === "skipped") reasons.push("workload-skipped");
-  else if (report.result.workload_status === "unknown") reasons.push("workload-state-unknown");
+  if (report.result.workload_status === "skipped")
+    reasons.push("workload-skipped");
+  else if (report.result.workload_status === "unknown")
+    reasons.push("workload-state-unknown");
   else if (!completed) reasons.push("workload-not-completed");
   reasons.push("insufficient-evidence");
   return {
-    observation: report.result.workload_status === "failed" ? "failure" : "inconclusive",
+    observation:
+      report.result.workload_status === "failed" ? "failure" : "inconclusive",
     claim: "unknown",
     actual_backend_claim: null,
     reasons: [...new Set(reasons)].sort(),
@@ -111,18 +99,28 @@ export function compatibilityKey(report) {
  */
 export function deriveAggregateClaim(entries, options = {}) {
   if (entries.length === 0) {
-    return { observation: "inconclusive", claim: "unknown", actual_backend_claim: null, reasons: ["insufficient-evidence"] };
+    return {
+      observation: "inconclusive",
+      claim: "unknown",
+      actual_backend_claim: null,
+      reasons: ["insufficient-evidence"],
+    };
   }
   const keys = new Set(entries.map(({ report }) => compatibilityKey(report)));
-  if (keys.size !== 1) throw new Error("aggregate entries do not share one compatibility key");
+  if (keys.size !== 1)
+    throw new Error("aggregate entries do not share one compatibility key");
 
   const derived = entries.map(({ report, sourceKey }) => ({
     reportId: report.report_id,
     sourceKey,
     result: deriveReportClaim(report, options),
   }));
-  const successes = derived.filter(({ result }) => result.claim === "observed-success");
-  const failures = derived.filter(({ result }) => result.claim === "observed-failure");
+  const successes = derived.filter(
+    ({ result }) => result.claim === "observed-success",
+  );
+  const failures = derived.filter(
+    ({ result }) => result.claim === "observed-failure",
+  );
   if (successes.length > 0 && failures.length > 0) {
     return {
       observation: "inconclusive",
@@ -132,8 +130,12 @@ export function deriveAggregateClaim(entries, options = {}) {
     };
   }
   if (successes.length > 0) {
-    const independentSources = new Set(successes.map(({ sourceKey }) => sourceKey).filter(Boolean));
-    const independentReports = new Set(successes.map(({ reportId }) => reportId).filter(Boolean));
+    const independentSources = new Set(
+      successes.map(({ sourceKey }) => sourceKey).filter(Boolean),
+    );
+    const independentReports = new Set(
+      successes.map(({ reportId }) => reportId).filter(Boolean),
+    );
     if (independentSources.size >= 2 && independentReports.size >= 2) {
       return {
         observation: "success",

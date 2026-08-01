@@ -9,13 +9,22 @@
     "observation": "inconclusive",
     "claim": "unknown",
     "actual_backend_claim": null,
-    "reasons": ["backend-not-directly-observed", "insufficient-evidence", "workload-state-unknown"]
+    "reasons": [
+      "backend-not-directly-observed",
+      "insufficient-evidence",
+      "workload-state-unknown"
+    ]
   },
   "missing-qvac.json": {
     "observation": "inconclusive",
     "claim": "unknown",
     "actual_backend_claim": null,
-    "reasons": ["backend-not-directly-observed", "insufficient-evidence", "qvac-version-unavailable", "workload-skipped"]
+    "reasons": [
+      "backend-not-directly-observed",
+      "insufficient-evidence",
+      "qvac-version-unavailable",
+      "workload-skipped"
+    ]
   },
   "success.json": {
     "observation": "success",
@@ -27,7 +36,7 @@
     "observation": "failure",
     "claim": "observed-failure",
     "actual_backend_claim": null,
-    "reasons": ["defined-runtime-failure"]
+    "reasons": ["backend-not-directly-observed", "defined-runtime-failure"]
   },
   "worker-crash.json": {
     "observation": "failure",
