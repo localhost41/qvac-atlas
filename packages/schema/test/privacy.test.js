@@ -44,6 +44,21 @@ test("known token shapes, high entropy, and forbidden field names are blocked", 
   ]);
 });
 
+test("privacy rules do not reject larger non-token and relative-path supersets", () => {
+  for (const value of [
+    "unbearer AAAAAAAA",
+    "xeyJAAAAAAAA.BBBBBBBB.CCCCCCCC",
+    "XAKIAIOSFODNN7EXAMPLEY",
+    "NOT_TOKEN=secretvalue",
+    "AA:BB:CC:DD:EE:FF:11",
+    "g123e4567-e89b-12d3-a456-426614174000z",
+    "x192.0.2.42y",
+    String.raw`wordD:\models\file.gguf`,
+  ]) {
+    assert.deepEqual(scanPrivacy({ value }), [], value);
+  }
+});
+
 test("only schema-constrained hashes and versions bypass entropy scanning", async () => {
   const report = await jsonFixture("success.json");
   assert.deepEqual(scanPrivacy(report), []);

@@ -5,34 +5,46 @@ const FORBIDDEN_KEY =
 
 const CONTENT_RULES = [
   ["private-key", /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/],
-  ["bearer-token", /(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i],
-  ["jwt", /eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/],
+  [
+    "bearer-token",
+    /(?<![A-Za-z0-9])(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i,
+  ],
+  [
+    "jwt",
+    /(?<![A-Za-z0-9])eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}(?![A-Za-z0-9])/,
+  ],
   [
     "known-token",
-    /(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})/,
+    /(?<![A-Za-z0-9])(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})(?![A-Za-z0-9])/,
   ],
-  ["credential-url", /[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@/i],
+  [
+    "credential-url",
+    /(?<![A-Za-z0-9])[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@/i,
+  ],
   ["email", /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i],
-  ["windows-user-path", /[A-Za-z]:\\Users\\[^\\\s]+/i],
-  ["posix-user-path", /\/(?:Users|home)\/[^/\s"']+/],
-  ["windows-absolute-path", /[A-Za-z]:[\\/][^\s"'<>]+/],
-  ["windows-unc-path", /\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
+  ["windows-user-path", /(?<![A-Za-z0-9])[A-Za-z]:\\Users\\[^\\\s]+/i],
+  ["posix-user-path", /(?<![A-Za-z0-9./])\/(?:Users|home)\/[^/\s"']+/],
+  ["windows-absolute-path", /(?<![A-Za-z0-9])[A-Za-z]:[\\/][^\s"'<>]+/],
+  ["windows-unc-path", /(?<![A-Za-z0-9\\])\\\\[^\\\s"'<>]+\\[^\\\s"'<>]+/],
   [
     "posix-absolute-path",
     /(?<![A-Za-z0-9./])\/(?!\/)[A-Za-z0-9._+-]+(?:\/[^/\s"'<>]+)+/,
   ],
-  ["mac-address", /(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}/i],
+  [
+    "mac-address",
+    /(?<![0-9A-F])(?<![0-9A-F]{2}[:-])(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}(?![0-9A-F]|[:-][0-9A-F]{2})/i,
+  ],
   [
     "stable-identifier",
-    /(?<![0-9a-f])[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}(?![0-9a-f])/i,
+    /(?<![A-Za-z0-9])[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}(?![A-Za-z0-9])/i,
   ],
   [
     "ipv4-address",
-    /(?<![\d.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\d.])/,
+    /(?<![A-Za-z0-9.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![A-Za-z0-9.])/,
   ],
   [
     "sensitive-assignment",
-    /(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)\s*=\s*\S+/i,
+    /(?<![A-Za-z0-9_])_?(?:TOKEN|SECRET|PASSWORD|API_KEY|AUTHORIZATION)\s*=\s*\S+/i,
   ],
 ];
 
