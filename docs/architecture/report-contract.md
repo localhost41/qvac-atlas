@@ -1,6 +1,6 @@
 # Report contract
 
-Status: provisional for schema `1.0.0` pending the technical-truth gate.
+Status: versioned pre-release schema `1.0.0`; production claims remain gated.
 
 ## Authority and boundaries
 
@@ -150,8 +150,9 @@ facets into a stronger compatibility claim.
 Production claim derivation receives a trusted allowlist of immutable profile
 descriptors. A report cannot make its own profile standard merely by naming it.
 `profiles/fixtures/atlas-small-llm-lifecycle-test.json` exists only for contract
-tests. The production V1 profile remains absent until ATLAS-002 verifies its
-artifact, license, download boundary, QVAC API, and direct backend observation.
+tests. The production V1 profile remains absent until ATLAS-013 physical validation
+succeeds and separate protected production-profile admission and repository-trust
+reviews approve it.
 
 ## Validation layers
 

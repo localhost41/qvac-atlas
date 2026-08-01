@@ -5,7 +5,7 @@ Updated: 2026-08-01
 ## Verified state
 
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
-- V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
+- V1 scope, versioned pre-release contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
 - The dormant executor, hostile-protocol matrix, private-artifact foundation,
   verified-artifact bridge, contained acquisition, genuine candidate pipeline, and
