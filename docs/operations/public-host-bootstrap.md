@@ -40,6 +40,10 @@ case "$ATLAS_REVIEWED_COMMIT" in
   *[!0-9a-f]*) echo 'ATLAS_REVIEWED_COMMIT must contain only lowercase hexadecimal characters.' >&2; false ;;
 esac
 test -n "$ATLAS_PAGES_REVIEWER"
+node -e '
+if (process.argv[1].toLowerCase() === process.argv[2].toLowerCase()) {
+  throw new Error("Pages reviewer must differ from repository owner/release captain");
+}' "$ATLAS_PAGES_REVIEWER" "$ATLAS_GITHUB_OWNER"
 ```
 
 ## Freeze the local release line

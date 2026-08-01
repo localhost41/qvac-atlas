@@ -140,9 +140,17 @@ M1 — Local probe and registry vertical slice.
   present. No remote, package, deployment, report, or message was published.
 - ATLAS-035: the project owner authorized the fixture-only community launch,
   selected Apache-2.0, and named `@localhost41` for the primary, evidence, and
-  security owner roles. Launch execution is in progress. A different GitHub
-  account is still required for the independent Pages approval, and npm
-  publication requires an authenticated publisher session.
+  security owner roles. The new deterministic package-source candidate is
+  `6db47361d01da9ae61724a20386708f8f4e93db7`; its 122,278-byte Apache-2.0 artifact
+  has SHA-256 `dec3ab4e41ec262396232a796ecb5ff772de008b4807bc90988f6e776afb4a2c`.
+  Both the main checkout and a no-local clean-room clone passed all 471 tests,
+  deterministic recreation, audit, and clean-tree checks. Initial independent
+  review found that Pages-reviewer independence was prose-only; the parser,
+  verifier, runbook, and regression tests now reject the repository owner as
+  reviewer case-insensitively. Final candidate freeze still requires the separate
+  reviewer's login so that account can also prevent CODEOWNERS deadlock. npm
+  publication requires an authenticated publisher session, and the Discord
+  destination has not been named.
 
 ## Next integration gate
 

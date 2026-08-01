@@ -13,6 +13,7 @@ const head = "a".repeat(40);
 function protectedHost() {
   return {
     repository: {
+      owner: { login: "approved-owner" },
       visibility: "public",
       private: false,
       default_branch: "main",
@@ -131,6 +132,20 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
       ]),
     /40 lowercase/u,
   );
+  assert.throws(
+    () =>
+      parseHostArguments([
+        "--repository",
+        "localhost41/qvac-atlas",
+        "--branch",
+        "main",
+        "--expected-head",
+        head,
+        "--deployment-reviewer",
+        "LocalHost41",
+      ]),
+    /differ from the repository owner/u,
+  );
 });
 
 test("placeholder ownership is explicit and launch-blocking", async () => {
@@ -154,6 +169,17 @@ test("placeholder ownership is explicit and launch-blocking", async () => {
 
 test("the complete protected host shape passes", () => {
   assert.deepEqual(repositoryProtectionFailures(protectedHost()), []);
+});
+
+test("the Pages reviewer must differ from the repository owner case-insensitively", () => {
+  const state = protectedHost();
+  state.deploymentReviewer = "APPROVED-OWNER";
+  state.pagesEnvironment.protection_rules[0].reviewers[0].reviewer.login =
+    "approved-owner";
+  assert.match(
+    repositoryProtectionFailures(state).join("\n"),
+    /not independent from the repository owner/u,
+  );
 });
 
 test("weak or stale host controls fail every release boundary", () => {

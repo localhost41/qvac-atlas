@@ -56,6 +56,11 @@ export function parseHostArguments(args) {
     throw new Error(
       "Deployment reviewer must be one explicit GitHub user login.",
     );
+  const [repositoryOwner] = repository.split("/", 1);
+  if (repositoryOwner.toLowerCase() === deploymentReviewer.toLowerCase())
+    throw new Error(
+      "Deployment reviewer must differ from the repository owner and release captain.",
+    );
   return { repository, branch, expectedHead, deploymentReviewer };
 }
 
@@ -112,6 +117,13 @@ export function repositoryProtectionFailures({
   actionsAppId = GITHUB_ACTIONS_APP_ID,
 }) {
   const failures = [];
+  if (
+    repository?.owner?.login?.toLowerCase() ===
+    deploymentReviewer?.toLowerCase()
+  )
+    failures.push(
+      "Pages deployment reviewer is not independent from the repository owner",
+    );
   if (repository?.visibility !== "public" || repository?.private !== false)
     failures.push("repository is not public");
   if (repository?.default_branch !== expectedBranch)

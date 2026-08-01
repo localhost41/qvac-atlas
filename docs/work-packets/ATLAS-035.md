@@ -1,6 +1,6 @@
 # ATLAS-035 — Authorized fixture-only community launch
 
-Status: in progress
+Status: local candidate verified; independent review and external gates in progress
 
 ## Objective
 
@@ -67,6 +67,8 @@ server/channel must be named before the announcement is sent.
 - `packages/cli/**`
 - `scripts/package-*.mjs`
 - `scripts/readiness.test.mjs`
+- `scripts/verify-host-protection.mjs`
+- `scripts/host-protection.test.mjs`
 - `docs/**`
 - `.artifacts/qvac-atlas-0.1.0.tgz` (generated, ignored release artifact)
 
@@ -96,3 +98,19 @@ announcement destination is unavailable, stop before that external action, retai
 the reviewed candidate, and report the exact missing value or command. Do not
 substitute the release captain for independent review and do not publish a nearby
 artifact.
+
+## 2026-08-01 candidate checkpoint
+
+The package-source commit is
+`6db47361d01da9ae61724a20386708f8f4e93db7`. Its deterministic 122,278-byte
+artifact has SHA-256
+`dec3ab4e41ec262396232a796ecb5ff772de008b4807bc90988f6e776afb4a2c` and passed
+the full suite plus a no-local clean-room recreation. The complete evidence and
+current external blockers are recorded in
+`docs/reviews/ATLAS-035-public-launch.md`.
+
+Initial independent review held launch because reviewer independence was not
+mechanically enforced. The parser, verifier, bootstrap runbook, and regression
+tests now reject the repository owner as reviewer case-insensitively. The reviewer
+login is also required as a co-owner before freeze so owner-authored future pull
+requests do not deadlock under mandatory code-owner approval.
