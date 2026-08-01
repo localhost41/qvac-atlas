@@ -36,6 +36,7 @@ test("invalid fixture syntax refuses before reading cwd or invoking effects", as
     ["probe", "--fixture", "success", "--output", ""],
     ["probe", "--fixture", "success", "--project", "", "--output", "a"],
     ["probe", "--fixture", "success", "--output", "a\nb"],
+    ["probe", "--fixture", "success", "--output", "a\u009bb"],
   ];
   for (const args of cases) {
     const errors: string[] = [];

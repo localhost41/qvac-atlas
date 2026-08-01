@@ -42,7 +42,7 @@ async function normalizeOutputPath(
     typeof output !== "string" ||
     output.length === 0 ||
     output.length > 4_096 ||
-    /[\x00-\x1f\x7f]/u.test(output)
+    /[\x00-\x1f\x7f-\x9f]/u.test(output)
   ) {
     throw new Error("real-output-path-invalid");
   }
@@ -52,7 +52,7 @@ async function normalizeOutputPath(
   if (
     !path.isAbsolute(normalized) ||
     path.normalize(normalized) !== normalized ||
-    /[\x00-\x1f\x7f]/u.test(normalized)
+    /[\x00-\x1f\x7f-\x9f]/u.test(normalized)
   )
     throw new Error("real-output-path-invalid");
   return normalized;

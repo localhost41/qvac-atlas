@@ -29,7 +29,7 @@ function validRealOutput(value: unknown): value is string {
     value.length > 0 &&
     value.length <= 4_096 &&
     !value.startsWith("-") &&
-    !/[\x00-\x1f\x7f]/u.test(value)
+    !/[\x00-\x1f\x7f-\x9f]/u.test(value)
   );
 }
 

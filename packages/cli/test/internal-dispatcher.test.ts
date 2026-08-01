@@ -84,6 +84,7 @@ test("malformed real intent has no effects beyond fixed usage", async () => {
     ["probe", "--real", "--output", "a\nb\u001b"],
     ["probe", "--real", "--output", "a\rb"],
     ["probe", "--real", "--output", "a\tb"],
+    ["probe", "--real", "--output", "a\u009bb"],
     ["probe", "--real", "--output", "x".repeat(4_097)],
   ];
   for (const args of cases) {
@@ -113,6 +114,8 @@ test("malformed fixture syntax has no effects beyond fixed usage", async () => {
     ["probe", "--fixture", "success", "--output", "a\nb"],
     ["probe", "--fixture", "success", "--output", "a\rb"],
     ["probe", "--fixture", "success", "--output", "a\tb"],
+    ["probe", "--fixture", "success", "--output", "a\u007fb"],
+    ["probe", "--fixture", "success", "--output", "a\u009bb"],
     ["probe", "--fixture", "success", "--output", "x".repeat(4_097)],
   ];
   for (const args of cases) {

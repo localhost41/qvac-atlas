@@ -131,7 +131,7 @@ test("prompt failure is fixed-text fatal and does not leak private details", asy
 
 test("a control-bearing canonical cwd fails before prompt without path echo", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "atlas-real-control-"));
-  const controlled = path.join(root, "project\n\u001b");
+  const controlled = path.join(root, "project\u009b");
   const errors: string[] = [];
   let prompted = false;
   try {

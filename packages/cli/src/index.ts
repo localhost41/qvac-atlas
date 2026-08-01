@@ -54,7 +54,7 @@ function validFixturePath(value: unknown): value is string {
     typeof value === "string" &&
     value.length > 0 &&
     value.length <= 4_096 &&
-    !/[\x00-\x1f\x7f]/u.test(value)
+    !/[\x00-\x1f\x7f-\x9f]/u.test(value)
   );
 }
 
