@@ -3,7 +3,12 @@
 Date: 2026-08-01
 
 Implementation candidate reviewed:
-`4a711ce6fdc670b46460e05d8887f9c9a0bbde73`
+`605eb23c7b25415d52f9ac60d121a6be43adee60`
+
+The local release-line head may be the documentation-only descendant that contains
+this completed record. No functional change after the implementation candidate is
+covered by this verdict; the host operator must record and verify the exact final
+`main` head before any external action.
 
 Verdict: **Local launch mechanics complete for a fixture-only `0.1.0` developer
 preview. External publication remains on explicit human, legal, identity, host,
@@ -91,6 +96,21 @@ packaging.
 The same remediation also upgraded vulnerable AJV, Astro, and Sharp dependency
 paths. The full dependency audit, focused regression tests, complete readiness run,
 deterministic package audit, and clean-room run then passed.
+
+## Final independent re-review
+
+- Architecture/security returned **PASS** on the exact implementation candidate.
+  It verified mutually exclusive ownership states and confirmed that the accepted
+  administrator-bypass and newest-check host controls were byte-identical after the
+  last delta.
+- Operations/release returned **PASS** on the exact implementation candidate. It
+  exercised all-placeholder preparation, all-concrete launch, partial-role,
+  repeated-occurrence mixed, and remaining-placeholder host-verification cases.
+- Both passes were read-only Sol xhigh reviews. Focused host/readiness tests passed
+  14/14, `git diff --check` passed, and the candidate worktree remained clean.
+- A final no-local clone of the exact implementation candidate repeated the offline
+  frozen install, all 471 tests, deterministic package build/audit, digest match,
+  and clean-tree check.
 
 ## Direct-Mac reviewer handoff
 

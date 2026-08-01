@@ -95,7 +95,7 @@ performing an unauthorized external publication.
 ## Completion record
 
 All locally executable ATLAS-034A–D work is complete. The implementation candidate
-`4a711ce6fdc670b46460e05d8887f9c9a0bbde73` passed a frozen offline clean-room
+`605eb23c7b25415d52f9ac60d121a6be43adee60` passed a frozen offline clean-room
 install, the complete readiness suite, deterministic package recreation and audit,
 dependency audit, static-site tests, responsive visual inspection, and independent
 architecture/security and operations/release review after remediation. The
