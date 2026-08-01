@@ -16,6 +16,8 @@ CLI, catalog, report-schema, profile-approval, or claim-producing path.
 - the minimum `packages/qvac-resolver` launch hook and tests needed to send a second
   bootstrap inside its existing kill/reap failure envelope
 - architecture documentation for these boundaries and the canonical workspace lock
+- the narrow root check-order correction required for a clean clone with no
+  generated workspace `dist` directories
 
 Do not export the existing model-artifact `./internal` surface. Do not edit probe,
 CLI, schema, reports, catalog, candidates, profile allowlists, or CI. Do not install
