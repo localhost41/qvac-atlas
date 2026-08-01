@@ -247,12 +247,13 @@ children settle.
 
 ## Release gate
 
-All code is implemented and synthetic-tested, but the shipped `main()` passes
-`realModeEnabled: false`. `runCli` may accept an injected true gate only in
-relative tests. While disabled, `probe --real` refuses before project, artifact,
-network, or QVAC effects with a fixed explanation that physical ATLAS-013 is
-required. Do not add an environment variable, config file, hidden flag, or exported
-gate setter.
+All code is implemented and synthetic-tested, but the shipped executable passes a
+literal false gate to the private `dispatchCli` composition seam. Only relative
+tests may inject true into `dispatchCli`; the public `runCli` remains fixture-only
+and exposes no real-mode gate. While disabled, `probe --real` refuses before
+project, artifact, network, or QVAC effects with a fixed explanation that physical
+ATLAS-013 is required. Do not add an environment variable, config file, hidden
+flag, or exported gate setter.
 
 ATLAS-013 on a suitable volunteer Node 22/macOS machine owns the real model fetch,
 hash-verified QVAC lifecycle, privacy review, and the separate decision to enable

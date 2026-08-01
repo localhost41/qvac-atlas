@@ -8,8 +8,8 @@ Updated: 2026-08-01
 - V1 scope, provisional contract, non-goals, decision log, task board, and worker protocol exist.
 - The protected release line is `main`; current milestone integration occurs on `integration`.
 - The dormant executor, hostile-protocol matrix, private-artifact foundation,
-  verified-artifact bridge, contained acquisition, and genuine candidate pipeline
-  are integrated through ATLAS-021B.
+  verified-artifact bridge, contained acquisition, genuine candidate pipeline, and
+  private hard-gated CLI composition are integrated through ATLAS-021C.
 - The complete workspace passes lint, typecheck, the full package test suite,
   five runtime isolation tests, static build, strict schema compilation,
   deterministic catalog regeneration, and a frozen-lockfile install.
