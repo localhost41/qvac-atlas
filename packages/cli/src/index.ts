@@ -7,8 +7,6 @@ import {
   type ProbeRunResult,
 } from "@qvac-atlas/probe";
 
-import { LocalMockProbeAdapter, type ProbeAdapter } from "./mock-adapter.js";
-
 const SCENARIOS = new Set<FixtureScenario>([
   "success",
   "missing-qvac",
@@ -32,14 +30,29 @@ function yes(value: string): boolean {
   return /^(?:y|yes)$/i.test(value.trim());
 }
 
-function usage(): string {
-  return "Usage: qvac-atlas probe --fixture <success|missing-qvac|worker-crash|timeout> --output <path> [--project <path>]\n       qvac-atlas probe --real --output <path>";
+export function usage(): string {
+  return [
+    "QVAC Atlas creates a local, sanitized report and uploads nothing.",
+    "",
+    "Usage:",
+    "  qvac-atlas probe --fixture <success|missing-qvac|worker-crash|timeout> --output <path> [--project <path>]",
+    "  qvac-atlas probe --real --output <path>",
+    "",
+    "This build accepts synthetic fixture scenarios only.",
+    "Real execution requires the ATLAS-013 physical-device/privacy gate and a separate reviewed activation decision.",
+  ].join("\n");
 }
 
-function parseArgs(args: string[], cwd: string): ProbeOptions | null {
+interface ParsedFixtureArguments {
+  output: string;
+  project: string;
+  scenario: FixtureScenario;
+}
+
+function parseArgs(args: string[]): ParsedFixtureArguments | null {
   if (args[0] !== "probe") return null;
   let output: string | undefined;
-  let project = cwd;
+  let project = ".";
   let scenario: FixtureScenario | undefined;
   for (let index = 1; index < args.length; index += 2) {
     const flag = args[index];
@@ -52,31 +65,32 @@ function parseArgs(args: string[], cwd: string): ProbeOptions | null {
     else return null;
   }
   if (output === undefined || scenario === undefined) return null;
-  return {
-    projectRoot: path.resolve(cwd, project),
-    outputPath: path.resolve(cwd, output),
-    scenario,
-  };
+  return { output, project, scenario };
 }
 
 export async function runCli(
   args: string[],
   dependencies: CliDependencies,
 ): Promise<number> {
-  let options: ProbeOptions | null;
+  const parsed = parseArgs(args);
+  if (parsed === null) {
+    dependencies.stderr(`${usage()}\n`);
+    return 2;
+  }
+
+  let options: ProbeOptions;
   try {
-    options = parseArgs(args, dependencies.cwd());
+    const cwd = dependencies.cwd();
+    options = {
+      projectRoot: path.resolve(cwd, parsed.project),
+      outputPath: path.resolve(cwd, parsed.output),
+      scenario: parsed.scenario,
+    };
   } catch {
     dependencies.stderr(
       "QVAC Atlas stopped safely before completion. No report was uploaded; check the chosen local destination and try again.\n",
     );
     return 1;
-  }
-  if (options === null) {
-    dependencies.stderr(
-      `${usage()}\nReal QVAC execution remains disabled until the audited SDK resolver is bound to a reviewed executor and passes the device gate.\n`,
-    );
-    return 2;
   }
   if (!dependencies.interactive) {
     dependencies.stderr(
@@ -130,15 +144,3 @@ export async function runCli(
   dependencies.stdout("No report was written. Nothing was uploaded.\n");
   return result.status === "refused" ? 2 : 0;
 }
-
-export function renderFixtureResult(adapter: ProbeAdapter): string {
-  const fixture = adapter.runFixture();
-  return [
-    "QVAC Atlas CLI scaffold",
-    `Fixture status: ${fixture.label}`,
-    `Scenario: ${fixture.scenario}`,
-    "No system inspection, QVAC execution, report validation, or upload occurred.",
-  ].join("\n");
-}
-
-export { LocalMockProbeAdapter };

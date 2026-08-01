@@ -1,4 +1,4 @@
-import { runCli, type CliDependencies } from "./index.js";
+import { runCli, usage, type CliDependencies } from "./index.js";
 
 interface RealModule {
   runEnabledRealCli(
@@ -42,6 +42,15 @@ function realUsage(): string {
   return "Usage: qvac-atlas probe --real --output <path>\n";
 }
 
+function isHelp(args: readonly string[]): boolean {
+  return (
+    (args.length === 1 && ["--help", "-h"].includes(args[0] ?? "")) ||
+    (args.length === 2 &&
+      args[0] === "probe" &&
+      ["--help", "-h"].includes(args[1] ?? ""))
+  );
+}
+
 function hasRealFlagIntent(args: readonly string[]): boolean {
   if (args[0] !== "probe") return false;
   for (let index = 1; index < args.length; index += 2) {
@@ -56,6 +65,10 @@ export async function dispatchCli(
   dependencies: InternalCliDependencies,
   realModeEnabled: boolean,
 ): Promise<number> {
+  if (isHelp(args)) {
+    dependencies.stdout(`${usage()}\n`);
+    return 0;
+  }
   const real = exactReal(args);
   if (real === null) {
     if (hasRealFlagIntent(args)) {
@@ -75,7 +88,7 @@ export async function dispatchCli(
   }
   if (!realModeEnabled) {
     dependencies.stderr(
-      "Real QVAC execution is disabled until the ATLAS-013 physical-device and privacy gate passes.\n",
+      "Real QVAC execution is disabled in this build. Activation requires the ATLAS-013 physical-device/privacy gate and a separate reviewed activation decision.\n",
     );
     return 2;
   }

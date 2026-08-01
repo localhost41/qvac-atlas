@@ -7,8 +7,9 @@ export type FixtureScenario =
 
 export interface RunnerExecutor {
   /**
-   * Future production executors will be preconfigured with an ATLAS-015 audited
-   * SDK grant. Structured IPC must never contain or accept an SDK path.
+   * The dormant production executor is preconfigured with audited opaque SDK and
+   * model grants. Structured child-to-parent IPC never contains or accepts paths;
+   * the shipped CLI gate remains hardcoded false pending physical review.
    */
   execute(): Promise<readonly unknown[]>;
 }

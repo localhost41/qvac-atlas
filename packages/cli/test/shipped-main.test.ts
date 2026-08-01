@@ -37,7 +37,8 @@ test("built main hardcodes false and ignores env, config, stdin, and hidden flag
     );
     assert.equal(exact.status, 2);
     assert.equal(exact.stdout, "");
-    assert.match(exact.stderr, /disabled until the ATLAS-013/);
+    assert.match(exact.stderr, /requires the ATLAS-013/);
+    assert.match(exact.stderr, /separate reviewed activation decision/);
     assert.deepEqual(await readdir(root), [".qvac-atlas.json"]);
 
     const hidden = spawnSync(
@@ -65,7 +66,7 @@ test("built main hardcodes false and ignores env, config, stdin, and hidden flag
       { cwd: root, encoding: "utf8", env: process.env },
     );
     assert.equal(linked.status, 2);
-    assert.match(linked.stderr, /disabled until the ATLAS-013/);
+    assert.match(linked.stderr, /requires the ATLAS-013/);
     assert.equal((await readdir(root)).includes("linked-report.json"), false);
 
     if (process.platform === "darwin") {
@@ -79,7 +80,7 @@ test("built main hardcodes false and ignores env, config, stdin, and hidden flag
           { cwd: root, encoding: "utf8", env: process.env },
         );
         assert.equal(aliased.status, 2);
-        assert.match(aliased.stderr, /disabled until the ATLAS-013/);
+        assert.match(aliased.stderr, /requires the ATLAS-013/);
         assert.equal(
           (await readdir(root)).includes("aliased-report.json"),
           false,

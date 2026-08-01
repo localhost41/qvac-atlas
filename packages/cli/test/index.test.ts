@@ -1,19 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { LocalMockProbeAdapter } from "../src/mock-adapter.js";
-import {
-  renderFixtureResult,
-  runCli,
-  type CliDependencies,
-} from "../src/index.js";
-
-test("fixture output cannot be mistaken for a probe report", () => {
-  const output = renderFixtureResult(new LocalMockProbeAdapter());
-
-  assert.match(output, /NOT A REAL QVAC REPORT/);
-  assert.match(output, /No system inspection/);
-});
+import { runCli, type CliDependencies } from "../src/index.js";
 
 test("noninteractive probe refuses before invoking the probe or writing", async () => {
   let invoked = false;
@@ -40,11 +28,15 @@ test("noninteractive probe refuses before invoking the probe or writing", async 
   assert.match(errors.join(""), /refuses noninteractive probing/);
 });
 
-test("real execution is unavailable without an explicit fixture scenario", async () => {
+test("invalid fixture syntax refuses before reading cwd or invoking effects", async () => {
   const errors: string[] = [];
+  let readCwd = false;
   const exit = await runCli(["probe", "--output", "report.json"], {
     interactive: true,
-    cwd: () => "/fixture",
+    cwd: () => {
+      readCwd = true;
+      throw new Error("must not read cwd");
+    },
     ask: async () => "yes",
     stdout: () => {},
     stderr: (value) => errors.push(value),
@@ -53,7 +45,12 @@ test("real execution is unavailable without an explicit fixture scenario", async
     },
   });
   assert.equal(exit, 2);
-  assert.match(errors.join(""), /Real QVAC execution remains disabled/);
+  assert.equal(readCwd, false);
+  assert.match(
+    errors.join(""),
+    /This build accepts synthetic fixture scenarios only/,
+  );
+  assert.match(errors.join(""), /separate reviewed activation decision/);
 });
 
 test("probe failures do not echo raw errors or local paths", async () => {

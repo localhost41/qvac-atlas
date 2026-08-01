@@ -2,7 +2,7 @@
   "name": "@qvac-atlas/cli",
   "version": "0.0.0",
   "private": true,
-  "description": "QVAC Atlas fixture-driven CLI shell",
+  "description": "Local-only QVAC Atlas report CLI; real execution is release-gated",
   "type": "module",
   "bin": {
     "qvac-atlas": "./dist/bin.js"

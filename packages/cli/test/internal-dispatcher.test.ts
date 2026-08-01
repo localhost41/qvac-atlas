@@ -54,6 +54,24 @@ test("false real gate refuses before every effect", async () => {
   assert.deepEqual(calls, ["stderr"]);
 });
 
+test("help forms succeed on stdout before every effect", async () => {
+  const forms = [["--help"], ["-h"], ["probe", "--help"], ["probe", "-h"]];
+  for (const args of forms) {
+    const calls: string[] = [];
+    const output: string[] = [];
+    const deps = dependencies(calls);
+    deps.stdout = (value) => {
+      calls.push("stdout");
+      output.push(value);
+    };
+    assert.equal(await dispatchCli(args, deps, false), 0);
+    assert.deepEqual(calls, ["stdout"]);
+    assert.match(output.join(""), /^QVAC Atlas creates a local/u);
+    assert.match(output.join(""), /separate reviewed activation decision/);
+    assert.equal(output.join("").includes("resolver is bound"), false);
+  }
+});
+
 test("malformed real intent has no effects beyond fixed usage", async () => {
   const cases = [
     ["probe", "--real"],
