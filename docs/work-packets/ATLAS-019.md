@@ -30,7 +30,10 @@ real cache during development.
   the exact pinned HTTPS source, but no acceptance test may contact the network.
 - Create private directories/files, reject symlinks and non-regular targets, cap
   bytes before overflow, stream SHA-256, require exact size/hash, fsync and publish
-  by same-filesystem atomic rename, and clean partial files on every failure.
+  by a same-filesystem atomic no-clobber operation, and clean partial files on every
+  failure. A hard-link publication followed by removal of the private staging name
+  is acceptable on the POSIX-only V1 boundary when final link count is revalidated
+  as one; overwriting rename is not.
 - Reuse an existing artifact only after descriptor-safe regular-file, containment,
   size, and full-hash validation. Never trust a filename or cached metadata alone.
 - Return only an opaque, single-use verified-artifact capability. Paths and digests
