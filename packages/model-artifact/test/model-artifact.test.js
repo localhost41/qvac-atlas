@@ -806,8 +806,11 @@ test("remains dormant with narrow private consumers and no real network", async 
   const cliManifest = JSON.parse(
     await read(new URL("../../cli/package.json", import.meta.url), "utf8"),
   );
+  assert.equal(cliManifest.name, "qvac-atlas");
+  assert.equal(cliManifest.private, undefined);
+  assert.equal(cliManifest.dependencies, undefined);
   assert.equal(
-    cliManifest.dependencies["@qvac-atlas/model-artifact"],
+    cliManifest.devDependencies["@qvac-atlas/model-artifact"],
     "workspace:*",
   );
   const executorManifest = JSON.parse(

@@ -3,9 +3,11 @@ node_modules/
 dist/
 .astro/
 coverage/
+.artifacts/
+packages/cli/bundle/
+packages/cli/.atlas-bundle-*/
 *.log
 .DS_Store
 .env
 .env.*
 !.env.example
-

@@ -31,14 +31,6 @@ async function json(path) {
   return JSON.parse(await text(path));
 }
 
-async function directoryFiles(path) {
-  const entries = await readdir(new URL(path, root), { withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isFile())
-    .map((entry) => entry.name)
-    .sort();
-}
-
 test("workspace advertises and enforces the exact Node 22 major", async () => {
   for (const path of manifests) {
     const manifest = await json(path);
@@ -247,6 +239,13 @@ test("security, support, release, and dependency policies preserve human gates",
 
 test("release metadata and package-content contract cannot drift", async () => {
   const cli = await json("packages/cli/package.json");
+  const policy = await import(
+    new URL("../packages/cli/scripts/package-policy.mjs", import.meta.url)
+  );
+  const [builder, packer] = await Promise.all([
+    text("packages/cli/scripts/build-bundle.mjs"),
+    text("scripts/package-local.mjs"),
+  ]);
   assert.equal(cli.name, "qvac-atlas");
   assert.equal(cli.version, "0.1.0");
   assert.equal(Object.hasOwn(cli, "private"), false);
@@ -266,16 +265,26 @@ test("release metadata and package-content contract cannot drift", async () => {
     assert.equal(manifest.version, "0.1.0", path);
     assert.equal(manifest.private, true, path);
   }
-  assert.deepEqual(await directoryFiles("packages/cli/bundle/"), [
-    "acquisition-child.js",
+  assert.deepEqual(policy.BUNDLE_FILENAMES, [
     "bin.js",
     "child-runner.js",
+    "acquisition-child.js",
     "recovery-child.js",
   ]);
-  assert.deepEqual(await directoryFiles("packages/cli/schemas/"), [
-    "claim.schema.json",
+  assert.deepEqual(policy.SCHEMA_FILENAMES, [
     "report.schema.json",
+    "claim.schema.json",
   ]);
+  for (const source of [
+    "src/bin.ts",
+    "packages/qvac-executor/src/child-runner.ts",
+    "packages/model-artifact/src/acquisition-child.ts",
+    "packages/model-artifact/src/recovery-child.ts",
+  ]) {
+    assert.match(builder, new RegExp(source.replaceAll("/", "\\/"), "u"));
+  }
+  assert.match(packer, /packages["'], ["']schema["'], ["']schemas/u);
+  assert.match(packer, /await auditPackage\(artifact\)/u);
 });
 
 test("launch preparation cannot activate production evidence or real execution", async () => {

@@ -11,6 +11,8 @@
     "build": "pnpm -r build",
     "check": "pnpm lint && pnpm build && pnpm typecheck && pnpm test:only",
     "lint": "prettier --check \"scripts/**/*.mjs\" package.json pnpm-workspace.yaml && pnpm -r lint",
+    "package:audit": "node scripts/audit-package.mjs",
+    "package:local": "node scripts/package-local.mjs",
     "ready:local": "node scripts/ready-local.mjs",
     "test": "pnpm build && pnpm test:only",
     "test:only": "pnpm -r test && node --test scripts/*.test.mjs spikes/runtime/*.test.mjs",

@@ -1338,7 +1338,7 @@ test("executor package vendors no SDK and implements no downloader or network cl
   }
 });
 
-test("executor is wired only through private CLI composition and remains non-claim", async () => {
+test("executor is wired only through the CLI-private composition and remains non-claim", async () => {
   const packagesRoot = path.dirname(packageRoot);
   const cliManifest = JSON.parse(
     await readFile(path.join(packagesRoot, "cli", "package.json"), "utf8"),
@@ -1351,9 +1351,11 @@ test("executor is wired only through private CLI composition and remains non-cla
     path.join(packagesRoot, "probe", "src", "pipeline.ts"),
     "utf8",
   );
-  assert.equal(cliManifest.private, true);
+  assert.equal(cliManifest.name, "qvac-atlas");
+  assert.equal(cliManifest.private, undefined);
+  assert.equal(cliManifest.dependencies, undefined);
   assert.equal(
-    cliManifest.dependencies?.["@qvac-atlas/qvac-executor"],
+    cliManifest.devDependencies?.["@qvac-atlas/qvac-executor"],
     "workspace:*",
   );
   for (const surface of [cliSource, probePipeline]) {

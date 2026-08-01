@@ -1,26 +1,32 @@
 {
-  "name": "@qvac-atlas/cli",
-  "version": "0.0.0",
-  "private": true,
+  "name": "qvac-atlas",
+  "version": "0.1.0",
   "description": "Local-only QVAC Atlas report CLI; real execution is release-gated",
   "type": "module",
+  "license": "UNLICENSED",
   "bin": {
-    "qvac-atlas": "./dist/bin.js"
+    "qvac-atlas": "./bundle/bin.js"
   },
+  "files": [
+    "bundle",
+    "schemas",
+    "README.md",
+    "NOTICE"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" package.json tsconfig.json",
-    "test": "pnpm --filter @qvac-atlas/cli... build && tsx --test test/**/*.test.ts",
-    "typecheck": "pnpm --filter @qvac-atlas/cli... build && tsc --noEmit --project tsconfig.json"
+    "build:bundle": "node scripts/build-bundle.mjs",
+    "lint": "prettier --check \"scripts/**/*.mjs\" \"src/**/*.ts\" \"test/**/*.ts\" README.md package.json tsconfig.json",
+    "test": "pnpm --filter qvac-atlas... build && tsx --test test/**/*.test.ts",
+    "typecheck": "pnpm --filter qvac-atlas... build && tsc --noEmit --project tsconfig.json"
   },
-  "dependencies": {
+  "devDependencies": {
     "@qvac-atlas/model-artifact": "workspace:*",
     "@qvac-atlas/probe": "workspace:*",
     "@qvac-atlas/qvac-executor": "workspace:*",
-    "@qvac-atlas/qvac-resolver": "workspace:*"
-  },
-  "devDependencies": {
+    "@qvac-atlas/qvac-resolver": "workspace:*",
     "@types/node": "^22.0.0",
+    "esbuild": "0.25.12",
     "tsx": "^4.20.5"
   },
   "engines": {
