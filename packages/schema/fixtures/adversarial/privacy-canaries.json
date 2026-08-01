@@ -858,5 +858,25 @@
     "name": "secret keyboard followed by backup key backup assignment",
     "value": "SECRET_KEYBOARD_BACKUPKEYBACKUP=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "private common key path assignment",
+    "value": "PRIVATE_COMMONKEYPATH=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "API common key value assignment",
+    "value": "API_COMMONKEYVALUE=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "access common key backup assignment",
+    "value": "ACCESS_COMMONKEYBACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "secret keyboard common key path assignment",
+    "value": "SECRET_KEYBOARD_COMMONKEYPATH=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]

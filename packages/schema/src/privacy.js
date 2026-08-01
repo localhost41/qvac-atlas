@@ -266,9 +266,7 @@ function hasCompactSensitiveKey(segment) {
     while (keyIndex !== -1) {
       const bridge = segment.slice(prefixEnd, keyIndex);
       const tail = segment.slice(keyIndex + 3);
-      const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
-        bridge.endsWith(stem),
-      );
+      const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.includes(bridge);
       if (!ordinaryKeyWord && !SAFE_KEY_WORD_PREFIX.test(`KEY${tail}`))
         return true;
       keyIndex = segment.indexOf("KEY", keyIndex + 3);
@@ -281,11 +279,8 @@ function isSensitiveKeySegment(segment) {
   let keyIndex = segment.indexOf("KEY");
   while (keyIndex !== -1) {
     const bridge = segment.slice(0, keyIndex);
-    const safePrefixWord =
-      keyIndex === 0 && SAFE_KEY_WORD_PREFIX.test(segment);
-    const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.some((stem) =>
-      bridge.endsWith(stem),
-    );
+    const safePrefixWord = SAFE_KEY_WORD_PREFIX.test(segment.slice(keyIndex));
+    const ordinaryKeyWord = SAFE_KEY_ENDING_STEMS.includes(bridge);
     if (!safePrefixWord && !ordinaryKeyWord) return true;
     keyIndex = segment.indexOf("KEY", keyIndex + 3);
   }
