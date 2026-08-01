@@ -27,8 +27,8 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-011: contribution admission, pull-request, and read-only CI workflows are
   integrated.
 - ATLAS-012: independent adversarial reviews of the integrated boundaries are active.
-- ATLAS-012A/B: the first review's SDK-child handoff and catalog filesystem/path
-  findings are in isolated remediation branches.
+- ATLAS-012A/B/C: the reviews' SDK-child handoff, catalog filesystem/path, and
+  claim-evidence/privacy findings are in isolated remediation branches.
 - ATLAS-015: the exact project-local SDK resolver and opaque child-bootstrap grant
   are integrated; no production user command consumes the grant yet.
 - ATLAS-016: real executor binding is queued after the adversarial findings are
