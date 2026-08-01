@@ -378,5 +378,40 @@
     "name": "plural wireless identifier assignment",
     "value": "SSIDS=secretvalue_",
     "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "compact plural API key assignment",
+    "value": "APIKEYS_BACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural auth assignment",
+    "value": "AUTHS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural environment abbreviation assignment",
+    "value": "ENVS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "plural home assignment",
+    "value": "HOMES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "compact plural full-log assignment",
+    "value": "FULLLOGS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "compact plural machine-ID assignment",
+    "value": "MACHINEIDS=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "compact plural shell-history assignment",
+    "value": "SHELLHISTORIES=secretvalue_",
+    "expected_rule": "sensitive-assignment"
   }
 ]
