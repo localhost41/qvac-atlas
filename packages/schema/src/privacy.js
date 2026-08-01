@@ -15,7 +15,7 @@ const CONTENT_RULES = [
   ],
   [
     "known-token",
-    /(?<![A-Za-z0-9])(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})(?![A-Za-z0-9])/,
+    /(?<![A-Za-z0-9])(?:gh[opusr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[0-9A-Z]{16})(?![A-Za-z0-9])/,
   ],
   [
     "credential-url",
@@ -32,7 +32,7 @@ const CONTENT_RULES = [
   ],
   [
     "mac-address",
-    /(?<![A-Za-z0-9])(?<![0-9A-F]{2}[:-])(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}(?![A-Za-z0-9]|[:-][0-9A-F]{2})/i,
+    /(?:(?<![A-Za-z0-9])(?<![0-9A-F]{2}[:-])(?:[0-9A-F]{2}[:-]){5}[0-9A-F]{2}(?![A-Za-z0-9]|[:-][0-9A-F]{2})|(?<![A-Za-z0-9])(?<![0-9A-F]{4}\.)(?:[0-9A-F]{4}\.){2}[0-9A-F]{4}(?![A-Za-z0-9]|\.[0-9A-F]{4}))/i,
   ],
   [
     "stable-identifier",
@@ -42,11 +42,22 @@ const CONTENT_RULES = [
     "ipv4-address",
     /(?<![A-Za-z0-9.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![A-Za-z0-9.])/,
   ],
-  [
-    "sensitive-assignment",
-    /(?<![A-Za-z0-9_])(?!_*NOT_TOKEN\s*=)_*[A-Za-z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|AUTHORIZATION)\s*=\s*\S+/i,
-  ],
 ];
+
+// Report strings are schema-bounded to 1024 characters. Capture only the name and
+// the first value character so findings can never reflect the assigned value.
+const ASSIGNMENT_CANDIDATE =
+  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{1,1024})[ \t]*=[ \t]*\S/gi;
+const SENSITIVE_ASSIGNMENT_SEGMENTS = new Set([
+  "APIKEY",
+  "AUTHORIZATION",
+  "CREDENTIAL",
+  "CREDENTIALS",
+  "PASSWORD",
+  "SECRET",
+  "TOKEN",
+]);
+const SENSITIVE_KEY_PREFIXES = new Set(["ACCESS", "API", "PRIVATE"]);
 
 const EXACT_ENTROPY_EXEMPT_PATHS = new Set([
   "/report_id",
@@ -86,6 +97,29 @@ function hasHighEntropySecret(value, pointer) {
     return false;
   const candidates = value.match(/[A-Za-z0-9+/=_-]{32,}/g) ?? [];
   return candidates.some((candidate) => shannonEntropy(candidate) >= 4.25);
+}
+
+function hasSensitiveAssignment(value) {
+  for (const match of value.matchAll(ASSIGNMENT_CANDIDATE)) {
+    const name = match[1].replace(/^_+/u, "").toUpperCase();
+    // This deliberate fixture-safe negation is exact; prefixed or suffixed forms
+    // still expose a TOKEN segment and remain sensitive.
+    if (name === "NOT_TOKEN") continue;
+    const segments = name.split("_").filter(Boolean);
+    if (
+      segments.some((segment) => SENSITIVE_ASSIGNMENT_SEGMENTS.has(segment)) ||
+      /(?:API_?KEY|AUTHORIZATION|PASSWORD|SECRET|TOKEN)$/u.test(name)
+    )
+      return true;
+    for (let index = 0; index + 1 < segments.length; index += 1) {
+      if (
+        SENSITIVE_KEY_PREFIXES.has(segments[index]) &&
+        segments[index + 1] === "KEY"
+      )
+        return true;
+    }
+  }
+  return false;
 }
 
 function hasIpv6Address(value) {
@@ -139,6 +173,9 @@ export function scanPrivacy(value) {
 
     for (const [rule, pattern] of CONTENT_RULES) {
       if (pattern.test(current)) findings.push({ path: pointer || "/", rule });
+    }
+    if (hasSensitiveAssignment(current)) {
+      findings.push({ path: pointer || "/", rule: "sensitive-assignment" });
     }
     if (hasIpv6Address(current)) {
       findings.push({ path: pointer || "/", rule: "ipv6-address" });

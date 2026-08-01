@@ -25,6 +25,21 @@
     "expected_rule": "known-token"
   },
   {
+    "name": "AWS temporary access-key identifier",
+    "value": "ASIAIOSFODNN7EXAMPLE",
+    "expected_rule": "known-token"
+  },
+  {
+    "name": "underscore-delimited AWS temporary access-key identifier",
+    "value": "_ASIAIOSFODNN7EXAMPLE_",
+    "expected_rule": "known-token"
+  },
+  {
+    "name": "hyphen-delimited AWS temporary access-key identifier",
+    "value": "-ASIAIOSFODNN7EXAMPLE-",
+    "expected_rule": "known-token"
+  },
+  {
     "name": "POSIX home path",
     "value": "failed at /Users/atlas-fixture/project/model.gguf",
     "expected_rule": "posix-user-path"
@@ -77,6 +92,21 @@
   {
     "name": "underscore-delimited MAC address",
     "value": "_AA:BB:CC:DD:EE:FF_",
+    "expected_rule": "mac-address"
+  },
+  {
+    "name": "Cisco dotted MAC address",
+    "value": "aabb.ccdd.eeff",
+    "expected_rule": "mac-address"
+  },
+  {
+    "name": "underscore-delimited Cisco dotted MAC address",
+    "value": "_aabb.ccdd.eeff_",
+    "expected_rule": "mac-address"
+  },
+  {
+    "name": "hyphen-delimited Cisco dotted MAC address",
+    "value": "-AABB.CCDD.EEFF-",
     "expected_rule": "mac-address"
   },
   {
@@ -177,6 +207,26 @@
   {
     "name": "Hugging Face token assignment",
     "value": "HF_TOKEN=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "AWS secret access-key assignment",
+    "value": "AWS_SECRET_ACCESS_KEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "compact API key assignment",
+    "value": "OPENAI_APIKEY=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "suffixed negated-token assignment",
+    "value": "NOT_TOKEN_BACKUP=secretvalue_",
+    "expected_rule": "sensitive-assignment"
+  },
+  {
+    "name": "AWS access-key identifier assignment",
+    "value": "AWS_ACCESS_KEY_ID=secretvalue_",
     "expected_rule": "sensitive-assignment"
   }
 ]
