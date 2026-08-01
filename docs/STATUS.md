@@ -30,7 +30,8 @@ M1 — Local probe and registry vertical slice.
 - ATLAS-012/A/B/C: independent reviews and the resulting SDK-child, filesystem,
   path, privacy, injection, and claim-evidence remediations are integrated.
 - ATLAS-015: the exact project-local SDK resolver and opaque child-bootstrap grant
-  are integrated; no production user command consumes the grant yet.
+  are integrated; only the CLI-private composition behind the shipped literal-false
+  gate can consume the grant.
 - ATLAS-016: the real-executor architecture is complete.
 - ATLAS-016A/C: the dormant synthetic-SDK executor/supervisor and independent
   adversarial review are integrated. The executor is absent from the public probe
@@ -80,15 +81,17 @@ M1 — Local probe and registry vertical slice.
   `docs/work-packets/ATLAS-013.md`. Execution remains capacity- and
   human-approval-gated: this host has about 1 GiB free, while the protocol requires
   at least 10 GiB of headroom on every relevant volume. No physical run has occurred.
+- ATLAS-023: candidate metadata now truthfully records implemented, contained,
+  dormant consent while retaining runtime-unverified status, candidate version,
+  claim ineligibility, and the empty production allowlist.
 
 ## Next integration gate
 
-ATLAS-021D is accepted and ATLAS-013 now has a bounded physical-run packet. The next
-serialized gate is independent review of that packet and, only with explicit human
-approval on a suitable consenting macOS host, its hash-verified lifecycle and
-privacy review. Production claim admission and user-facing real execution stay
-disabled until that physical gate succeeds and a separate activation decision is
-reviewed.
+ATLAS-021D and the bounded ATLAS-013 physical-run packet are independently accepted.
+The next serialized gate is explicit human approval and, on a suitable consenting
+macOS host, the hash-verified lifecycle and privacy review. Production claim
+admission and user-facing real execution stay disabled until that physical gate
+succeeds and a separate activation decision is reviewed.
 
 ## Known risks
 
