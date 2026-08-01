@@ -6,7 +6,8 @@ Updated: 2026-08-01
 
 - Local Git repository initialized at `/Users/samaroomini/qvac-atlas`.
 - V1 scope, versioned pre-release contract, non-goals, decision log, task board, and worker protocol exist.
-- The protected release line is `main`; current milestone integration occurs on `integration`.
+- The designated release line is `main`; protection remains pending ATLAS-018,
+  while current milestone integration occurs on `integration`.
 - The dormant executor, hostile-protocol matrix, private-artifact foundation,
   verified-artifact bridge, contained acquisition, genuine candidate pipeline, and
   private hard-gated CLI composition are integrated through ATLAS-021C.
