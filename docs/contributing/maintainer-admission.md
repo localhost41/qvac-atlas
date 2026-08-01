@@ -2,15 +2,41 @@
 
 Treat every report pull request as publication of permanent, untrusted data.
 
+## Maintainer-owned first-report admission branch
+
+A report-only contribution cannot pass the bidirectional registry audit, while a
+metadata-only change cannot be merged ahead of its report. That mutual requirement
+is intentional. It must not be weakened for the first report or for a fork that a
+maintainer cannot safely update.
+
+1. Keep the contributor's pull request as the durable record of their deliberate
+   submission and exact report commit. Do not ask them to author `sourceKey` or
+   production-profile metadata.
+2. From the protected release base, create a maintainer-owned admission branch.
+   Transfer the exact report blob from the contributor's named commit without
+   editing its bytes, and verify that its canonical filename and `report_id` still
+   match.
+3. Confirm that the production profile was approved in an earlier, separate
+   change. Establish source independence from review evidence, add exactly one
+   maintainer-controlled `sourceKey`, and rebuild the catalog on the same admission
+   branch.
+4. Open the admission pull request from that maintainer-owned branch and identify
+   the superseded contributor pull request in review metadata, never in the report.
+   The bidirectional report-to-registry checks remain unchanged.
+5. After the latest push, require fresh code-owner approval and the protected exact
+   base/target CI result. The author of the final metadata change does not substitute
+   for the required reviewer. Close the contributor pull request as superseded only
+   after the admission review has preserved its exact submitted blob and intent.
+
 ## Review sequence
 
 1. Confirm the contributor intentionally opened the PR and completed the privacy
    acknowledgement. Never infer consent from a pasted file outside this workflow.
 2. Inspect the exact diff. The PR must add one regular JSON file at
    `reports/v1/sha256-<64 lowercase hex>.json`; it must not alter existing reports.
-3. Run the frozen install, full workspace check, and contribution audit. Privacy
-   errors identify only rules and paths; do not ask the contributor to paste the
-   rejected value into an issue or comment.
+3. Run the frozen install and `pnpm ready:local`, then require protected CI's exact
+   base/target history audit. Privacy errors identify only rules and paths; do not
+   ask the contributor to paste the rejected value into an issue or comment.
 4. Confirm the report matches exactly one already-approved production profile.
    Production profile admission is a separate technical and release gate, never a
    convenience edit in a report PR.

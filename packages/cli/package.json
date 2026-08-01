@@ -20,7 +20,10 @@
     "@qvac-atlas/qvac-resolver": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.20.5"
+  },
+  "engines": {
+    "node": ">=22 <23"
   }
 }

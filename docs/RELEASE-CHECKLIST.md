@@ -8,10 +8,11 @@ hardware, privacy, and repository-trust gates below.
 
 - [ ] Node 22 and the `packageManager`-pinned pnpm version are in use.
 - [ ] `pnpm install --frozen-lockfile` succeeds from a fresh checkout.
-- [ ] `node scripts/validate-contribution.mjs` succeeds.
-- [ ] `pnpm check` succeeds.
-- [ ] `node scripts/build-catalog.mjs` followed by
-      `git diff --exit-code -- apps/site/src/generated/catalog.json` succeeds.
+- [ ] `pnpm ready:local` succeeds after the frozen install; its current-tree audit,
+      full workspace check, deterministic rebuild, generated diff, and cleanliness
+      checks are reviewed.
+- [ ] Exact base/target append-only history is separately proven by protected CI;
+      the local readiness command is not treated as that proof.
 - [ ] The release commit has no unexplained generated or untracked files.
 
 ## Probe and executor gate
@@ -55,11 +56,31 @@ hardware, privacy, and repository-trust gates below.
 - [ ] At least two genuinely independent volunteer sources are reviewed before any
       `reproduced-success` badge is allowed.
 
+## Activation and first production evidence gate
+
+- [ ] The accepted ATLAS-013 record contains a passing, commit-pinned physical
+      verdict and the required human lifecycle and privacy approval.
+- [ ] Immediately before activation work starts, the shipped entry point is
+      rechecked to remain behind the literal hardcoded-false gate; no environment,
+      configuration, input, or hidden flag can enable it.
+- [ ] A production profile is admitted in its own reviewed change only after the
+      model-artifact and physical gates pass; it is not added to make a report pass.
+- [ ] At least one manually submitted genuine report is admitted through the
+      maintainer-owned workflow with exact source metadata and protected CI.
+- [ ] The deterministic rebuild reports a nonempty genuine registry, and the site
+      exposes that genuine evidence without allowing fixtures into claims.
+- [ ] A distinct activation diff, based on the accepted physical, profile, and
+      report commits, is reviewed after the preceding gates. It intentionally
+      changes the shipped gate, preserves all consent and no-upload boundaries, and
+      passes the complete release checks.
+
 ## Repository trust gate
 
 - [ ] The public repository has named, valid code owners for
       `registry/catalog.json`, production profiles, report admission code, workflow
       files, and the code-owner file itself.
+- [ ] Every third-party workflow action is pinned to an authoritatively verified
+      immutable commit SHA; floating major tags are not accepted as release proof.
 - [ ] The protected release branch requires pull requests, current code-owner
       approval after the latest push, passing required checks, and no direct pushes.
 - [ ] Maintainers, not contributors or report content, assign stable source

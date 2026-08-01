@@ -29,14 +29,13 @@ From the repository root, install and verify with the pinned toolchain:
 
 ```text
 pnpm install --frozen-lockfile
-pnpm check
-node scripts/validate-contribution.mjs
-node scripts/build-catalog.mjs
-git diff --exit-code -- apps/site/src/generated/catalog.json
+pnpm ready:local
 ```
 
 Review the final Git diff and unexplained files before proposing a contribution.
-These mechanical checks do not authorize publication or replace human review.
+The readiness command covers only current-tree mechanics. It does not prove exact
+history or any physical, governance, activation, deployment, or release approval
+gate. These mechanical checks do not authorize publication or replace human review.
 
 ## Decide whether to keep or publish a fingerprint
 
@@ -146,6 +145,33 @@ forbidden material reaches review or a public surface:
 6. Re-run schema, privacy, contribution, catalog, site, and Git-diff audits on the
    remediated state. Resume review or publication only after a human maintainer
    confirms the affected surfaces are addressed and credentials are safe.
+
+### Exceptional secret-history remediation
+
+The ordinary append-only CI path intentionally cannot approve deletion or mutation
+of an accepted report, an unrelated rewritten target, or a reset base. That failure
+is a safety control, not permission to add a label, environment variable, workflow
+input, metadata state, or contributor-accessible bypass.
+
+When forbidden secret or identity material requires host-level history remediation:
+
+1. Keep publication, review, catalog generation, and deployment stopped. Assign a
+   named host authority through the repository host's private administrative process
+   and record only the coarse, sanitized incident facts described above.
+2. Rotate or revoke exposed credentials first. Use the host's private artifact and
+   history-removal procedure under that authority; do not publish the value or a
+   destructive command recipe in the repository.
+3. Treat the remediated history as untrusted until maintainers inspect the complete
+   current tree, establish and record one exact trusted baseline commit, run a fresh
+   frozen install, and pass `pnpm ready:local` at that baseline.
+4. Restore required branch protection and code-owner review before accepting any
+   subsequent change. Prove the next candidate with the exact base/target audit from
+   the newly recorded trusted baseline, then require fresh approval after the latest
+   push.
+5. Resume publication only after the named host authority and human privacy reviewer
+   confirm remediation, restored protection, current-tree readiness, and exact
+   history proof. The former history may remain in forks, caches, mirrors, or prior
+   downloads, so remediation is never described as universal erasure.
 
 The maintainer admission sequence remains authoritative for report review; see
 [`maintainer-admission.md`](maintainer-admission.md). The future submission shape

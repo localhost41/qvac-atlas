@@ -47,8 +47,11 @@ QVAC or the candidate model. Atlas does not install QVAC.
 
 ```bash
 pnpm install --frozen-lockfile
-node scripts/validate-contribution.mjs
-pnpm check
-node scripts/build-catalog.mjs
-git diff --exit-code -- apps/site/src/generated/catalog.json
+pnpm ready:local
 ```
+
+The frozen install is a separate fresh-checkout prerequisite. `ready:local` checks
+the current tree, full workspace, deterministic catalog, generated diff, and
+repository cleanliness. It does not prove exact append-only history, physical
+hardware or privacy evidence, repository protection, activation, deployment, or
+release approval.

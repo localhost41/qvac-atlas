@@ -120,3 +120,6 @@ succeeds and a separate activation decision is reviewed.
   not properties CI can derive from contributor JSON. The production allowlist is
   empty, and release remains blocked until the eventual host repository enforces
   maintainer ownership and protected review for that metadata.
+- Workflow actions still use floating major tags. Immutable action pinning remains
+  a release-checklist item because this local repository contains no authoritative
+  commit-SHA evidence from which to pin them without guessing.

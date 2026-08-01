@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@qvac-atlas/probe": "workspace:*",
-    "@types/node": "^24.3.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.9.2"
   },
   "engines": {

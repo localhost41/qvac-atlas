@@ -54,11 +54,14 @@ types.
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm check
-node scripts/validate-contribution.mjs
-node scripts/build-catalog.mjs
-git diff --exit-code -- apps/site/src/generated/catalog.json
+pnpm ready:local
 ```
+
+The frozen install remains a separate fresh-checkout gate. `ready:local` checks
+only the current tree. It deliberately does not prove exact base-to-target report
+history or any physical, repository-governance, activation, deployment, or release
+approval gate. Stage every intended new path before running it; unexplained
+untracked paths fail the cleanliness check.
 
 The contribution audit fails on malformed, private, unlisted, duplicated,
 untracked, symlinked, profile-mismatched, or non-deterministic evidence. Errors name

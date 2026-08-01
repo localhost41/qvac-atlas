@@ -33,8 +33,8 @@ reports/v1/sha256-______________________________________________________________
 
 ```text
 pnpm install --frozen-lockfile
-pnpm check
-node scripts/validate-contribution.mjs
-node scripts/build-catalog.mjs
-git diff --exit-code -- apps/site/src/generated/catalog.json
+pnpm ready:local
 ```
+
+`ready:local` proves current-tree mechanics only. Pull-request CI separately binds
+the exact base and target commits for the append-only history audit.

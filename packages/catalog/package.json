@@ -17,6 +17,6 @@
     "@qvac-atlas/schema": "workspace:*"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22 <23"
   }
 }

@@ -5,14 +5,15 @@
   "description": "Evidence-backed QVAC hardware compatibility registry",
   "packageManager": "pnpm@11.10.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=22 <23"
   },
   "scripts": {
     "build": "pnpm -r build",
     "check": "pnpm lint && pnpm build && pnpm typecheck && pnpm test:only",
-    "lint": "pnpm -r lint",
+    "lint": "prettier --check \"scripts/**/*.mjs\" package.json pnpm-workspace.yaml && pnpm -r lint",
+    "ready:local": "node scripts/ready-local.mjs",
     "test": "pnpm build && pnpm test:only",
-    "test:only": "pnpm -r test && node --test spikes/runtime/*.test.mjs",
+    "test:only": "pnpm -r test && node --test scripts/*.test.mjs spikes/runtime/*.test.mjs",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
