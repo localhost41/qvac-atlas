@@ -18,7 +18,7 @@ const DEFINED_FAILURE_TERMINATIONS = new Map([
 ]);
 
 function profileIdentity(profile) {
-  return `${profile.id}@${profile.version}:${profile.artifact_sha256}`;
+  return `${profile.id}@${profile.version}:${profile.artifact_sha256}:${profile.requested_backend}`;
 }
 
 function hasExactlyOneTrustedProfile(report, standardProfiles) {

@@ -12,6 +12,7 @@
     "reasons": [
       "backend-not-directly-observed",
       "insufficient-evidence",
+      "nonstandard-profile",
       "workload-state-unknown"
     ]
   },
@@ -22,6 +23,7 @@
     "reasons": [
       "backend-not-directly-observed",
       "insufficient-evidence",
+      "nonstandard-profile",
       "qvac-version-unavailable",
       "workload-skipped"
     ]
@@ -40,8 +42,13 @@
   },
   "worker-crash.json": {
     "observation": "failure",
-    "claim": "observed-failure",
+    "claim": "unknown",
     "actual_backend_claim": null,
-    "reasons": ["backend-not-directly-observed", "defined-runtime-failure"]
+    "reasons": [
+      "backend-not-directly-observed",
+      "insufficient-evidence",
+      "nonstandard-profile",
+      "workload-not-completed"
+    ]
   }
 }

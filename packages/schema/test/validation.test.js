@@ -153,6 +153,19 @@ test("unsupported or undiscovered QVAC runtimes remain inconclusive", async () =
   }
 });
 
+test("trusted profile identity includes the requested device", async () => {
+  const report = asProbe(await jsonFixture("success.json"));
+  const mismatchedProfiles = (await standardProfiles()).map((profile) => ({
+    ...profile,
+    requested_backend: "cpu",
+  }));
+  const claim = deriveReportClaim(report, {
+    standardProfiles: mismatchedProfiles,
+  });
+  assert.equal(claim.claim, "unknown");
+  assert.equal(claim.reasons.includes("nonstandard-profile"), true);
+});
+
 test("aggregate claims reuse the V1 evidence boundary", async () => {
   const profiles = await standardProfiles();
   const first = asProbe(await jsonFixture("success.json"));
