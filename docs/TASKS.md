@@ -30,7 +30,11 @@ Updated: 2026-08-01
 | ATLAS-018  | release captain     | Sol + human      | pending          | ATLAS-011, ATLAS-012            | Configure and verify protected maintainer ownership for profile and source-independence metadata           |
 | ATLAS-019  | artifact worker     | Sol              | completed        | ATLAS-016B                      | Dormant consent-capability and private artifact acquisition/validation package; no probe or CLI wiring     |
 | ATLAS-020  | executor worker     | Sol              | completed        | ATLAS-019                       | Bind a consumed verified local-artifact grant to the isolated child, loaded-path check, and post-run hash  |
-| ATLAS-021  | probe/CLI worker    | Sol              | pending          | ATLAS-020                       | Real-mode consent sequence and report pipeline, still claim-ineligible until ATLAS-013                     |
+| ATLAS-021  | release captain     | Sol              | in progress      | ATLAS-020                       | Dormant real-mode activation program; hard-gated and claim-ineligible until ATLAS-013                      |
+| ATLAS-021A | artifact worker     | Sol              | pending          | ATLAS-020                       | Manual redirect authority, crash-recoverable staging, and contained acquisition child                     |
+| ATLAS-021B | probe worker        | Sol              | pending          | ATLAS-021A                      | Genuine candidate report assembly and dependency-inverted real consent/state pipeline                     |
+| ATLAS-021C | CLI worker          | Sol              | pending          | ATLAS-021B                      | Concrete cwd resolver/Doctor/artifact/executor wiring behind a hardcoded false release gate                |
+| ATLAS-021D | quality workers     | Sol + Terra      | pending          | ATLAS-021C                      | Independent activation, containment, privacy, UX, and reproducibility acceptance                           |
 | ATLAS-022  | quality worker      | Terra            | completed        | ATLAS-016A                      | Expanded hostile IPC, cap, ordering, post-terminal, and phase-timeout regression matrix                    |
 
 ## Queue rules

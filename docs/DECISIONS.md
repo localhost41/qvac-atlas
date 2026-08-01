@@ -108,3 +108,25 @@ same model ID, a non-delegated local model, the exact model type, and the exact 
 After unload and close it revalidates the artifact again. Any mismatch is fixed,
 path-free, non-claim-producing evidence. ATLAS-020 adds no consent issuer, CLI,
 probe wiring, report field, profile approval, download, or real model execution.
+
+## D-016 — Real-mode activation is two directly supervised worker waves
+
+ATLAS-021 may add a dormant real-mode composition path, but acquisition and QVAC
+execution do not share a killable coordinator. The root CLI process first owns and
+fully reaps one contained artifact-acquisition process. Only an exact successful
+handoff can mint the expected pinned capability in the parent. The parent then
+immediately converts it to the existing opaque grant and directly supervises the
+QVAC process group. This preserves ATLAS-020 containment and avoids orphaning a
+separately detached QVAC/Bare group if an outer worker dies.
+
+The acquisition approval is one fresh TTY decision bound to the exact candidate,
+fixed cache root, canonical project, audited SDK 0.16 handle, requested GPU
+workload, and session nonce. No raw consent issuer is exported. Acquisition uses a
+bounded manual official-host redirect policy and an exact nonce-owned staging name
+so the parent can attempt descriptor-safe recovery after a hard worker kill without
+scanning or deleting unrelated cache entries.
+
+Real reports use probe provenance and the candidate profile, but production profile
+admission and `claim_eligible` remain disabled. The complete path stays behind a
+hardcoded false release gate until a separate ATLAS-013 physical run and privacy
+review succeed.

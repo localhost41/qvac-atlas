@@ -58,10 +58,10 @@ M1 — Local probe and registry vertical slice.
 
 ## Next integration gate
 
-ATLAS-021 may now design the explicit real-mode disclosure and consent sequence
-that can activate the already-dormant acquisition and execution capabilities from
-the probe/CLI. Production claim admission and user-facing real execution stay
-disabled until a hash-verified real lifecycle succeeds.
+ATLAS-021 is implementing the explicit real-mode disclosure, contained acquisition,
+and local report sequence in four serialized packets. The shipped CLI gate remains
+hardcoded off. Production claim admission and user-facing real execution stay
+disabled until a hash-verified ATLAS-013 lifecycle and privacy review succeed.
 
 ## Known risks
 
