@@ -16,9 +16,13 @@ registry/catalog.json (trusted source metadata and profile allowlists)
 `sourceKey`, source classification, and profile admission live in
 `registry/catalog.json`; they are never accepted from a report. Genuine report
 paths use the cross-platform form `reports/v1/sha256-<64 lowercase hex>.json`,
-which must map exactly to the validated `sha256:<same hex>` report ID. Fixtures are confined to
-`reports/fixtures/` or the schema package's fixture corpus. Path traversal and a
-source-kind/provenance mismatch fail admission.
+which must map exactly to the validated `sha256:<same hex>` report ID. Fixtures are
+confined to `reports/fixtures/` or the schema package's fixture corpus. Source paths
+must be bounded canonical repository-relative POSIX paths. Empty, `.`, `..`,
+backslash, absolute, non-ASCII, and otherwise ambiguous segments fail before
+filesystem access. The canonical final report file must remain beneath the
+canonical physical allowed directory; lexical prefixes alone never grant trust. A
+source-kind/provenance mismatch also fails admission.
 
 Every report passes `validatePublishableReport()` before it reaches presentation.
 That one gate combines strict JSON Schema validation, canonical report identity,
@@ -86,6 +90,26 @@ already-rendered records; there is no network API, analytics, account state, or
 backend. Report fields are interpolated as text and never passed to raw-HTML,
 Markdown, style, or script directives. Detail pages show the exact validated JSON
 as escaped text together with derivation reasons and evidence limitations.
+
+## Filesystem snapshot boundary
+
+Configuration, reports, generated catalog data, and contribution-audit reports are
+read through one opened file descriptor. Atlas rejects a static final-component
+symlink, opens with `O_NOFOLLOW` where the platform exposes it, validates the opened
+descriptor as the same regular file observed during canonical containment checks,
+and caps bytes during the descriptor read rather than trusting a preliminary file
+size. It then verifies descriptor identity, size, modification/change timestamps,
+the current path identity, and canonical containment again. Controlled growth,
+in-place mutation, path replacement, parent escape, and symlink tests exercise
+these failure paths.
+
+This protects the CI/review use case and ensures a path replacement cannot redirect
+the bytes being validated after open. It is not a transactional filesystem
+snapshot. A process with write access could theoretically mutate an inode and
+restore all observable metadata within an extremely narrow window, or exploit a
+filesystem that provides unstable inode/timestamp semantics. Atlas therefore also
+depends on the reviewed Git checkout being quiescent during validation; running the
+catalog against an actively hostile mutable filesystem is outside V1's guarantee.
 
 ## Build command
 

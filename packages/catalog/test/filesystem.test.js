@@ -164,3 +164,62 @@ test("genuine report filenames must map exactly to their report IDs", async () =
     /genuine report filename does not match report ID/,
   );
 });
+
+test("trusted source paths reject ambiguous segments before filesystem access", async () => {
+  const ambiguous = [
+    "packages/schema/fixtures/../fixtures/success.json",
+    "packages/schema/fixtures//success.json",
+    "packages/schema/fixtures/./success.json",
+    "packages\\schema\\fixtures\\success.json",
+  ];
+  for (const sourcePath of ambiguous) {
+    const root = await temporaryRegistry(sourcePath);
+    await assert.rejects(
+      buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+      /trusted source path|bounded regular JSON file/,
+    );
+  }
+});
+
+test("an unknown source kind is rejected before its path is read", async () => {
+  const root = await temporaryRegistry();
+  const invalid = config("private/report.json");
+  invalid.sources[0].kind = "unknown";
+  await writeFile(
+    join(root, "registry", "catalog.json"),
+    JSON.stringify(invalid),
+    "utf8",
+  );
+
+  await assert.rejects(
+    buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+    /source kind is invalid/,
+  );
+});
+
+test(
+  "the canonical allowed fixture directory cannot itself be a symlink",
+  { skip: process.platform === "win32" },
+  async () => {
+    const root = await mkdtemp(join(tmpdir(), "qvac-atlas-area-link-"));
+    const outside = await mkdtemp(join(tmpdir(), "qvac-atlas-area-outside-"));
+    await mkdir(join(root, "registry"), { recursive: true });
+    await mkdir(join(root, "reports"), { recursive: true });
+    await writeFile(
+      join(outside, "success.json"),
+      await fixture("success.json"),
+      "utf8",
+    );
+    await symlink(outside, join(root, "reports", "fixtures"), "dir");
+    await writeFile(
+      join(root, "registry", "catalog.json"),
+      JSON.stringify(config()),
+      "utf8",
+    );
+
+    await assert.rejects(
+      buildCatalogFromFiles({ root, configPath: "registry/catalog.json" }),
+      /report is not a bounded regular JSON file/,
+    );
+  },
+);

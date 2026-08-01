@@ -199,7 +199,7 @@ test(
         trackedPaths: new Set([path]),
         untrackedPaths: [],
       }),
-      /outside the report naming contract|must be a regular file/,
+      /outside the report naming contract|must be a (?:physical )?regular file/,
     );
   },
 );

@@ -1,7 +1,7 @@
-import { lstat, readFile, readdir, realpath } from "node:fs/promises";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { readdir } from "node:fs/promises";
 import { buildCatalogFromFiles, readRegistryConfig } from "./filesystem.js";
 import { serializeCatalog } from "./catalog.js";
+import { canonicalDirectory, readBoundedRegularFile } from "./secure-file.js";
 
 const REPORT_DIRECTORY = "reports/v1";
 const REPORT_NAME = /^sha256-[a-f0-9]{64}\.json$/;
@@ -12,51 +12,25 @@ function fail(message) {
   throw new Error(`Contribution audit failed: ${message}`);
 }
 
-function contained(root, candidate) {
-  const fromRoot = relative(root, candidate);
-  return (
-    fromRoot !== "" &&
-    fromRoot !== ".." &&
-    !fromRoot.startsWith(`..${sep}`) &&
-    !isAbsolute(fromRoot)
-  );
-}
-
-async function checkedDirectory(root, path) {
-  const lexical = resolve(root, path);
-  const [rootPath, info] = await Promise.all([realpath(root), lstat(lexical)]);
-  if (!info.isDirectory() || info.isSymbolicLink())
-    fail("reports/v1 must be a regular directory");
-  const resolved = await realpath(lexical);
-  if (!contained(rootPath, resolved)) fail("reports/v1 escapes the repository");
-  return resolved;
-}
-
-async function checkedFile(rootPath, path, maxBytes, label) {
-  const info = await lstat(path);
-  if (!info.isFile() || info.isSymbolicLink())
-    fail(`${label} must be a regular file`);
-  if (info.size > maxBytes) fail(`${label} exceeds its size limit`);
-  const resolved = await realpath(path);
-  if (!contained(rootPath, resolved)) fail(`${label} escapes the repository`);
-  return readFile(resolved, "utf8");
-}
-
 async function versionedReports(root) {
-  const rootPath = await realpath(root);
-  const directory = await checkedDirectory(root, REPORT_DIRECTORY);
+  const { directoryPath } = await canonicalDirectory({
+    root,
+    relativePath: REPORT_DIRECTORY,
+    label: "reports/v1",
+  });
   const paths = [];
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
+  for (const entry of await readdir(directoryPath, { withFileTypes: true })) {
     if (entry.name === ".gitkeep" && entry.isFile()) continue;
     if (!REPORT_NAME.test(entry.name))
       fail("reports/v1 contains a path outside the report naming contract");
     const reportPath = `${REPORT_DIRECTORY}/${entry.name}`;
-    await checkedFile(
-      rootPath,
-      resolve(directory, entry.name),
-      MAX_REPORT_BYTES,
-      reportPath,
-    );
+    await readBoundedRegularFile({
+      root,
+      relativePath: reportPath,
+      allowedDirectory: REPORT_DIRECTORY,
+      maxBytes: MAX_REPORT_BYTES,
+      label: reportPath,
+    });
     paths.push(reportPath);
   }
   return paths.sort();
@@ -120,13 +94,13 @@ export async function auditContributions({
   ensureTracked(reportPaths, trackedPaths, untrackedPaths);
 
   const catalog = await buildCatalogFromFiles({ root, configPath });
-  const rootPath = await realpath(root);
-  const generated = await checkedFile(
-    rootPath,
-    resolve(root, generatedPath),
-    MAX_CATALOG_BYTES,
-    "generated catalog",
-  );
+  const generated = await readBoundedRegularFile({
+    root,
+    relativePath: generatedPath,
+    allowedDirectory: "apps/site/src/generated",
+    maxBytes: MAX_CATALOG_BYTES,
+    label: "generated catalog",
+  });
   if (generated !== serializeCatalog(catalog))
     fail(
       "deterministic catalog rebuild differs from the checked-in generated catalog",

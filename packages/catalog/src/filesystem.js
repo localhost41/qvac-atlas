@@ -1,55 +1,23 @@
-import { lstat, readFile, realpath } from "node:fs/promises";
-import { isAbsolute, relative, resolve, sep } from "node:path";
 import { buildCatalog } from "./catalog.js";
+import {
+  assertCanonicalRepositoryPath,
+  readBoundedRegularFile,
+} from "./secure-file.js";
 
 const MAX_CONFIG_BYTES = 256 * 1024;
 const MAX_REPORT_BYTES = 256 * 1024;
 
-function safePath(root, candidate) {
-  if (typeof candidate !== "string" || isAbsolute(candidate)) {
-    throw new Error(
-      "Catalog admission failed: report path must be repository-relative",
-    );
-  }
-  const resolved = resolve(root, candidate);
-  const fromRoot = relative(root, resolved);
-  if (
-    fromRoot === "" ||
-    fromRoot === ".." ||
-    fromRoot.startsWith(`..${sep}`) ||
-    isAbsolute(fromRoot)
-  ) {
-    throw new Error(
-      "Catalog admission failed: report path escapes repository root",
-    );
-  }
-  return resolved;
-}
-
-function contained(root, candidate) {
-  const fromRoot = relative(root, candidate);
-  return (
-    fromRoot !== "" &&
-    fromRoot !== ".." &&
-    !fromRoot.startsWith(`..${sep}`) &&
-    !isAbsolute(fromRoot)
-  );
-}
-
-async function readJson(root, path, label, maxBytes) {
+async function readJson(root, path, label, maxBytes, allowedDirectory) {
   try {
-    const lexicalPath = safePath(root, path);
-    const [rootPath, fileInfo] = await Promise.all([
-      realpath(root),
-      lstat(lexicalPath),
-    ]);
-    if (!fileInfo.isFile() || fileInfo.isSymbolicLink())
-      throw new Error("not a regular file");
-    if (fileInfo.size > maxBytes) throw new Error("file exceeds size limit");
-    const resolvedPath = await realpath(lexicalPath);
-    if (!contained(rootPath, resolvedPath))
-      throw new Error("real path escapes repository root");
-    return JSON.parse(await readFile(resolvedPath, "utf8"));
+    return JSON.parse(
+      await readBoundedRegularFile({
+        root,
+        relativePath: path,
+        allowedDirectory,
+        maxBytes,
+        label,
+      }),
+    );
   } catch {
     throw new Error(
       `Catalog admission failed: ${label} is not a bounded regular JSON file`,
@@ -66,6 +34,7 @@ export async function readRegistryConfig({
     configPath,
     "registry configuration",
     MAX_CONFIG_BYTES,
+    "registry",
   );
   if (config?.version !== 1 || !Array.isArray(config.sources)) {
     throw new Error(
@@ -88,9 +57,15 @@ export async function readRegistryConfig({
 }
 
 function validateConfiguredPath(kind, path) {
-  const fixturePath =
-    path.startsWith("packages/schema/fixtures/") ||
-    path.startsWith("reports/fixtures/");
+  if (!["fixture", "genuine"].includes(kind)) {
+    throw new Error("Catalog admission failed: source kind is invalid");
+  }
+  assertCanonicalRepositoryPath(path, "trusted source path");
+  const fixtureDirectory = [
+    "packages/schema/fixtures",
+    "reports/fixtures",
+  ].find((directory) => path.startsWith(`${directory}/`));
+  const fixturePath = fixtureDirectory !== undefined && path.endsWith(".json");
   const genuinePath = /^reports\/v1\/sha256-[a-f0-9]{64}\.json$/.test(path);
   if (
     (kind === "fixture" && !fixturePath) ||
@@ -100,6 +75,7 @@ function validateConfiguredPath(kind, path) {
       "Catalog admission failed: report path is outside its trusted source area",
     );
   }
+  return kind === "genuine" ? "reports/v1" : fixtureDirectory;
 }
 
 export async function buildCatalogFromFiles({ root, configPath }) {
@@ -109,9 +85,7 @@ export async function buildCatalogFromFiles({ root, configPath }) {
   });
 
   const sources = [];
-  for (const metadata of [...config.sources].sort((left, right) =>
-    left.path.localeCompare(right.path),
-  )) {
+  const metadataSources = config.sources.map((metadata) => {
     const metadataKeys = Object.keys(metadata).sort();
     if (
       JSON.stringify(metadataKeys) !==
@@ -121,12 +95,21 @@ export async function buildCatalogFromFiles({ root, configPath }) {
         "Catalog admission failed: source metadata has an unsupported field",
       );
     }
-    validateConfiguredPath(metadata.kind, metadata.path);
+    const allowedDirectory = validateConfiguredPath(
+      metadata.kind,
+      metadata.path,
+    );
+    return { ...metadata, allowedDirectory };
+  });
+  for (const metadata of metadataSources.sort((left, right) =>
+    left.path.localeCompare(right.path),
+  )) {
     const report = await readJson(
       root,
       metadata.path,
       "report",
       MAX_REPORT_BYTES,
+      metadata.allowedDirectory,
     );
     if (metadata.kind === "genuine") {
       const expectedPath = `reports/v1/${report.report_id?.replace(":", "-")}.json`;
