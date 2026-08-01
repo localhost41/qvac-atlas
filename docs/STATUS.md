@@ -76,14 +76,16 @@ M1 — Local probe and registry vertical slice.
   seam through the actual consent pipeline and `0600` output transaction while
   substituting only the QVAC-touching coordinator. Shipped activation remains false.
 - ATLAS-022: the expanded hostile executor-protocol matrix is integrated.
-- ATLAS-013: a real QVAC lifecycle run is capacity-gated because this host has
-  about 1 GiB free while the QVAC dependency graph plus model requires more than
-  4.8 GiB before safety margin.
+- ATLAS-013: the bounded macOS physical-validation protocol is specified in
+  `docs/work-packets/ATLAS-013.md`. Execution remains capacity- and
+  human-approval-gated: this host has about 1 GiB free, while the protocol requires
+  at least 10 GiB of headroom on every relevant volume. No physical run has occurred.
 
 ## Next integration gate
 
-ATLAS-021D is accepted. The next serialized gate is a bounded ATLAS-013 physical-run
-packet and, on a suitable consenting macOS host, a hash-verified lifecycle and
+ATLAS-021D is accepted and ATLAS-013 now has a bounded physical-run packet. The next
+serialized gate is independent review of that packet and, only with explicit human
+approval on a suitable consenting macOS host, its hash-verified lifecycle and
 privacy review. Production claim admission and user-facing real execution stay
 disabled until that physical gate succeeds and a separate activation decision is
 reviewed.

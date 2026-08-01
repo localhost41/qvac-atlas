@@ -19,7 +19,7 @@ Updated: 2026-08-01
 | ATLAS-012A | resolver worker     | Sol              | completed        | ATLAS-012                       | Close child-listener and bounded cleanup races in the SDK bootstrap handoff                                |
 | ATLAS-012B | catalog worker      | Terra            | completed        | ATLAS-012                       | Descriptor-safe reads, canonical source boundaries, and end-to-end injection coverage                      |
 | ATLAS-012C | schema worker       | Sol              | completed        | ATLAS-012                       | Central V1 claim-evidence and path-free genuine-report gate                                                |
-| ATLAS-013  | real-device gate    | root + volunteer | pending capacity | ATLAS-009                       | Hash-verified Node 22/macOS QVAC lifecycle run                                                             |
+| ATLAS-013  | real-device gate    | root + volunteer | pending capacity | ATLAS-021D                      | Human-approved, commit-pinned Node 22/macOS physical-validation protocol and lifecycle/privacy verdict     |
 | ATLAS-014  | Windows gate        | volunteer        | pending hardware | ATLAS-009                       | Real Windows process containment and lifecycle validation                                                  |
 | ATLAS-015  | resolver worker     | Sol              | completed        | ATLAS-008                       | Fail-closed SDK resolver, opaque grant, and isolated-child bootstrap                                       |
 | ATLAS-016  | architecture worker | Sol              | completed        | ATLAS-009, ATLAS-012, ATLAS-015 | Production-executor architecture and consent-boundary work packet                                          |
