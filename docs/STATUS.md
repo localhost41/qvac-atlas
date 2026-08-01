@@ -10,9 +10,9 @@ Updated: 2026-08-01
 - The dormant executor, hostile-protocol matrix, private-artifact foundation,
   verified-artifact bridge, contained acquisition, and genuine candidate pipeline
   are integrated through ATLAS-021B.
-- The complete workspace passes lint, typecheck, 306 package tests, five runtime
-  isolation tests, static build, strict schema compilation, deterministic catalog
-  regeneration, and a frozen-lockfile install.
+- The complete workspace passes lint, typecheck, the full package test suite,
+  five runtime isolation tests, static build, strict schema compilation,
+  deterministic catalog regeneration, and a frozen-lockfile install.
 - No external repository, package, deployment, upload, or Discord message has been created.
 - The technical-truth verdict is **NARROW**: published QVAC SDK 0.16.0 directly
   exposes actual `cpu|gpu` device class, but not Metal/CUDA/Vulkan backend name.
