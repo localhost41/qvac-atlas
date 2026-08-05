@@ -125,7 +125,7 @@ to perform that promotion.
 ## Activation and rollback
 
 The released CLI keeps `REVIEWED_ANONYMOUS_RELAY_ORIGIN` equal to literal `null`.
-After deployment, an independent reviewer must verify the edge controls, GitHub App
+After deployment, the owner/operator must verify the edge controls, GitHub App
 installation scope, private repository ID/visibility, secret handling, log policy,
 timeouts, health behavior, and a fake-report end-to-end test. Activation is a
 separate source change that pins the exact HTTPS origin in a new package version,

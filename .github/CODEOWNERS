@@ -1,8 +1,8 @@
 # QVAC Atlas ownership
 #
-# @localhost41 holds the primary, evidence, and security operational roles for
-# the fixture-only 0.1.0 launch. Protected Pages deployment separately requires
-# a different named human reviewer and prevents self-review.
+# @localhost41 holds the primary, evidence, security, and release roles. The
+# owner has explicitly chosen an owner-operated launch without a separate
+# independent reviewer; branch integrity and required checks remain protected.
 
 * @localhost41
 

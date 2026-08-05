@@ -228,13 +228,14 @@ test("release controls pin every workflow and refuse unsupported real platforms"
 });
 
 test("repository ownership supports only complete preparation or launch states", async () => {
-  const [codeowners, security, release, bootstrap, protection] =
+  const [codeowners, security, release, bootstrap, protection, decisions] =
     await Promise.all([
       text(".github/CODEOWNERS"),
       text("SECURITY.md"),
       text("docs/RELEASE-PROCESS.md"),
       text("docs/operations/public-host-bootstrap.md"),
       json(".github/branch-protection.json"),
+      text("docs/DECISIONS.md"),
     ]);
   const rows = new Map(
     codeowners
@@ -315,22 +316,8 @@ test("repository ownership supports only complete preparation or launch states",
       },
     ],
   });
-  assert.equal(
-    protection.required_pull_request_reviews?.require_code_owner_reviews,
-    true,
-  );
-  assert.equal(
-    protection.required_pull_request_reviews?.require_last_push_approval,
-    true,
-  );
-  assert.equal(
-    protection.required_pull_request_reviews?.dismiss_stale_reviews,
-    true,
-  );
-  assert.deepEqual(
-    protection.required_pull_request_reviews?.bypass_pull_request_allowances,
-    { users: [], teams: [], apps: [] },
-  );
+  assert.equal(protection.required_pull_request_reviews, null);
+  assert.match(decisions, /D-021/u);
   assert.equal(protection.enforce_admins, true);
   assert.equal(protection.required_conversation_resolution, true);
   assert.equal(protection.allow_force_pushes, false);
