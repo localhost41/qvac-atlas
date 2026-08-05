@@ -8,9 +8,15 @@ import {
   type RealProbeInteraction,
   type RealProbeRunResult,
 } from "@qvac-atlas/probe/real";
+import {
+  admitExactSubmission,
+  SubmissionClientError,
+  type AnonymousSubmissionClient,
+} from "@qvac-atlas/submission";
 
 import { ProductionRealCoordinator } from "./real-coordinator.js";
 import { BoundRealOutput } from "./real-output.js";
+import { configuredAnonymousSubmissionClient } from "./submission-policy.js";
 
 export interface EnabledRealCliRequest {
   readonly cwd: string;
@@ -28,6 +34,7 @@ export interface EnabledRealCliOverrides {
   createCoordinator?(projectRoot: string): RealCoordinatorBoundary;
   createOutput?(outputPath: string): RealOutputBoundary;
   runPipeline?: typeof runRealProbePipeline;
+  submissionClient?: AnonymousSubmissionClient | null;
 }
 
 function yes(value: string): boolean {
@@ -73,7 +80,8 @@ function interaction(
           `Collection: ${view.collection}.`,
           "The selected project code executes in bounded isolation, not a sandbox.",
           "The candidate is nonstandard and cannot create a compatibility claim.",
-          "Atlas installs nothing, uploads nothing, and performs approved cache effects before report preview.",
+          "Atlas installs nothing and performs approved cache effects before report preview.",
+          "Nothing is submitted unless you separately approve anonymous queueing after the final report is written.",
           "",
         ].join("\n"),
       );
@@ -105,7 +113,7 @@ function interaction(
     },
     choosePublication: async (warning) => {
       io.stdout(
-        `Publication warning: claim eligible=${warning.claimEligible}; currently admissible=${warning.currentlyAdmissible}; no upload occurs.\n`,
+        `Publication warning: claim eligible=${warning.claimEligible}; currently admissible=${warning.currentlyAdmissible}; no upload occurs until a separate post-write choice.\n`,
       );
       return decide(
         "Mark this local report as intended for later public submission [y/N] ",
@@ -116,17 +124,11 @@ function interaction(
   };
 }
 
-function renderResult(
+function renderNonWrittenResult(
   result: RealProbeRunResult,
   outputPath: string,
   io: EnabledRealCliIo,
 ): number {
-  if (result.status === "written") {
-    io.stdout(
-      `Candidate report written locally to ${outputPath}. Nothing was uploaded.\n`,
-    );
-    return 0;
-  }
   if (result.status === "aborted") {
     io.stderr("QVAC Atlas was cancelled. No report was written or uploaded.\n");
     return 130;
@@ -142,6 +144,81 @@ function renderResult(
     "QVAC Atlas could not complete the local report. Nothing was uploaded.\n",
   );
   return 1;
+}
+
+async function handleWrittenResult(
+  result: { readonly exactJson: string },
+  outputPath: string,
+  signal: AbortSignal,
+  io: EnabledRealCliIo,
+  client: AnonymousSubmissionClient | null,
+): Promise<number> {
+  io.stdout(`Candidate report written locally to ${outputPath}.\n`);
+  let submission;
+  try {
+    submission = admitExactSubmission(result.exactJson);
+  } catch {
+    io.stdout(
+      "This report is not eligible for anonymous queueing and remains local. Nothing was submitted.\n",
+    );
+    return 0;
+  }
+  if (client === null) {
+    io.stdout(
+      "Anonymous submission is disabled in this build; the report remains local. Nothing was submitted.\n",
+    );
+    return 0;
+  }
+  io.stdout(
+    [
+      "Anonymous submission disclosure",
+      `Destination: ${client.origin}`,
+      "Payload: only the exact final JSON previewed above and written locally.",
+      "The relay stores it in a private GitHub review queue; queueing is not public publication or identity verification.",
+      "Accountless is not network-anonymous: the hosting provider processes connection metadata, and GitHub records relay timing.",
+      "Atlas performs one bounded request, keeps no application access log, and never retries in the background.",
+      "Rejected queue refs are scheduled for deletion within 30 days, but provider backups or internal retention may persist.",
+      "A maintainer may later publish the report as unverified-anonymous evidence after review.",
+      "",
+    ].join("\n"),
+  );
+  let approved = false;
+  try {
+    approved = yes(
+      await io.ask(
+        `Submit this exact report accountlessly to ${client.origin} [y/N] `,
+        signal,
+      ),
+    );
+  } catch {
+    if (signal.aborted) {
+      io.stderr(
+        "The local report remains saved. Anonymous submission was cancelled before a request started.\n",
+      );
+      return 130;
+    }
+  }
+  if (!approved) {
+    io.stdout("The report remains local. Nothing was submitted.\n");
+    return 0;
+  }
+  try {
+    const receipt = await client.submit(submission.exactJson, signal);
+    io.stdout(
+      `Anonymous report ${receipt.submissionId} is ${receipt.status} in the private review queue. Maintainer review is required before publication.\n`,
+    );
+    return 0;
+  } catch (error) {
+    const cancelled =
+      signal.aborted ||
+      (error instanceof SubmissionClientError && error.code === "cancelled");
+    io.stderr(
+      cancelled
+        ? "The local report remains saved. Submission was cancelled; its queue outcome may be unknown. Atlas did not retry.\n"
+        : "The local report remains saved. Anonymous submission did not complete; its queue outcome may be unknown. Atlas did not retry.\n",
+    );
+    return cancelled ? 130 : 1;
+  }
 }
 
 /** Relative-only enabled seam; shipped main never calls it while the gate is false. */
@@ -168,7 +245,20 @@ export async function runEnabledRealCli(
         output,
       },
     );
-    return renderResult(result, outputPath, io);
+    if (result.status === "written") {
+      const submissionClient =
+        overrides.submissionClient === undefined
+          ? configuredAnonymousSubmissionClient()
+          : overrides.submissionClient;
+      return await handleWrittenResult(
+        result,
+        outputPath,
+        request.signal,
+        io,
+        submissionClient,
+      );
+    }
+    return renderNonWrittenResult(result, outputPath, io);
   } catch {
     if (request.signal.aborted) {
       io.stderr(

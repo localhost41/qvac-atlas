@@ -91,6 +91,7 @@ async function writeGenerated(root) {
 
 function metadata(report, path = reportPath(report)) {
   return {
+    independence: "independent",
     kind: "genuine",
     lifecycle: { state: "active" },
     path,

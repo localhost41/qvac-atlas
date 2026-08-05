@@ -1,14 +1,12 @@
 # Privacy, removal, and incident guidance
 
-Genuine QVAC Atlas report submissions are currently closed. The production profile
-allowlist is empty, and the shipped CLI keeps real QVAC execution disabled. Code,
-documentation, and fixture-only test contributions remain open. Fixture reports are
-demonstration data and must never be submitted as hardware compatibility evidence.
+The accountless submission implementation is complete but its source-pinned relay
+origin and shipped real QVAC execution remain disabled pending separate release
+reviews. Fixture reports are demonstration data and can never enter the relay.
 
-This guide explains decisions and cleanup without creating an upload path. Atlas
-never uploads a report, opens an issue, or creates a pull request. A future public
-submission would be a separate action performed deliberately by a contributor after
-the project announces that genuine submissions are open.
+Atlas submits only after final exact preview, a successful local write, a separate
+destination disclosure, and a default-no confirmation. The relay creates a draft
+item in a private GitHub queue; it does not publish to the public registry.
 
 ## Installation and verification prerequisites
 
@@ -53,9 +51,16 @@ proposing it for publication:
    decision so no report file is created.
 5. Do not assume later withdrawal will erase Git history, forks, caches, or copies.
 
-Consent to local collection is not consent to publication. Choosing publication
-intent does not upload anything; Atlas has no upload command or automatic
-submission mechanism.
+Consent to local collection is not consent to publication or transport. Choosing
+publication intent does not submit anything; the later accountless queue question
+is separate. Declining it leaves the report local and makes no request.
+
+The feature is accountless, not network-anonymous. The edge provider processes a
+connection address and timing; GitHub receives the fingerprint-bearing report from
+the relay. Atlas does not forward client network headers or retain an application
+access log. Rejected refs are scheduled for deletion within 30 days, but provider
+backups or internal retention may persist. An accepted public report is durable Git
+history and cannot be promised erased from forks, caches, or copies.
 
 ## Remove a never-submitted local report
 

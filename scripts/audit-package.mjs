@@ -7,7 +7,7 @@ if (args[0] === "--") args.shift();
 
 if (args.length !== 1 || /[\x00-\x1f\x7f-\x9f]/u.test(args[0])) {
   process.stderr.write(
-    "Usage: pnpm package:audit -- <path-to-qvac-atlas-0.1.0.tgz>\n",
+    "Usage: pnpm package:audit -- <path-to-qvac-atlas-0.2.0.tgz>\n",
   );
   process.exitCode = 2;
 } else {

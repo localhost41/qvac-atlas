@@ -1,0 +1,25 @@
+{
+  "name": "@qvac-atlas/submission-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Narrow anonymous ingress for the private QVAC Atlas review queue",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" package.json tsconfig.json",
+    "start": "node dist/bin.js",
+    "test": "pnpm --filter @qvac-atlas/submission... build && pnpm build && tsx --test test/**/*.test.ts",
+    "typecheck": "pnpm --filter @qvac-atlas/submission... build && tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {
+    "@qvac-atlas/submission": "workspace:*"
+  },
+  "devDependencies": {
+    "@qvac-atlas/schema": "workspace:*",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.5"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  }
+}

@@ -1,8 +1,9 @@
 # Report submission guide
 
-> **Genuine report submissions are currently closed.** The production profile
-> allowlist is empty and shipped real mode is disabled. This page documents the
-> future reviewed shape; it is not an invitation to submit fixture output.
+> **The accountless path is built but deployment-gated.** The production profile
+> allowlist, shipped real mode, and reviewed relay origin remain disabled. Fixture
+> output is never eligible. This page documents the exact behavior once those
+> separate release gates are approved.
 
 For the current safe path, use the
 [five-minute fixture-only walkthrough](five-minute-fixture-walkthrough.md). Its
@@ -14,8 +15,18 @@ An Atlas report contains allowlisted hardware and software details rather than a
 name or account field. That combination can still be identifying. A merged report
 is public, durable Git history. Review the complete JSON before submitting it.
 
-Atlas does not provide an upload command, API, telemetry path, or automated issue
-filing. The only V1 submission mechanism is a pull request you create deliberately.
+After the report is previewed and written locally, Atlas may offer one accountless
+submission choice. It names one source-pinned HTTPS relay and sends only the exact
+final JSON if you answer `yes`. `no`, Enter, EOF, cancellation, an ineligible
+profile, or a disabled endpoint makes no request. There is no telemetry, hidden
+upload, background retry, contributor credential, or automatic public publication.
+
+Accountless does not mean network-anonymous. The hosting edge necessarily processes
+connection metadata, and GitHub records the relay's queue activity and timing. The
+Atlas application strips forwarding, cookie, and authorization headers and keeps
+no application access log. Queue items remain private pending review. Maintainers
+schedule rejected refs for deletion within 30 days, but GitHub backups and internal
+retention may persist under the provider's policies.
 
 ## What belongs in the report
 
@@ -45,13 +56,13 @@ before running the audit so Git can prove it is part of the proposed contributio
 
 ## Why the first audit may reject a valid report
 
-Every genuine report needs one trusted source entry in `registry/catalog.json`.
-That entry starts with an active lifecycle and contains a maintainer-owned opaque
-`source:<32 lowercase hex>` key, used only to decide whether reports are
-independent. It never comes from contributor JSON and must not encode a name,
-account, email, organization, PR/report number, or hardware/device identifier.
-Leave lifecycle metadata, source keys, and profile allowlists to maintainers;
-request maintainer review on the draft pull request.
+Every genuine report needs one protected source entry in `registry/catalog.json`.
+An accountless queue report must use `independence: "unverified-anonymous"` and the
+single reserved `source:anonymous-relay` key. Any number of such reports therefore
+counts as at most one source and cannot manufacture an independently reproduced
+claim. A separate, identity-reviewed non-anonymous contribution may instead receive
+a maintainer-owned opaque `source:<32 lowercase hex>` key. Neither value comes from
+the report JSON.
 
 A report must also match exactly one production profile already approved by the
 project. Profile admission is a separate release decision. Maintainers will not add

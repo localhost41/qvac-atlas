@@ -17,9 +17,11 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 2. Atlas explains what it will collect and obtains explicit consent.
 3. Atlas runs official checks and one pinned QVAC workload in an isolated child process.
 4. Atlas creates a local, sanitized, schema-valid JSON report and previews it.
-5. Nothing leaves the machine automatically.
-6. The contributor explicitly submits the report through GitHub.
-7. CI and a human review the report before it becomes searchable on the static site.
+5. Atlas writes the report locally; declining submission sends nothing.
+6. With one separate default-no confirmation, Atlas can submit that exact report
+   anonymously to a private review queue without requiring a GitHub account.
+7. CI and a human review and promote the report before it becomes searchable on
+   the static site.
 
 ## Must ship
 
@@ -30,7 +32,10 @@ Atlas does not claim universal hardware support, future-version compatibility, o
   bundle and the official verifier may execute project configuration.
 - Isolated worker startup and one standardized small-LLM lifecycle profile.
 - Requested and directly observed backend recorded separately.
-- Local preview and JSON output with no automatic upload.
+- Local preview and JSON output, followed only by an explicit anonymous submission
+  choice to one pinned Atlas relay.
+- Private GitHub-backed submission queue with no service database and no automatic
+  public publication.
 - Git-backed reviewed reports.
 - Static site filtered by hardware, OS, QVAC version, backend, and outcome.
 - Evidence and limitations visible for every public claim.
@@ -39,8 +44,9 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 
 - Doctor replacement or generalized troubleshooting suite.
 - Support bundle, repair engine, or large failure knowledge base.
-- Accounts, API server, database, OAuth, or telemetry.
-- Automatic submission, unattended issue filing, or scraping Discord/GitHub.
+- Accounts, database, OAuth, or telemetry.
+- Silent/background submission, unattended public issue filing, automatic public
+  publication, or scraping Discord/GitHub.
 - Leaderboards, scores, recommendations, or broad benchmarking.
 - Multiple models or modalities in V1.
 - Native Android/iOS application or browser probe.

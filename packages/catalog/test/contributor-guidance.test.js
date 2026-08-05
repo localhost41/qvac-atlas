@@ -14,18 +14,20 @@ function prose(text) {
 
 const guidancePath = "docs/contributing/privacy-removal-incidents.md";
 
-test("contributor entry points state that genuine submissions are closed", async () => {
-  const [readme, contributing, registry, shippedMain] = await Promise.all([
-    repositoryText("README.md"),
-    repositoryText("CONTRIBUTING.md"),
-    repositoryText("registry/catalog.json").then(JSON.parse),
-    repositoryText("packages/cli/src/bin.ts"),
-  ]);
+test("contributor entry points state the accountless deployment gates", async () => {
+  const [readme, contributing, registry, shippedMain, relayPolicy] =
+    await Promise.all([
+      repositoryText("README.md"),
+      repositoryText("CONTRIBUTING.md"),
+      repositoryText("registry/catalog.json").then(JSON.parse),
+      repositoryText("packages/cli/src/bin.ts"),
+      repositoryText("packages/cli/src/submission-policy.ts"),
+    ]);
 
-  assert.match(readme, /^## Genuine report submissions are closed$/m);
+  assert.match(readme, /^## Accountless report submission$/m);
   assert.match(
     contributing,
-    /^> \*\*Genuine report submissions are closed\.\*\*/m,
+    /^> \*\*Accountless submission is implemented but deployment-gated\.\*\*/m,
   );
   for (const entryPoint of [readme, contributing]) {
     const content = prose(entryPoint);
@@ -40,6 +42,10 @@ test("contributor entry points state that genuine submissions are closed", async
   assert.equal(registry.version, 2);
   assert.deepEqual(registry.productionProfiles, []);
   assert.match(shippedMain, /\n\s*false,\n\s*\);/u);
+  assert.match(
+    relayPolicy,
+    /REVIEWED_ANONYMOUS_RELAY_ORIGIN: string \| null = null/u,
+  );
 });
 
 test("safety guide contains required decisions, cleanup, and incident controls", async () => {
@@ -62,8 +68,12 @@ test("safety guide contains required decisions, cleanup, and incident controls",
   }
 
   const content = prose(guidance);
-  assert.match(content, /Atlas never uploads a report/i);
-  assert.match(content, /does not upload anything/i);
+  assert.match(content, /separate.*default-no confirmation/i);
+  assert.match(
+    content,
+    /Declining it leaves the report local and makes no request/i,
+  );
+  assert.match(content, /accountless, not network-anonymous/i);
   assert.match(content, /Move to Trash.*Move to Recycle Bin/);
   assert.match(
     content,
@@ -100,6 +110,8 @@ test("safety guide contains required decisions, cleanup, and incident controls",
   assert.match(reportGuide, /\]\(privacy-removal-incidents\.md\)/);
   assert.match(maintainerGuide, /\]\(privacy-removal-incidents\.md\)/);
   assert.match(maintainerGuide, /source:<32 lowercase hex>/);
+  assert.match(maintainerGuide, /source:anonymous-relay/);
+  assert.match(maintainerGuide, /unverified-anonymous/);
   assert.match(
     maintainerGuide,
     /must not be\s+derived from or contain a person's name/,

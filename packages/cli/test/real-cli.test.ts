@@ -1,10 +1,64 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { canonicalize, withReportId } from "@qvac-atlas/schema";
+import {
+  SUBMISSION_PROFILE,
+  type AnonymousSubmissionClient,
+} from "@qvac-atlas/submission";
+
 import { runEnabledRealCli } from "../src/real-cli.js";
+
+async function eligibleExactJson(): Promise<string> {
+  const report = JSON.parse(
+    await readFile(
+      new URL("../../schema/fixtures/success.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  report.consent.publication = true;
+  report.created_at = "2026-08-04T00:00:00.000Z";
+  report.profile = { ...SUBMISSION_PROFILE };
+  report.provenance = { fixture_id: null, kind: "probe" };
+  return `${canonicalize(withReportId(report))}\n`;
+}
+
+function writtenPipeline(exactJson: string) {
+  return async (_options: unknown, dependencies: any) => {
+    await dependencies.interaction.disclosePrivacy({
+      collection: "allowlisted",
+    });
+    assert.equal(await dependencies.interaction.decideFingerprint(), true);
+    await dependencies.interaction.discloseProjectCode({
+      package: "@qvac/sdk",
+      version: "0.16.0",
+      containment: "bounded",
+    });
+    assert.equal(await dependencies.interaction.decideProjectCode(), true);
+    await dependencies.interaction.discloseWorkload({});
+    assert.equal(await dependencies.interaction.decideWorkload(), true);
+    await dependencies.interaction.preview(exactJson, "draft");
+    assert.equal(
+      await dependencies.interaction.choosePublication({
+        claimEligible: false,
+        currentlyAdmissible: false,
+      }),
+      true,
+    );
+    await dependencies.interaction.preview(exactJson, "final");
+    assert.equal(await dependencies.interaction.confirmLocalWrite(), true);
+    await dependencies.output.writeExclusive(exactJson);
+    return {
+      exactJson,
+      history: [],
+      report: JSON.parse(exactJson),
+      status: "written",
+    } as const;
+  };
+}
 
 test("real CLI uses one normalized output for consent and exclusive write", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "atlas-real-cli-"));
@@ -89,7 +143,7 @@ test("real CLI uses one normalized output for consent and exclusive write", asyn
       questions[4],
       `Write the final exact JSON to ${expected} [y/N] `,
     );
-    assert.match(visible.join(""), /Nothing was uploaded/);
+    assert.match(visible.join(""), /Nothing was submitted/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -189,6 +243,158 @@ test("cleanup uncertainty uses neutral fixed text without claiming no local writ
     assert.equal(exit, 1);
     assert.match(errors.join(""), /could not complete/);
     assert.equal(errors.join("").includes("No report was written"), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("anonymous submission is offered only after the exact local write", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "atlas-real-submit-"));
+  const exactJson = await eligibleExactJson();
+  const questions: string[] = [];
+  const events: string[] = [];
+  const submitted: string[] = [];
+  const client: AnonymousSubmissionClient = {
+    origin: "https://relay.example",
+    submit: async (value) => {
+      events.push("submitted");
+      submitted.push(value);
+      return {
+        status: "queued",
+        submissionId: JSON.parse(value).report_id,
+      };
+    },
+  };
+  try {
+    const exit = await runEnabledRealCli(
+      {
+        cwd: root,
+        output: "report.json",
+        signal: new AbortController().signal,
+      },
+      {
+        ask: async (question) => {
+          questions.push(question);
+          return "yes";
+        },
+        stdout: (value) => {
+          if (value.includes("Anonymous submission disclosure"))
+            events.push("disclosed");
+        },
+        stderr: () => {},
+      },
+      {
+        createCoordinator: () => ({}) as never,
+        createOutput: () => ({
+          preflight: async () => true,
+          writeExclusive: async (value: string) => {
+            assert.equal(value, exactJson);
+            events.push("written");
+            return { status: "written" as const };
+          },
+        }),
+        runPipeline: writtenPipeline(exactJson) as never,
+        submissionClient: client,
+      },
+    );
+    assert.equal(exit, 0);
+    assert.deepEqual(events, ["written", "disclosed", "submitted"]);
+    assert.deepEqual(submitted, [exactJson]);
+    assert.equal(questions.length, 6);
+    assert.match(questions[5] ?? "", /https:\/\/relay\.example/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("decline and prompt EOF after write make zero submission calls", async (t) => {
+  const exactJson = await eligibleExactJson();
+  for (const mode of ["decline", "eof"] as const) {
+    await t.test(mode, async () => {
+      const root = await mkdtemp(path.join(tmpdir(), "atlas-real-decline-"));
+      let questionCount = 0;
+      let calls = 0;
+      try {
+        const exit = await runEnabledRealCli(
+          {
+            cwd: root,
+            output: "report.json",
+            signal: new AbortController().signal,
+          },
+          {
+            ask: async () => {
+              questionCount += 1;
+              if (questionCount <= 5) return "yes";
+              if (mode === "eof") throw new Error("EOF private detail");
+              return "no";
+            },
+            stdout: () => {},
+            stderr: () => {},
+          },
+          {
+            createCoordinator: () => ({}) as never,
+            createOutput: () => ({
+              preflight: async () => true,
+              writeExclusive: async () => ({ status: "written" as const }),
+            }),
+            runPipeline: writtenPipeline(exactJson) as never,
+            submissionClient: {
+              origin: "https://relay.example",
+              submit: async () => {
+                calls += 1;
+                throw new Error("unreachable");
+              },
+            },
+          },
+        );
+        assert.equal(exit, 0);
+        assert.equal(questionCount, 6);
+        assert.equal(calls, 0);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
+test("an ineligible written report never reaches submission consent or transport", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "atlas-real-ineligible-"));
+  let questions = 0;
+  let calls = 0;
+  try {
+    const exit = await runEnabledRealCli(
+      {
+        cwd: root,
+        output: "report.json",
+        signal: new AbortController().signal,
+      },
+      {
+        ask: async () => {
+          questions += 1;
+          return "yes";
+        },
+        stdout: () => {},
+        stderr: () => {},
+      },
+      {
+        createCoordinator: () => ({}) as never,
+        createOutput: () => ({
+          preflight: async () => true,
+          writeExclusive: async () => ({ status: "written" as const }),
+        }),
+        runPipeline: writtenPipeline('{"final":true}\n') as never,
+        submissionClient: {
+          origin: "https://relay.example",
+          submit: async () => {
+            calls += 1;
+            throw new Error("unreachable");
+          },
+        },
+      },
+    );
+    assert.equal(exit, 0);
+    assert.equal(questions, 5);
+    assert.equal(calls, 0);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

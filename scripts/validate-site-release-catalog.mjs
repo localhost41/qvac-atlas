@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 
 const REPORT_ID = /^sha256:[a-f0-9]{64}$/;
 const GENUINE_SOURCE_KEY = /^source:[a-f0-9]{32}$/;
+const ANONYMOUS_SOURCE_KEY = "source:anonymous-relay";
 const FIXTURE_SOURCE_KEY = /^fixture:[a-z0-9][a-z0-9._-]{0,79}$/;
 const FIXTURE_SOURCE_PATH =
   /^(?:packages\/schema\/fixtures|reports\/fixtures)\/[a-z0-9][a-z0-9._/-]*\.json$/;
@@ -48,6 +49,7 @@ export function validateSiteReleaseCatalog(catalog) {
   requireCatalog(catalog);
   const fixtureIds = new Set();
   const genuineIds = new Set();
+  const genuineEntries = new Map();
 
   for (const entry of catalog.fixtures) {
     const id = reportId(entry, "fixture");
@@ -58,6 +60,7 @@ export function validateSiteReleaseCatalog(catalog) {
       typeof entry.report?.provenance?.fixture_id !== "string" ||
       entry.report.provenance.fixture_id.length === 0 ||
       !FIXTURE_SOURCE_KEY.test(entry.sourceKey) ||
+      entry.sourceIndependence !== "fixture" ||
       !FIXTURE_SOURCE_PATH.test(entry.sourcePath) ||
       entry.claim?.claim !== "unknown" ||
       !hasFixtureReason(entry)
@@ -71,11 +74,18 @@ export function validateSiteReleaseCatalog(catalog) {
     if (genuineIds.has(id)) reject("duplicate-genuine-report");
     if (fixtureIds.has(id)) reject("report-id-crosses-boundary");
     genuineIds.add(id);
+    genuineEntries.set(id, entry);
     const expectedPath = `reports/v1/${id.replace(":", "-")}.json`;
     if (
       entry.report?.provenance?.kind !== "probe" ||
       entry.report?.provenance?.fixture_id !== null ||
-      !GENUINE_SOURCE_KEY.test(entry.sourceKey) ||
+      !["independent", "unverified-anonymous"].includes(
+        entry.sourceIndependence,
+      ) ||
+      (entry.sourceIndependence === "independent" &&
+        !GENUINE_SOURCE_KEY.test(entry.sourceKey)) ||
+      (entry.sourceIndependence === "unverified-anonymous" &&
+        entry.sourceKey !== ANONYMOUS_SOURCE_KEY) ||
       entry.sourcePath !== expectedPath ||
       hasFixtureReason(entry)
     ) {
@@ -98,6 +108,19 @@ export function validateSiteReleaseCatalog(catalog) {
     const distinctIds = new Set(claim.reportIds);
     if (distinctIds.size !== claim.reportIds.length)
       reject("claim-duplicate-report");
+    const sourceKeys = new Set(
+      claim.reportIds.map((id) => genuineEntries.get(id)?.sourceKey),
+    );
+    const hasAnonymous = claim.reportIds.some(
+      (id) =>
+        genuineEntries.get(id)?.sourceIndependence === "unverified-anonymous",
+    );
+    if (
+      claim.sourceCount !== sourceKeys.size ||
+      claim.unverifiedAnonymous !== hasAnonymous
+    ) {
+      reject("claim-source-boundary");
+    }
     for (const id of claim.reportIds) {
       if (fixtureIds.has(id) || !genuineIds.has(id))
         reject("claim-references-non-genuine-report");

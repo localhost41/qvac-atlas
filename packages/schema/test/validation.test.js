@@ -336,6 +336,29 @@ test("reruns from one trusted source do not produce reproduced success", async (
   assert.equal(claim.claim, "observed-success");
 });
 
+test("unverified anonymous success does not count as an independent reproduction", async () => {
+  const profiles = await standardProfiles();
+  const report = asProbe(await jsonFixture("success.json"));
+  const second = structuredClone(report);
+  second.created_at = "2026-07-31T12:00:01.000Z";
+  const claim = deriveAggregateClaim(
+    [
+      {
+        independence: "independent",
+        report,
+        sourceKey: "reviewed-source-a",
+      },
+      {
+        independence: "unverified-anonymous",
+        report: withReportId(second),
+        sourceKey: "source:anonymous-relay",
+      },
+    ],
+    { standardProfiles: profiles },
+  );
+  assert.equal(claim.claim, "observed-success");
+});
+
 test("mixed compatible evidence is derived, never report-authored", async () => {
   const profiles = await standardProfiles();
   const success = asProbe(await jsonFixture("success.json"));

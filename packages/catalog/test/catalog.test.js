@@ -42,10 +42,11 @@ function source(
   path,
   kind = "genuine",
   lifecycle = { state: "active" },
+  independence = "independent",
 ) {
   return {
     kind,
-    ...(kind === "genuine" ? { lifecycle } : {}),
+    ...(kind === "genuine" ? { independence, lifecycle } : {}),
     path,
     report,
     sourceKey,
@@ -179,6 +180,88 @@ test("two independent trusted sources produce reproduced success", async () => {
   assert.equal(catalog.claims.length, 1);
   assert.equal(catalog.claims[0].claim.claim, "reproduced-success");
   assert.equal(catalog.claims[0].sourceCount, 2);
+});
+
+test("any number of anonymous reports remains one unverified source class", async () => {
+  const raw = await fixture("success.json");
+  const first = asProbe(raw);
+  const second = asProbe(raw, "2026-08-01T00:00:01.000Z");
+  const anonymous = "source:anonymous-relay";
+  const catalog = buildCatalog({
+    productionProfiles: [profileOf(raw)],
+    sources: [
+      source(
+        first,
+        anonymous,
+        "reports/v1/first.json",
+        "genuine",
+        { state: "active" },
+        "unverified-anonymous",
+      ),
+      source(
+        second,
+        anonymous,
+        "reports/v1/second.json",
+        "genuine",
+        { state: "active" },
+        "unverified-anonymous",
+      ),
+    ],
+  });
+
+  assert.equal(catalog.claims[0].claim.claim, "observed-success");
+  assert.equal(catalog.claims[0].sourceCount, 1);
+  assert.equal(catalog.claims[0].unverifiedAnonymous, true);
+  assert.deepEqual(
+    catalog.reports.map(({ sourceIndependence }) => sourceIndependence),
+    ["unverified-anonymous", "unverified-anonymous"],
+  );
+});
+
+test("anonymous success cannot complete an independent reproduction", async () => {
+  const raw = await fixture("success.json");
+  const independent = asProbe(raw);
+  const anonymous = asProbe(raw, "2026-08-01T00:00:01.000Z");
+  const catalog = buildCatalog({
+    productionProfiles: [profileOf(raw)],
+    sources: [
+      source(independent, SOURCE_A, "reports/v1/independent.json"),
+      source(
+        anonymous,
+        "source:anonymous-relay",
+        "reports/v1/anonymous.json",
+        "genuine",
+        { state: "active" },
+        "unverified-anonymous",
+      ),
+    ],
+  });
+
+  assert.equal(catalog.claims[0].claim.claim, "observed-success");
+  assert.equal(catalog.claims[0].sourceCount, 2);
+  assert.equal(catalog.claims[0].unverifiedAnonymous, true);
+});
+
+test("anonymous independence metadata is bound to one reserved source key", async () => {
+  const raw = await fixture("success.json");
+  const report = asProbe(raw);
+  assert.throws(
+    () =>
+      buildCatalog({
+        productionProfiles: [profileOf(raw)],
+        sources: [
+          source(
+            report,
+            SOURCE_A,
+            "reports/v1/report.json",
+            "genuine",
+            { state: "active" },
+            "unverified-anonymous",
+          ),
+        ],
+      }),
+    /sourceKey is invalid/,
+  );
 });
 
 test("compatible success and failure evidence produce a mixed claim", async () => {

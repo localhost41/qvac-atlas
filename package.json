@@ -15,6 +15,7 @@
     "package:audit": "node scripts/audit-package.mjs",
     "package:local": "node scripts/package-local.mjs",
     "ready:local": "node scripts/ready-local.mjs",
+    "submission:review": "pnpm --filter @qvac-atlas/submission build && node scripts/review-anonymous-submission.mjs",
     "test": "pnpm build && pnpm test:only",
     "test:only": "pnpm -r test && node --test scripts/*.test.mjs spikes/runtime/*.test.mjs",
     "typecheck": "pnpm -r typecheck"

@@ -7,7 +7,8 @@ The V1 workflow is deliberately narrow:
 ```text
 consented local probe
   -> sanitized, versioned JSON report
-  -> reviewed Git contribution
+  -> explicit accountless submission to a private review queue
+  -> reviewed Git promotion
   -> static compatibility registry
 ```
 
@@ -19,11 +20,14 @@ The fixture-driven vertical slice is implemented: consent ordering, report
 validation, a fail-closed project-local SDK resolver, deterministic Git admission,
 and the static registry all pass the workspace gate. The CLI deliberately exposes
 only synthetic scenarios today. A deterministic, zero-runtime-dependency local
-`qvac-atlas@0.1.0` tarball can be built and installed outside the monorepo for
-fixture-only evaluation. The authorized public launch is tracked in ATLAS-035.
+`qvac-atlas@0.1.0` remains the reviewed fixture-only baseline. ATLAS-036 adds the
+source-complete `0.2.0` accountless submission path: one post-write choice, a
+bounded HTTPS relay, a private GitHub App queue, and mechanically unverified
+anonymous source metadata. Its production relay origin remains disabled until the
+exact deployment passes a separate operations and privacy review.
 
-Real QVAC execution, model download, production-profile admission, genuine claims,
-and real-mode activation remain disabled. A real lifecycle needs an existing
+Real QVAC execution, model download, genuine claims, and real-mode activation
+remain disabled, and the production profile allowlist is empty. A real lifecycle needs an existing
 project-local QVAC SDK, enough disk for its multi-gigabyte dependency graph and the
 386,404,992-byte pinned model, then explicit human review. Do not describe the
 current fixture registry as hardware compatibility evidence.
@@ -36,25 +40,28 @@ See [`docs/PROJECT.md`](docs/PROJECT.md) for the immutable V1 boundary and [`doc
 
 ## Try the fixture-only preview
 
-Use Node 22 in a fresh project:
+After the reviewed `0.2.0` release is published, use Node 22 in a fresh project:
 
 ```bash
-npm install --ignore-scripts --save-dev qvac-atlas@0.1.0
+npm install --ignore-scripts --save-dev qvac-atlas@0.2.0
 npx qvac-atlas --help
 ```
 
 The public static registry is at <https://localhost41.github.io/qvac-atlas/>. Start
 with the [five-minute synthetic walkthrough](docs/contributing/five-minute-fixture-walkthrough.md).
 
-## Genuine report submissions are closed
+## Accountless report submission
 
-The production profile allowlist is empty and the shipped CLI keeps real mode
-disabled, so genuine hardware report submissions are not currently accepted. Do
-not submit fixture output as compatibility evidence. Code, documentation, and
-fixture-only test contributions remain open.
+The complete anonymous submission path is implemented and locally tested, but the
+shipped source still pins its relay origin to `null` and keeps real mode disabled.
+Fixture output can never be submitted. After a reviewed deployment is pinned, an
+eligible real probe will write its report locally and offer one separate default-no
+choice to queue the exact previewed bytes without a GitHub account.
+Code, documentation, and fixture-only test contributions remain open.
 
-Atlas never uploads a report or opens a pull request. Before installing contributor
-dependencies or keeping any future local report/model cache, read the
+Atlas never submits silently, retries in the background, or publishes queue items
+automatically. Before installing contributor dependencies or keeping any future
+local report/model cache, read the
 [`privacy, removal, and incident guidance`](docs/contributing/privacy-removal-incidents.md).
 
 ## Verify the repository
@@ -80,7 +87,7 @@ After the repository gate passes:
 
 ```bash
 pnpm package:local
-pnpm package:audit -- .artifacts/qvac-atlas-0.1.0.tgz
+pnpm package:audit -- .artifacts/qvac-atlas-0.2.0.tgz
 ```
 
 The artifact is audited before atomic no-clobber publication to `.artifacts/` and

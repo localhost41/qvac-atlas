@@ -187,6 +187,21 @@ export async function auditPackage(tarball, options = {}) {
 
     const binPath = path.join(packageRoot, "bundle", "bin.js");
     const bin = await readFile(binPath, "utf8");
+    for (const forbidden of [
+      "-----BEGIN PRIVATE KEY-----",
+      "-----BEGIN RSA PRIVATE KEY-----",
+      "ATLAS_GITHUB_APP_PRIVATE_KEY",
+      "ATLAS_GITHUB_TOKEN",
+      "relay.example",
+    ]) {
+      if (bin.includes(forbidden))
+        fail(
+          "CLI bundle contains relay credential or unreviewed endpoint material",
+        );
+    }
+    if (/(?:github_pat_[A-Za-z0-9_]{20,}|ghs_[A-Za-z0-9]{20,})/u.test(bin)) {
+      fail("CLI bundle contains a GitHub credential-shaped value");
+    }
     if (!bin.startsWith("#!/usr/bin/env node\n")) {
       fail("CLI bundle lost its Node shebang");
     }

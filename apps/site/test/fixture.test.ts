@@ -87,7 +87,7 @@ function source(
 ) {
   return {
     kind,
-    ...(kind === "genuine" ? { lifecycle } : {}),
+    ...(kind === "genuine" ? { independence: "independent", lifecycle } : {}),
     path,
     report,
     sourceKey,

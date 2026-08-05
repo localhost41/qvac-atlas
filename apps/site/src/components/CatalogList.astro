@@ -195,7 +195,9 @@ function limitation(entry: CatalogCardEntry): string {
               <dd>
                 {entry.sourceCount === null
                   ? "Excluded from aggregate claims"
-                  : plural(entry.sourceCount, "trusted source")}
+                  : entry.unverifiedAnonymous
+                    ? "Unverified anonymous source class"
+                    : plural(entry.sourceCount, "trusted source")}
               </dd>
             </div>
           </dl>

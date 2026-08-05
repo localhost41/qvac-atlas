@@ -27,25 +27,31 @@ identities in reports.
 
 ## Candidate contract
 
-The V1 distribution contract is one unscoped `qvac-atlas@0.1.0` CLI package with
-the `qvac-atlas` binary. It contains one bundled zero-runtime-dependency CLI, the
-three fixed supervised child entry files required by that bundle, the two exact
-runtime JSON Schemas, `README.md`, `LICENSE`, and `NOTICE`; it contains no tests, fixtures,
-reports, source maps, caches, credentials, local paths, or workspace-only packages.
-All internal workspace packages remain private at `0.1.0`. The workspace root
-remains private and is not a release artifact.
+The current V1 distribution candidate is one unscoped `qvac-atlas@0.2.0` CLI
+package with the `qvac-atlas` binary. It supersedes the original fixture-only
+`0.1.0` candidate contract. It contains one bundled zero-runtime-dependency CLI,
+the three fixed supervised child entry files required by that bundle, the two
+exact runtime JSON Schemas, `README.md`, `LICENSE`, and `NOTICE`; it contains no
+tests, fixtures, reports, source maps, caches, credentials, local paths, or
+workspace-only packages. The accountless submission client is bundled, but its
+source-pinned relay origin is literal `null`. All internal workspace packages and
+the workspace root remain private and are not release artifacts.
 
 The shipped CLI real-mode seam must remain the literal `false`. A local package
 artifact may be built and installed without authorizing npm publication. Any
-future topology, package name, version, file-list, dependency, or activation change
-requires an explicit reviewed update to this contract and its readiness tests.
+future topology, package name, version, file-list, dependency, or activation
+change requires an explicit reviewed update to this contract and its readiness
+tests. Enabling a relay origin changes distributable bytes and therefore requires
+a new package version; `0.2.0` must never identify both disabled- and
+enabled-origin artifacts.
 
 ## Candidate preparation
 
-1. For the initial fixture-only `0.1.0` release, start from an exact reviewed
-   commit with an empty production-profile allowlist, no genuine reports or
-   claims, and the real gate still false. A later release may contain only genuine
-   state admitted through the separately protected profile/report ceremony.
+1. For the disabled-origin `0.2.0` candidate, start from an exact reviewed commit
+   with an empty production-profile allowlist, no genuine reports or claims, the
+   real gate literal false, and the relay origin literal `null`. A later release
+   may contain only genuine state admitted through the separately protected
+   profile/report ceremony.
 2. Use Node 22 and pnpm `11.10.0`; run a fresh
    `pnpm install --frozen-lockfile` and `pnpm ready:local`.
 3. Build the deterministic local package artifact. Audit its exact filenames and
@@ -80,7 +86,7 @@ Before any external publication:
 A locally concrete CODEOWNERS file is still only preparation until GitHub reports
 zero ownership errors and the complete public-host verifier passes.
 
-## External release sequence
+## External fixture-only `0.1.0` release sequence
 
 ATLAS-035 records explicit owner authorization for all five steps below. Each step
 still executes only after its listed technical and independent-review prerequisites

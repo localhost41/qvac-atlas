@@ -43,6 +43,9 @@ const report = entry.report;
     <dl class="summary detail-summary">
       <div><dt>Report ID</dt><dd class="breakable">{entry.reportId}</dd></div>
       <div><dt>Trusted source key</dt><dd>{entry.sourceKey}</dd></div>
+      <div>
+        <dt>Source independence</dt><dd>{entry.sourceIndependence}</dd>
+      </div>
       <div><dt>Source path</dt><dd>{entry.sourcePath}</dd></div>
       <div><dt>Hardware</dt><dd>{entry.facets.hardware}</dd></div>
       <div><dt>Operating system</dt><dd>{entry.facets.os}</dd></div>
@@ -72,6 +75,15 @@ const report = entry.report;
           One successful report is an observation, not universal hardware
           support.
         </li>
+        {
+          entry.sourceIndependence === "unverified-anonymous" && (
+            <li>
+              This accountless submission is not identity-verified and cannot
+              establish an independent reproduction, even alongside other
+              anonymous reports.
+            </li>
+          )
+        }
         <li>
           Hardware and software fields can form an identifying fingerprint.
         </li>

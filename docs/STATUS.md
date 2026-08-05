@@ -1,6 +1,6 @@
 # Current status
 
-Updated: 2026-08-01
+Updated: 2026-08-04
 
 ## Verified state
 
@@ -153,6 +153,21 @@ M1 — Local probe and registry vertical slice.
   reviewer's login so that account can also prevent CODEOWNERS deadlock. npm
   publication requires an authenticated publisher session, and the Discord
   destination has not been named.
+- ATLAS-036: the source-complete accountless submission candidate adds a
+  post-write default-no CLI choice, source-pinned bounded client, strict Node 22
+  relay, and atomic private GitHub App review queue. Anonymous promotions use one
+  mechanically unverified source class, so repeated anonymous reports can never
+  create an independent reproduction claim. The full repository gate, hostile
+  transport/queue tests, local socket path, clean-room offline install, package
+  audit, and deterministic repeated build pass. The `0.2.0` candidate artifact is
+  125,796 bytes with SHA-256
+  `06eb32a70c8ed56c64cf5f26b768d119ef8909a5cf1df33c37a4e5ef002ceb10`.
+  Independent architecture/security and operations/release reviews accept the
+  dormant source candidate with no remaining source-level blocker and hold only
+  external deployment and activation.
+  Its relay origin remains literal `null`, the production profile allowlist is
+  empty, and the shipped real gate remains literal `false`; no relay deployment or
+  public evidence admission follows from the local build.
 
 ## Next integration gate
 
@@ -170,6 +185,12 @@ zero genuine reports, zero production claims, and a literal-false real gate. The
 previous physical attempt remains private engineering evidence with formal
 `STOP / MANUAL REVIEW`; ATLAS-013, production admission, and activation remain
 separate future gates.
+
+The ATLAS-036 source candidate is independently reviewable without activating it.
+Operational activation would separately require a dedicated private queue
+repository, a least-privilege GitHub App installed only there, an abuse-controlled
+HTTPS host, and review of the exact deployed origin before that origin is pinned in
+a new candidate. Those external controls are not implied by local readiness.
 
 ## Known risks
 

@@ -35,6 +35,7 @@ export interface CatalogCardEntry {
   reportCount: number;
   reportObservations: ObservationState[];
   sourceCount: number | null;
+  unverifiedAnonymous: boolean;
   title: string;
 }
 
@@ -53,6 +54,7 @@ export interface CatalogReport {
   reportId: string;
   slug: string;
   sourceKey: string;
+  sourceIndependence: "fixture" | "independent" | "unverified-anonymous";
   sourcePath: string;
 }
 
@@ -63,6 +65,7 @@ export interface CatalogClaim {
   facets: CatalogFacets;
   reportIds: string[];
   sourceCount: number;
+  unverifiedAnonymous: boolean;
 }
 
 export interface CatalogData {

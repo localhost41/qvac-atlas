@@ -172,7 +172,9 @@ test("private true seam completes the synthetic real path without enabling produ
             events.push("preview:final");
           else if (value.startsWith("Candidate report written locally to"))
             events.push("complete");
-          else assert.fail(`unexpected stdout shape: ${value.slice(0, 40)}`);
+          else if (value.startsWith("Anonymous submission is disabled")) {
+            // The source-pinned relay origin intentionally remains inactive.
+          } else assert.fail(`unexpected stdout shape: ${value.slice(0, 40)}`);
         },
         stderr: (value) => errors.push(value),
         onCancellationSignal: () => {
@@ -237,13 +239,13 @@ test("private true seam completes the synthetic real path without enabling produ
       forwardedSignal,
     ]);
 
-    assert.equal(visible.length, 7);
+    assert.equal(visible.length, 8);
     assert.match(visible[0]!, /candidate is nonstandard/);
     assert.match(visible[2]!, /"requestedBackend": "gpu"/);
     assert.match(visible[4]!, /claim eligible=false/);
     assert.equal(
-      visible[6],
-      `Candidate report written locally to ${expectedOutput}. Nothing was uploaded.\n`,
+      `${visible[6]}${visible[7]}`,
+      `Candidate report written locally to ${expectedOutput}.\nAnonymous submission is disabled in this build; the report remains local. Nothing was submitted.\n`,
     );
 
     const draftBytes = previewBytes(visible[3]!, "draft");

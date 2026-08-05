@@ -4,37 +4,32 @@ QVAC Atlas accepts code and documentation contributions. Hardware compatibility
 evidence follows a stricter, human-reviewed path because accepted JSON becomes
 public Git history and can influence compatibility claims.
 
-> **Genuine report submissions are closed.** The production profile allowlist is
-> empty and the shipped CLI keeps real mode disabled. Do not submit fixture output
-> as hardware evidence. Code, documentation, and fixture-only test contributions
-> remain open.
+> **Accountless submission is implemented but deployment-gated.** The production
+> profile allowlist is empty. Shipped real mode is disabled, and the source-pinned
+> relay origin remains disabled. Fixture output is never eligible. Code,
+> documentation, and fixture-only test contributions remain open.
 
-## Future genuine report workflow — currently closed
+## Accountless report workflow
 
-Atlas never uploads a report or opens a pull request. You make the publication
-decision by reviewing your local JSON and manually creating a Git contribution.
-The steps below document the future workflow; do not use them until maintainers
-explicitly announce that genuine submissions are open.
+After its separate deployment and activation review, Atlas will offer a one-click
+accountless path. It never submits silently: the report is previewed and written
+locally first, then Atlas names one pinned relay and asks a separate default-no
+question. A `yes` sends only those exact JSON bytes once to a private GitHub review
+queue. A human still controls public promotion.
 
 1. Generate and preview the report locally with the Atlas probe.
 2. Verify both consent fields are `true`. Reconsider submission if the hardware and
    software combination is too identifying for you.
-3. Copy the report without editing its evidence fields to:
+3. At the separate accountless disclosure, review the pinned destination, private
+   queue, network-metadata, retention, and possible later-publication limits.
+4. Answer `yes` only if you want one bounded submission attempt. `no`, Enter, EOF,
+   cancellation, or a disabled endpoint makes no request and leaves the local file
+   unchanged.
 
-   ```text
-   reports/v1/sha256-<64 lowercase hex>.json
-   ```
-
-   Replace the colon in `report_id` with a hyphen. For example,
-   `sha256:abcd…` becomes `sha256-abcd….json`. The 64 hexadecimal characters
-   must match exactly.
-
-4. Stage the file in Git, run the checks below, and open a pull request using the
-   repository template.
-
-A contributor report is deliberately incomplete for merge until a maintainer adds
-trusted source metadata. Do not add your own `sourceKey`, public claim, badge,
-recommendation, or production profile. See
+Queue acceptance is deliberately incomplete for publication until a maintainer
+reviews the exact bytes and adds protected `unverified-anonymous` metadata. Do not
+add your own `sourceKey`, public claim, badge, recommendation, or production
+profile. See
 [`docs/contributing/report-submissions.md`](docs/contributing/report-submissions.md)
 for privacy and review details.
 

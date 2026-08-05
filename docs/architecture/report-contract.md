@@ -134,7 +134,9 @@ failure observation remains visible while the requested-device claim is unknown.
 
 `reproduced-success` requires at least two successful reports with different
 trusted registry `sourceKey` values and different report IDs. Source independence
-is not stored in, or accepted from, contributor-authored report JSON. `mixed`
+is not stored in, or accepted from, contributor-authored report JSON. All
+accountless submissions use one `source:anonymous-relay` key and therefore cannot
+establish an independent reproduction among themselves. `mixed`
 requires compatible success and failure evidence. Aggregate functions reject
 reports with different compatibility keys.
 

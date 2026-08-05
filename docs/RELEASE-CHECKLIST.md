@@ -28,8 +28,9 @@ hardware, privacy, and repository-trust gates below.
       IPC, and descendant-process tests all pass.
 - [ ] The CLI still requires interactive collection, draft preview, publication
       choice, final exact-byte preview, and local-write consent.
-- [ ] Atlas performs no installation, upload, automatic issue/PR creation,
-      telemetry, repair, or configuration mutation.
+- [ ] Atlas performs no installation, silent/background upload, unattended public
+      issue/PR creation, automatic publication, telemetry, repair, or configuration
+      mutation.
 
 ## Model artifact gate
 
@@ -114,11 +115,41 @@ hardware, privacy, and repository-trust gates below.
       on the exact release commit. Pages uses workflow deployment, and its
       protected environment prevents self-review, names an independent required
       reviewer, disallows administrator bypass, and accepts only protected branches.
-- [ ] Maintainers, not contributors or report content, assign stable source
-      independence keys.
+- [ ] Maintainers, not contributors or report content, assign stable independent
+      source keys; every accountless queue report is instead forced into the one
+      `unverified-anonymous` / `source:anonymous-relay` class.
 - [ ] A production profile change is reviewed separately from a report submission.
 - [ ] Genuine reports are append-only; corrections supersede rather than silently
       rewrite accepted evidence.
+
+## Anonymous relay gate
+
+- [ ] The CLI relay origin remains literal `null` until an exact HTTPS deployment
+      completes independent privacy and operations review.
+- [ ] Decline, EOF, cancellation, fixture, nonpublication, wrong-profile,
+      pre-write, and disabled-origin tests make zero requests.
+- [ ] Consent occurs only after exact preview and successful local write, names the
+      destination and private GitHub queue, and explains that accountless is not
+      network-anonymous.
+- [ ] The edge enforces TLS/HSTS, body and rate limits, concurrency caps, short
+      timeouts, body-free logs, and minimal network-metadata retention.
+- [ ] A short-lived GitHub App installation token is narrowed to one immutable
+      private queue repository ID and only metadata, contents, and pull-request
+      permissions; the App has no public Atlas repository access.
+- [ ] New, replayed, concurrent, partial, closed, merged, deleted-head, public-repo
+      drift, and hostile-extra-file queue cases pass the atomic-ref test suite.
+- [ ] The application has an independent queue-operation deadline, no background
+      retry, and fixed errors that never reflect reports, GitHub responses, network
+      identity, paths, or credentials.
+- [ ] Maintainer review, 30-day rejected-ref scheduling, provider-retention limits,
+      App-key rotation, private-visibility incidents, and rollback are exercised
+      from the operations runbook.
+- [ ] Multiple `unverified-anonymous` reports remain one source and cannot derive
+      `reproduced-success`; the site visibly states this limitation.
+- [ ] Origin activation is a separate reviewed source change, uses a new package
+      version rather than rebuilding `0.2.0` with different bytes, and repeats the
+      full package, clean-room, privacy, and deployment review without changing the
+      literal real-mode gate.
 
 ## External release gate
 

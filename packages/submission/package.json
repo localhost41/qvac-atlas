@@ -1,0 +1,29 @@
+{
+  "name": "@qvac-atlas/submission",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Anonymous QVAC Atlas submission protocol and bounded client",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" package.json tsconfig.json",
+    "test": "pnpm build && tsx --test test/**/*.test.ts",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {
+    "@qvac-atlas/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.5"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  }
+}

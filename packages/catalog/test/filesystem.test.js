@@ -183,6 +183,7 @@ test("genuine report filenames must map exactly to their report IDs", async () =
       fixtureProfiles: [],
       sources: [
         {
+          independence: "independent",
           kind: "genuine",
           lifecycle: { state: "active" },
           path: reportPath,

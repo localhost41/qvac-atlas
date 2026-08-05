@@ -1,7 +1,7 @@
 {
   "name": "qvac-atlas",
-  "version": "0.1.0",
-  "description": "Local-only QVAC Atlas report CLI; real execution is release-gated",
+  "version": "0.2.0",
+  "description": "Consent-first QVAC Atlas report CLI with release-gated real execution and anonymous submission",
   "type": "module",
   "license": "Apache-2.0",
   "homepage": "https://github.com/localhost41/qvac-atlas#readme",
@@ -40,6 +40,8 @@
     "@qvac-atlas/probe": "workspace:*",
     "@qvac-atlas/qvac-executor": "workspace:*",
     "@qvac-atlas/qvac-resolver": "workspace:*",
+    "@qvac-atlas/schema": "workspace:*",
+    "@qvac-atlas/submission": "workspace:*",
     "@types/node": "^22.0.0",
     "esbuild": "0.25.12",
     "tsx": "^4.20.5"

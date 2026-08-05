@@ -5,7 +5,8 @@ Status: **versioned V1 contract; fixture foundation implemented, production gate
 ## Product boundary
 
 ```text
-local probe -> canonical report -> reviewed Git data -> static registry
+local probe -> canonical report -> explicit anonymous relay -> private review queue
+            -> reviewed Git data -> static registry
 ```
 
 ## Claim states
@@ -54,6 +55,8 @@ sanitize
 validate
 preview
 write
+confirm-anonymous-submission
+submit-once-if-confirmed
 ```
 
 All runtime phases have deadlines. Failure finalization retains only structured phase results, exit metadata, requested backend, directly observed backend, and a bounded sanitized failure excerpt.
@@ -75,6 +78,11 @@ All runtime phases have deadlines. Failure finalization retains only structured 
 Collection is allowlist-first. Never collect environment values, tokens, cookies, auth headers, usernames, home directories, hostnames, organization names, network addresses, serial numbers, stable machine identifiers, process lists, shell history, arbitrary prompts, generated content, full configs, full logs, or absolute model paths.
 
 The hardware/OS combination may itself be identifying. Publication therefore requires an explicit preview and separate consent.
+
+Anonymous relay submission is a second explicit, default-no decision after the
+exact preview and local write. It sends only the already-previewed canonical report
+to one source-pinned HTTPS origin. It never retries in the background, never sends
+fixtures, and never makes queued evidence public without maintainer promotion.
 
 ## Resolved feasibility boundary
 

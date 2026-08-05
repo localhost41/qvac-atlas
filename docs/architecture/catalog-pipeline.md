@@ -13,8 +13,8 @@ registry/catalog.json (trusted source metadata and profile allowlists)
   -> static Astro pages
 ```
 
-Registry metadata version 2 owns `sourceKey`, source classification, genuine-source
-lifecycle, and profile admission; none is accepted from a report. Genuine report
+Registry metadata version 2 owns `sourceKey`, independence classification,
+genuine-source lifecycle, and profile admission; none is accepted from a report. Genuine report
 paths use the cross-platform form `reports/v1/sha256-<64 lowercase hex>.json`,
 which must map exactly to the validated `sha256:<same hex>` report ID. Fixtures are
 confined to `reports/fixtures/` or the schema package's fixture corpus. Source paths
@@ -67,6 +67,8 @@ requested-device matching is applied before calling schema-owned claim derivatio
 The catalog does not accept a contributor-authored badge, status, recommendation,
 or display override. Aggregation uses the full compatibility key and requires
 distinct trusted `sourceKey` values and report IDs for reproduced success.
+Accountless reports are bound to `unverified-anonymous` and the single reserved
+`source:anonymous-relay` key, so any number contributes at most one source.
 
 Fixture provenance always derives `unknown`. Fixture records are stored in the
 catalog's `fixtures` collection, never `reports` or `claims`, and appear only in a
@@ -94,10 +96,12 @@ unknown states, extra fields, and fixture lifecycle fields fail closed. All reta
 genuine reports, including retired reports, still pass the complete report,
 profile, path, tracking, and append-only admission gates.
 
-Genuine source independence uses only `source:<32 lowercase hex>`, an opaque
+Reviewed independent-source evidence uses `source:<32 lowercase hex>`, an opaque
 repository-scoped 128-bit token assigned by maintainers. It must not encode or be
 derived from a name, account, email, organization, PR/report number, or
-hardware/device identifier. Fixture keys remain separately namespaced under
+hardware/device identifier. Accountless evidence instead requires the exact
+`source:anonymous-relay` key and is visibly labeled unverified; catalog validation
+rejects cross-class key pairing. Fixture keys remain separately namespaced under
 `fixture:` and cannot satisfy the genuine key contract.
 
 Only active genuine sources cross the presentation boundary; generated output has

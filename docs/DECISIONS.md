@@ -164,3 +164,38 @@ The genuine macOS collector's `platform.os.version` value comes from Node
 version. Public rendering labels it as a kernel release. Changing to a product
 version or adding a separate GPU inventory requires a versioned collection,
 privacy, schema, and compatibility-key review.
+
+## D-019 — Anonymous submission is an explicit relay to a private review queue
+
+Atlas may reduce the GitHub contribution barrier without adding contributor
+accounts. After the final exact report preview and a successful local write, the
+CLI may offer one separate, default-no confirmation to submit that exact canonical
+JSON to one pinned Atlas relay origin. Declining performs no network request. An
+accepted submission performs one bounded request, has no background work or retry,
+and never reads credentials from the contributor machine.
+
+The relay is a narrow ingress, not the registry trust root. It revalidates size,
+canonical form, schema, semantics, privacy, genuine provenance, publication
+consent, and report identity before writing to a configured private GitHub queue.
+GitHub supplies the durable queue and duplicate key; Atlas adds no service
+database. Queue acceptance does not publish a report, create a compatibility
+claim, establish an independent source, or permit the relay to edit protected
+catalog/source metadata. A maintainer must still review and promote evidence into
+the public append-only registry under D-013.
+
+Every promoted accountless-queue report must use the protected
+`unverified-anonymous` independence class and the single reserved
+`source:anonymous-relay` key. Catalog validation rejects any other pairing. This
+allows reviewed anonymous observations to become public while ensuring that any
+number of them appears as one unverified source class but contributes zero sources
+to independent reproduction derivation, even when mixed with independent reports.
+Only a separately reviewed non-anonymous source may receive an independent source
+key.
+
+The relay must fail closed without its server-held GitHub credential, private queue
+repository, and host-level abuse controls. It must not log request bodies, client
+network addresses, report contents, or GitHub credentials. The public CLI endpoint
+stays disabled until a reviewed HTTPS deployment is pinned in source. This decision
+supersedes only the earlier blanket prohibition on an API server and automatic
+submission in the bounded form above; the prohibitions on accounts, OAuth,
+telemetry, databases, silent upload, and automatic public publication remain.

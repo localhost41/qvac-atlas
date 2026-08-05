@@ -9,6 +9,7 @@ import {
 } from "@qvac-atlas/schema";
 
 const GENUINE_SOURCE_KEY = /^source:[a-f0-9]{32}$/;
+const ANONYMOUS_SOURCE_KEY = "source:anonymous-relay";
 const FIXTURE_SOURCE_KEY = /^fixture:[a-z0-9][a-z0-9._-]{0,79}$/;
 const PROFILE_ID = /^[a-z0-9][a-z0-9._-]{0,79}$/;
 const SEMVER =
@@ -30,7 +31,7 @@ function validateSource(source) {
   const keys = Object.keys(source).sort();
   const expectedKeys =
     source.kind === "genuine"
-      ? ["kind", "lifecycle", "path", "report", "sourceKey"]
+      ? ["independence", "kind", "lifecycle", "path", "report", "sourceKey"]
       : ["kind", "path", "report", "sourceKey"];
   if (canonicalize(keys) !== canonicalize(expectedKeys)) {
     fail("source metadata has an unsupported field");
@@ -38,7 +39,14 @@ function validateSource(source) {
   if (!["fixture", "genuine"].includes(source.kind))
     fail("source kind is invalid");
   if (
-    (source.kind === "genuine" && !GENUINE_SOURCE_KEY.test(source.sourceKey)) ||
+    (source.kind === "genuine" &&
+      !["independent", "unverified-anonymous"].includes(source.independence)) ||
+    (source.kind === "genuine" &&
+      source.independence === "independent" &&
+      !GENUINE_SOURCE_KEY.test(source.sourceKey)) ||
+    (source.kind === "genuine" &&
+      source.independence === "unverified-anonymous" &&
+      source.sourceKey !== ANONYMOUS_SOURCE_KEY) ||
     (source.kind === "fixture" && !FIXTURE_SOURCE_KEY.test(source.sourceKey))
   ) {
     fail("sourceKey is invalid for its source kind");
@@ -93,6 +101,10 @@ function validateLifecycle(genuineSources) {
       fail("a superseded source replacement must be active");
     if (replacement.sourceKey !== source.sourceKey)
       fail("a superseded source replacement must use the same sourceKey");
+    if (replacement.independence !== source.independence)
+      fail(
+        "a superseded source replacement must use the same independence class",
+      );
   }
 }
 
@@ -189,6 +201,8 @@ function reportEntry(source, derived) {
     report: source.report,
     reportId: source.report.report_id,
     slug: source.report.report_id.replace(/^sha256:/, ""),
+    sourceIndependence:
+      source.kind === "genuine" ? source.independence : "fixture",
     sourceKey: source.sourceKey,
     sourcePath: source.path,
   };
@@ -220,6 +234,9 @@ function aggregateEntries(entries, standardProfiles) {
         facets: facets(group[0].report, aggregate.observation),
         reportIds: reports,
         sourceCount: new Set(group.map(({ sourceKey }) => sourceKey)).size,
+        unverifiedAnonymous: group.some(
+          ({ independence }) => independence === "unverified-anonymous",
+        ),
       };
     })
     .sort((left, right) => compareText(left.claimId, right.claimId));

@@ -108,8 +108,11 @@ export function compatibilityKey(report) {
 }
 
 /**
- * sourceKey is trusted registry metadata (for example reviewed PR identity),
- * not a report field. Callers must pass only reports sharing a compatibility key.
+ * sourceKey and independence are trusted registry metadata (for example reviewed
+ * PR identity), not report fields. Callers must pass only reports sharing a
+ * compatibility key. An omitted independence value preserves the original API
+ * contract and is treated as independently attributed; the catalog always passes
+ * one of its validated explicit classes.
  */
 export function deriveAggregateClaim(entries, options = {}) {
   if (entries.length === 0) {
@@ -124,7 +127,9 @@ export function deriveAggregateClaim(entries, options = {}) {
   if (keys.size !== 1)
     throw new Error("aggregate entries do not share one compatibility key");
 
-  const derived = entries.map(({ report, sourceKey }) => ({
+  const derived = entries.map(({ report, sourceKey, independence }) => ({
+    independentlyAttributed:
+      independence === undefined || independence === "independent",
     reportId: report.report_id,
     sourceKey,
     result: deriveReportClaim(report, options),
@@ -144,11 +149,14 @@ export function deriveAggregateClaim(entries, options = {}) {
     };
   }
   if (successes.length > 0) {
+    const independentlyAttributed = successes.filter(
+      ({ independentlyAttributed }) => independentlyAttributed,
+    );
     const independentSources = new Set(
-      successes.map(({ sourceKey }) => sourceKey).filter(Boolean),
+      independentlyAttributed.map(({ sourceKey }) => sourceKey).filter(Boolean),
     );
     const independentReports = new Set(
-      successes.map(({ reportId }) => reportId).filter(Boolean),
+      independentlyAttributed.map(({ reportId }) => reportId).filter(Boolean),
     );
     if (independentSources.size >= 2 && independentReports.size >= 2) {
       return {

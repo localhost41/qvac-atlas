@@ -1,5 +1,5 @@
 export const PACKAGE_NAME = "qvac-atlas";
-export const PACKAGE_VERSION = "0.1.0";
+export const PACKAGE_VERSION = "0.2.0";
 export const PACKAGE_FILENAME = `${PACKAGE_NAME}-${PACKAGE_VERSION}.tgz`;
 
 export const BUNDLE_FILENAMES = Object.freeze([
@@ -42,6 +42,6 @@ export const BUNDLED_RUNTIME_PACKAGES = new Map([
   ["ajv", "8.18.0"],
   ["ajv-formats", "3.0.1"],
   ["fast-deep-equal", "3.1.3"],
-  ["fast-uri", "3.1.4"],
+  ["fast-uri", "3.1.5"],
   ["json-schema-traverse", "1.0.0"],
 ]);

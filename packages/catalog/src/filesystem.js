@@ -98,7 +98,7 @@ export async function buildCatalogFromFiles({ root, configPath }) {
     const metadataKeys = Object.keys(metadata).sort();
     const expectedKeys =
       metadata.kind === "genuine"
-        ? ["kind", "lifecycle", "path", "sourceKey"]
+        ? ["independence", "kind", "lifecycle", "path", "sourceKey"]
         : ["kind", "path", "sourceKey"];
     if (JSON.stringify(metadataKeys) !== JSON.stringify(expectedKeys)) {
       throw new Error(
@@ -131,7 +131,12 @@ export async function buildCatalogFromFiles({ root, configPath }) {
     }
     sources.push({
       kind: metadata.kind,
-      ...(metadata.kind === "genuine" ? { lifecycle: metadata.lifecycle } : {}),
+      ...(metadata.kind === "genuine"
+        ? {
+            independence: metadata.independence,
+            lifecycle: metadata.lifecycle,
+          }
+        : {}),
       path: metadata.path,
       report,
       sourceKey: metadata.sourceKey,

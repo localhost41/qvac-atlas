@@ -2,6 +2,50 @@
 
 Treat every report pull request as publication of permanent, untrusted data.
 
+## Private accountless queue review
+
+The relay queue is a separate private repository. Its GitHub App has no access to
+the public Atlas repository, so queue acceptance cannot publish or alter trusted
+metadata. A draft queue pull request is only an intake record.
+
+1. Review the draft PR in the private queue. It must contain exactly one new
+   `submissions/v1/sha256-<64 hex>.json` regular file and no other diff.
+2. On a trusted Node 22 checkout of Atlas, validate the exact queue file without
+   printing its contents:
+
+   ```text
+   pnpm submission:review -- /absolute/path/to/private-queue-report.json
+   ```
+
+   The command emits only the report ID, canonical public target, and required
+   anonymous source metadata. It rejects links, mutation, noncanonical bytes,
+   fixtures, private/nonpublishable evidence, and unapproved profiles.
+3. Inspect the exact JSON locally and confirm the in-report publication consent.
+   Do not claim the submitter's network or account identity; the relay deliberately
+   establishes neither.
+4. If rejected, close the queue PR and schedule its branch ref for deletion within
+   30 days. Record only a fixed reason code. Do not quote report contents. GitHub
+   provider retention may outlast ref deletion; a privacy incident can require
+   deleting/recreating the private queue and contacting the provider.
+5. If accepted, create a maintainer-owned branch from the protected public base,
+   transfer the exact blob without editing it, and use exactly this metadata:
+
+   ```json
+   {
+     "independence": "unverified-anonymous",
+     "kind": "genuine",
+     "lifecycle": { "state": "active" },
+     "path": "reports/v1/sha256-<64 lowercase hex>.json",
+     "sourceKey": "source:anonymous-relay"
+   }
+   ```
+
+   Any number of accountless reports shares this one source class. It can support
+   reviewed observations but never independent reproduction by itself.
+6. Open the ordinary public admission PR and require the complete append-only,
+   catalog, privacy, site, code-owner, and fresh-review gates below. Only after that
+   public PR merges may the private intake PR be closed as accepted.
+
 ## Initial public-host trust bootstrap
 
 The workflow deliberately rejects a push event whose `before` value is all zero,
@@ -33,9 +77,9 @@ maintainer cannot safely update.
    editing its bytes, and verify that its canonical filename and `report_id` still
    match.
 3. Confirm that the production profile was approved in an earlier, separate
-   change. Establish source independence from review evidence, add exactly one
-   maintainer-controlled `sourceKey`, and rebuild the catalog on the same admission
-   branch.
+   change. Establish source independence from review evidence, set
+   `independence: "independent"`, add exactly one maintainer-controlled
+   `sourceKey`, and rebuild the catalog on the same admission branch.
 4. Open the admission pull request from that maintainer-owned branch and identify
    the superseded contributor pull request in review metadata, never in the report.
    The bidirectional report-to-registry checks remain unchanged.
@@ -61,6 +105,7 @@ maintainer cannot safely update.
 
    ```json
    {
+     "independence": "independent",
      "kind": "genuine",
      "lifecycle": { "state": "active" },
      "path": "reports/v1/sha256-<64 lowercase hex>.json",
@@ -68,7 +113,7 @@ maintainer cannot safely update.
    }
    ```
 
-   A genuine `sourceKey` is a repository-scoped opaque 128-bit token. It must be
+   An independent genuine `sourceKey` is a repository-scoped opaque 128-bit token. It must be
    stable across repeated reports from the same underlying source, but must not be
    derived from or contain a person's name, username, email, organization, PR
    number, report ID, hardware/device ID, or contributor-authored value.
@@ -143,9 +188,12 @@ The audit enforces all of these simultaneously:
 - every genuine registry source maps to one existing report;
 - every genuine report already present at the trusted base remains byte- and
   mode-identical throughout relevant introduced history and at the target;
-- every genuine source has one exact lifecycle, and only active genuine evidence
+- every genuine source has one exact independence class and lifecycle, and only active genuine evidence
   enters current pages, counts, and claims;
 - every superseded source points directly to an active same-source replacement;
+- every `unverified-anonymous` source uses the single
+  `source:anonymous-relay` key, so multiple accountless reports cannot satisfy
+  reproduction independence;
 - report ID, schema, semantics, privacy, consent, provenance, and trusted profile
   match all pass;
 - the deterministic catalog equals the checked-in generated file;

@@ -20,6 +20,7 @@ function catalogWithIsolatedGenuineEvidence(catalog: CatalogData): CatalogData {
   report.reportId = reportId;
   report.slug = digest;
   report.sourceKey = `source:${"a".repeat(32)}`;
+  report.sourceIndependence = "independent";
   report.sourcePath = `reports/v1/sha256-${digest}.json`;
   report.report.report_id = reportId;
   report.report.provenance = { kind: "probe", fixture_id: null };
@@ -36,6 +37,7 @@ function catalogWithIsolatedGenuineEvidence(catalog: CatalogData): CatalogData {
     facets: structuredClone(report.facets),
     reportIds: [reportId],
     sourceCount: 1,
+    unverifiedAnonymous: false,
   };
   return { ...structuredClone(catalog), claims: [claim], reports: [report] };
 }

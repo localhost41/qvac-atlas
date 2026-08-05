@@ -63,6 +63,7 @@ const claims = catalog.claims.map((entry) => {
     reportCount: entry.reportIds.length,
     reportObservations,
     sourceCount: entry.sourceCount,
+    unverifiedAnonymous: entry.unverifiedAnonymous,
     title: entry.facets.hardware,
   };
 });

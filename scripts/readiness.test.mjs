@@ -8,6 +8,7 @@ const root = new URL("../", import.meta.url);
 const manifests = [
   "package.json",
   "apps/site/package.json",
+  "apps/submission-relay/package.json",
   "packages/catalog/package.json",
   "packages/cli/package.json",
   "packages/model-artifact/package.json",
@@ -15,14 +16,17 @@ const manifests = [
   "packages/qvac-executor/package.json",
   "packages/qvac-resolver/package.json",
   "packages/schema/package.json",
+  "packages/submission/package.json",
 ];
 const nodeTypeManifests = [
   "apps/site/package.json",
+  "apps/submission-relay/package.json",
   "packages/cli/package.json",
   "packages/model-artifact/package.json",
   "packages/probe/package.json",
   "packages/qvac-executor/package.json",
   "packages/qvac-resolver/package.json",
+  "packages/submission/package.json",
 ];
 
 async function text(path) {
@@ -368,7 +372,7 @@ test("release metadata and package-content contract cannot drift", async () => {
     text("scripts/package-local.mjs"),
   ]);
   assert.equal(cli.name, "qvac-atlas");
-  assert.equal(cli.version, "0.1.0");
+  assert.equal(cli.version, "0.2.0");
   assert.equal(Object.hasOwn(cli, "private"), false);
   assert.equal(Object.hasOwn(cli, "dependencies"), false);
   assert.deepEqual(cli.bin, { "qvac-atlas": "./bundle/bin.js" });
