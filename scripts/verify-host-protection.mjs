@@ -14,8 +14,14 @@ const PLACEHOLDER = /@[A-Z][A-Z0-9_]*_HANDLE_REQUIRED\b/gu;
 
 export function parseHostArguments(args) {
   const values = new Map();
-  for (let index = 0; index < args.length; index += 2) {
+  for (let index = 0; index < args.length;) {
     const option = args[index];
+    if (option === "--no-independent-reviewer") {
+      if (values.has(option)) throw new Error(`Duplicate option: ${option}`);
+      values.set(option, true);
+      index += 1;
+      continue;
+    }
     const value = args[index + 1];
     if (
       ![
@@ -23,21 +29,24 @@ export function parseHostArguments(args) {
         "--branch",
         "--expected-head",
         "--deployment-reviewer",
+        "--no-independent-reviewer",
       ].includes(option ?? "") ||
       value === undefined
     ) {
       throw new Error(
-        "Usage: verify-host-protection.mjs --repository OWNER/REPO --branch main --expected-head <40 lowercase hex> --deployment-reviewer <GitHub login>",
+        "Usage: verify-host-protection.mjs --repository OWNER/REPO --branch main --expected-head <40 lowercase hex> (--deployment-reviewer <GitHub login> | --no-independent-reviewer)",
       );
     }
     if (values.has(option)) throw new Error(`Duplicate option: ${option}`);
     values.set(option, value);
+    index += 2;
   }
 
   const repository = values.get("--repository") ?? "";
   const branch = values.get("--branch") ?? "";
   const expectedHead = values.get("--expected-head") ?? "";
   const deploymentReviewer = values.get("--deployment-reviewer") ?? "";
+  const independentReviewer = !values.has("--no-independent-reviewer");
   if (
     !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/[A-Za-z0-9._-]{1,100}$/u.test(
       repository,
@@ -52,16 +61,28 @@ export function parseHostArguments(args) {
     throw new Error(
       "Expected head must be exactly 40 lowercase hexadecimal characters.",
     );
-  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/u.test(deploymentReviewer))
+  if (
+    independentReviewer &&
+    !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/u.test(deploymentReviewer)
+  )
     throw new Error(
       "Deployment reviewer must be one explicit GitHub user login.",
     );
   const [repositoryOwner] = repository.split("/", 1);
-  if (repositoryOwner.toLowerCase() === deploymentReviewer.toLowerCase())
+  if (
+    independentReviewer &&
+    repositoryOwner.toLowerCase() === deploymentReviewer.toLowerCase()
+  )
     throw new Error(
       "Deployment reviewer must differ from the repository owner and release captain.",
     );
-  return { repository, branch, expectedHead, deploymentReviewer };
+  return {
+    repository,
+    branch,
+    expectedHead,
+    deploymentReviewer,
+    independentReviewer,
+  };
 }
 
 export function unresolvedCodeOwnerPlaceholders(codeowners) {
@@ -110,6 +131,7 @@ export function repositoryProtectionFailures({
   expectedBranch,
   expectedHead,
   deploymentReviewer,
+  independentReviewer = true,
   pages,
   pagesEnvironment,
   checkRuns,
@@ -118,8 +140,9 @@ export function repositoryProtectionFailures({
 }) {
   const failures = [];
   if (
+    independentReviewer &&
     repository?.owner?.login?.toLowerCase() ===
-    deploymentReviewer?.toLowerCase()
+      deploymentReviewer?.toLowerCase()
   )
     failures.push(
       "Pages deployment reviewer is not independent from the repository owner",
@@ -179,18 +202,24 @@ export function repositoryProtectionFailures({
   const reviewerRule = environmentRules.find(
     (rule) => rule?.type === "required_reviewers",
   );
-  if (reviewerRule?.prevent_self_review !== true)
-    failures.push("Pages deployment self-review is not prevented");
-  if (
-    !Array.isArray(reviewerRule?.reviewers) ||
-    !reviewerRule.reviewers.some(
-      (entry) =>
-        entry?.type === "User" &&
-        entry?.reviewer?.login?.toLowerCase() ===
-          deploymentReviewer?.toLowerCase(),
+  if (independentReviewer) {
+    if (reviewerRule?.prevent_self_review !== true)
+      failures.push("Pages deployment self-review is not prevented");
+    if (
+      !Array.isArray(reviewerRule?.reviewers) ||
+      !reviewerRule.reviewers.some(
+        (entry) =>
+          entry?.type === "User" &&
+          entry?.reviewer?.login?.toLowerCase() ===
+            deploymentReviewer?.toLowerCase(),
+      )
     )
-  )
-    failures.push("required Pages deployment reviewer is missing");
+      failures.push("required Pages deployment reviewer is missing");
+  } else if (reviewerRule !== undefined) {
+    failures.push(
+      "Pages deployment reviewer is configured despite owner-operated mode",
+    );
+  }
   if (
     pagesEnvironment?.deployment_branch_policy?.protected_branches !== true ||
     pagesEnvironment?.deployment_branch_policy?.custom_branch_policies !== false
@@ -198,9 +227,9 @@ export function repositoryProtectionFailures({
     failures.push("Pages deployments are not limited to protected branches");
 
   const reviews = protection?.required_pull_request_reviews;
-  if (reviews === null || reviews === undefined)
+  if (independentReviewer && (reviews === null || reviews === undefined))
     failures.push("pull requests and review are not required");
-  else {
+  else if (independentReviewer) {
     if (reviews.dismiss_stale_reviews !== true)
       failures.push("stale approvals are not dismissed after changes");
     if (reviews.require_code_owner_reviews !== true)
@@ -214,6 +243,14 @@ export function repositoryProtectionFailures({
       failures.push("at least one approving review is not required");
     if (allowanceCount(reviews.bypass_pull_request_allowances) !== 0)
       failures.push("pull-request bypass actors are configured");
+  } else if (
+    reviews !== null &&
+    reviews !== undefined &&
+    reviews.required_approving_review_count !== 0
+  ) {
+    failures.push(
+      "owner-operated mode unexpectedly requires pull-request approval",
+    );
   }
 
   if (!isEnabled(protection?.enforce_admins))

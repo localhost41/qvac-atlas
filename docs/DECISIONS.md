@@ -224,3 +224,16 @@ and links each card to a shareable exact-report page. `/contribute/` explains
 the command, the two decisions, collection exclusions, local-first behavior,
 and the private-review-to-public-publication boundary. The site remains static,
 reviewed Git data with no accounts, database, analytics, or live API.
+
+## D-021 — Owner-operated launch
+
+The project owner explicitly chose to proceed without naming a separate
+independent GitHub reviewer. Atlas therefore retains branch integrity, required
+workspace checks, linear history, conversation resolution, administrator
+enforcement, and no-force/no-delete controls, but does not require pull-request
+approval or a separate Pages environment reviewer.
+
+This is an explicit availability and governance tradeoff, not evidence that an
+independent review occurred. The public site and npm release remain gated on the
+exact local and CI checks; the relay remains gated on its host and GitHub App
+controls.

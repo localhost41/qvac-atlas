@@ -101,6 +101,7 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
       branch: "main",
       expectedHead: head,
       deploymentReviewer: "independent-reviewer",
+      independentReviewer: true,
     },
   );
   assert.throws(() => parseHostArguments([]), /explicit GitHub/u);
@@ -145,6 +146,33 @@ test("exact host arguments are accepted and ambiguous targets fail closed", () =
         "LocalHost41",
       ]),
     /differ from the repository owner/u,
+  );
+});
+
+test("owner-operated host mode accepts protected branches without reviewer rules", () => {
+  const state = protectedHost();
+  state.deploymentReviewer = "";
+  state.pagesEnvironment.protection_rules = [];
+  state.protection.required_pull_request_reviews = null;
+  state.independentReviewer = false;
+  assert.deepEqual(repositoryProtectionFailures(state), []);
+  assert.deepEqual(
+    parseHostArguments([
+      "--repository",
+      "approved-owner/qvac-atlas",
+      "--branch",
+      "main",
+      "--expected-head",
+      head,
+      "--no-independent-reviewer",
+    ]),
+    {
+      repository: "approved-owner/qvac-atlas",
+      branch: "main",
+      expectedHead: head,
+      deploymentReviewer: "",
+      independentReviewer: false,
+    },
   );
 });
 

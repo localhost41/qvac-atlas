@@ -18,8 +18,8 @@ Before bootstrap:
   no syntax or ownership errors;
 - confirm the repository and package contain the approved Apache-2.0 license;
 - enable a valid private security-reporting owner and support path;
-- name one GitHub user, distinct from the person triggering deployment, as the
-  required Pages reviewer and grant that reviewer repository access;
+- record the owner's explicit choice between a separately reviewed launch and
+  the owner-operated mode documented in D-021;
 - approve one exact 40-character commit whose real gate is false, production
   profiles/reports/claims are empty, and full release checks pass; and
 - authenticate GitHub CLI through its normal credential store with only the
@@ -31,7 +31,6 @@ Set non-secret identifiers explicitly:
 ATLAS_GITHUB_OWNER='localhost41'
 ATLAS_GITHUB_REPOSITORY='qvac-atlas'
 ATLAS_REVIEWED_COMMIT='REPLACE_WITH_40_HEX_COMMIT'
-ATLAS_PAGES_REVIEWER='REPLACE_WITH_INDEPENDENT_GITHUB_LOGIN'
 ATLAS_REPOSITORY="$ATLAS_GITHUB_OWNER/$ATLAS_GITHUB_REPOSITORY"
 
 test "$(git status --porcelain=v1 --untracked-files=all)" = ''
@@ -39,11 +38,9 @@ test "${#ATLAS_REVIEWED_COMMIT}" -eq 40
 case "$ATLAS_REVIEWED_COMMIT" in
   *[!0-9a-f]*) echo 'ATLAS_REVIEWED_COMMIT must contain only lowercase hexadecimal characters.' >&2; false ;;
 esac
-test -n "$ATLAS_PAGES_REVIEWER"
-node -e '
-if (process.argv[1].toLowerCase() === process.argv[2].toLowerCase()) {
-  throw new Error("Pages reviewer must differ from repository owner/release captain");
-}' "$ATLAS_PAGES_REVIEWER" "$ATLAS_GITHUB_OWNER"
+# In owner-operated mode, do not configure a Pages reviewer. The verifier is
+# invoked with --no-independent-reviewer and the branch protection payload
+# intentionally has no pull-request approval rule.
 ```
 
 ## Freeze the local release line
@@ -129,41 +126,28 @@ gh api --hostname github.com --method POST \
   "repos/$ATLAS_REPOSITORY/pages" \
   -f build_type=workflow
 
-ATLAS_PAGES_REVIEWER_ID="$(gh api --hostname github.com \
-  "users/$ATLAS_PAGES_REVIEWER" --jq .id)"
-case "$ATLAS_PAGES_REVIEWER_ID" in
-  ''|*[!0-9]*) echo 'Pages reviewer ID was not resolved.' >&2; false ;;
-esac
-
-node -e '
-const id = Number(process.argv[1]);
-process.stdout.write(JSON.stringify({
-  wait_timer: 0,
-  prevent_self_review: true,
-  can_admins_bypass: false,
-  reviewers: [{ type: "User", id }],
-  deployment_branch_policy: {
-    protected_branches: true,
-    custom_branch_policies: false
+printf '%s' '{
+  "wait_timer": 0,
+  "prevent_self_review": false,
+  "can_admins_bypass": false,
+  "reviewers": [],
+  "deployment_branch_policy": {
+    "protected_branches": true,
+    "custom_branch_policies": false
   }
-}));' "$ATLAS_PAGES_REVIEWER_ID" | gh api --hostname github.com --method PUT \
+}' | gh api --hostname github.com --method PUT \
   "repos/$ATLAS_REPOSITORY/environments/github-pages" \
   --input -
 ```
 
-The checked-in payload requires an up-to-date branch, the exact workspace check,
-bound to the GitHub Actions application, at least one approval, code-owner review,
-stale-approval dismissal, approval by someone other than the latest pusher,
-resolved conversations, administrator enforcement, no PR bypass actors, no force
-pushes or deletion, and linear history. Pages must use workflow deployment; its
-environment prevents self-review, disallows administrator bypass, requires the
-named independent reviewer, and accepts only protected branches. Do not add bypass
-users, teams, apps, or a direct-push exception. GitHub enables administrator
-deployment bypass by default, so the operator must confirm in the environment UI
-that **Allow administrators to bypass configured protection rules** is off. The
-read-only verifier below must also observe `can_admins_bypass: false`; if the API
-payload is rejected or ignored, use that GitHub environment control and rerun the
-verifier rather than weakening this requirement.
+The checked-in owner-operated payload requires an up-to-date branch, the exact
+workspace check bound to the GitHub Actions application, resolved conversations,
+administrator enforcement, no force pushes or deletion, and linear history. It
+does not require pull-request approval or a separate Pages reviewer, as recorded
+in D-021. Pages still uses workflow deployment, disallows administrator bypass,
+and accepts only protected branches. Do not add bypass users, teams, apps, or a
+direct-push exception. The read-only verifier below must observe
+`can_admins_bypass: false`.
 
 ## Read-only verification
 
@@ -175,7 +159,7 @@ node scripts/verify-host-protection.mjs \
   --repository "$ATLAS_REPOSITORY" \
   --branch main \
   --expected-head "$ATLAS_REVIEWED_COMMIT" \
-  --deployment-reviewer "$ATLAS_PAGES_REVIEWER"
+  --no-independent-reviewer
 ```
 
 It fails unless the repository is public, `main` is the default branch at the
@@ -183,10 +167,10 @@ exact reviewed commit, GitHub reports no CODEOWNERS errors, private vulnerabilit
 reporting is enabled, the exact commit has a successful GitHub Actions check, every
 required branch-protection field matches, the newest matching GitHub Actions check
 run on the exact commit is successful, Pages uses workflow mode, and the protected
-environment has the named reviewer, self-review prevention, administrator bypass
-disabled, and protected-branch-only deployment. Preserve the sanitized pass/fail
-output and exact commit in the private release record; do not preserve tokens or
-raw API responses.
+environment has no reviewer rule, administrator bypass disabled, and
+protected-branch-only deployment. Preserve the sanitized pass/fail output and
+exact commit in the private release record; do not preserve tokens or raw API
+responses.
 
 After verification, the next change must be a pull request from the exact trusted
 baseline and pass the normal base/target append-only audit. If any host setting
