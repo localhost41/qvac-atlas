@@ -13,7 +13,7 @@ const head = "a".repeat(40);
 function protectedHost() {
   return {
     repository: {
-      owner: { login: "approved-owner" },
+      owner: { login: "approved-owner", type: "User" },
       visibility: "public",
       private: false,
       default_branch: "main",
@@ -173,6 +173,21 @@ test("owner-operated host mode accepts protected branches without reviewer rules
       deploymentReviewer: "",
       independentReviewer: false,
     },
+  );
+});
+
+test("owner-operated personal repositories may lack block-creations support", () => {
+  const state = protectedHost();
+  state.independentReviewer = false;
+  state.deploymentReviewer = "";
+  state.pagesEnvironment.protection_rules = [];
+  state.protection.required_pull_request_reviews = null;
+  state.protection.block_creations.enabled = false;
+  assert.deepEqual(repositoryProtectionFailures(state), []);
+  state.repository.owner.type = "Organization";
+  assert.match(
+    repositoryProtectionFailures(state).join("\n"),
+    /matching branch creation/u,
   );
 });
 
