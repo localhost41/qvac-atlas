@@ -183,8 +183,11 @@ test("site release workflow is pinned, least-privilege, main-only, and manual-de
     readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
   ]);
 
-  assert.match(workflow, /^on:\n  workflow_dispatch:/mu);
-  assert.doesNotMatch(workflow, /^  (?:push|pull_request|schedule):/mu);
+  assert.match(
+    workflow,
+    /^on:\n  push:\n    branches:\n      - main\n  workflow_dispatch:/mu,
+  );
+  assert.doesNotMatch(workflow, /^  (?:pull_request|schedule):/mu);
   assert.match(
     workflow,
     /deploy:[\s\S]*?type: boolean\n        default: false/u,
