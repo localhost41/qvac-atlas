@@ -99,7 +99,7 @@ test("one static source builds at root and an owner-independent subpath", async 
     try {
       const output = join(temporaryRoot, "dist");
       await assertInternalTargetsResolve(output, base);
-      const [index, fixtures, report] = await Promise.all([
+      const [index, fixtures, report, contribute] = await Promise.all([
         readFile(join(output, "index.html"), "utf8"),
         readFile(join(output, "fixtures/index.html"), "utf8"),
         readFile(
@@ -109,6 +109,7 @@ test("one static source builds at root and an owner-independent subpath", async 
           ),
           "utf8",
         ),
+        readFile(join(output, "contribute/index.html"), "utf8"),
       ]);
       assert.match(index, new RegExp(`href="${base.replaceAll("/", "\\/")}"`));
       assert.match(fixtures, /Every result on this page is synthetic/u);
@@ -120,6 +121,10 @@ test("one static source builds at root and an owner-independent subpath", async 
       assert.match(index, /href="#main-content">Skip to content/u);
       assert.match(index, /<nav aria-label="Primary navigation">/u);
       assert.match(index, /aria-live="polite"/u);
+      assert.match(index, /Browse compatibility results/u);
+      assert.match(index, /Contribute your hardware result/u);
+      assert.match(contribute, /npx --yes qvac-atlas@0\.3\.0 contribute/u);
+      assert.match(contribute, /Submit anonymous report?/u);
       if (base !== "/") {
         assert.doesNotMatch(index, /(?:href|src)="\/(?!atlas-subpath\/)/u);
         assert.match(index, /src="\/atlas-subpath\/catalog-filter\.js"/u);

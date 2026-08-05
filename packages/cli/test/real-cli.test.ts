@@ -26,7 +26,7 @@ async function eligibleExactJson(): Promise<string> {
   return `${canonicalize(withReportId(report))}\n`;
 }
 
-function writtenPipeline(exactJson: string) {
+function writtenPipeline(exactJson: string, publication = true) {
   return async (_options: unknown, dependencies: any) => {
     await dependencies.interaction.disclosePrivacy({
       collection: "allowlisted",
@@ -41,20 +41,21 @@ function writtenPipeline(exactJson: string) {
     await dependencies.interaction.discloseWorkload({});
     assert.equal(await dependencies.interaction.decideWorkload(), true);
     await dependencies.interaction.preview(exactJson, "draft");
-    assert.equal(
-      await dependencies.interaction.choosePublication({
-        claimEligible: false,
-        currentlyAdmissible: false,
-      }),
-      true,
-    );
+    const approved = await dependencies.interaction.choosePublication({
+      claimEligible: false,
+      currentlyAdmissible: false,
+    });
+    assert.equal(approved, publication);
+    const report = JSON.parse(exactJson);
+    report.consent.publication = approved;
+    const outputJson = `${canonicalize(withReportId(report))}\n`;
     await dependencies.interaction.preview(exactJson, "final");
     assert.equal(await dependencies.interaction.confirmLocalWrite(), true);
-    await dependencies.output.writeExclusive(exactJson);
+    await dependencies.output.writeExclusive(outputJson);
     return {
-      exactJson,
+      exactJson: outputJson,
       history: [],
-      report: JSON.parse(exactJson),
+      report,
       status: "written",
     } as const;
   };
@@ -128,21 +129,19 @@ test("real CLI uses one normalized output for consent and exclusive write", asyn
           await dependencies.output.writeExclusive('{"final":true}\n');
           return { status: "written" } as never;
         },
+        submissionClient: {
+          origin: "https://relay.example",
+          submit: async () => ({ status: "queued", submissionId: "test" }),
+        },
       },
     );
     const expected = path.join(await realpath(root), "report.json");
     assert.equal(exit, 0);
     assert.equal(createdPath, expected);
     assert.equal(written, '{"final":true}\n');
-    assert.equal(questions.length, 5);
-    assert.match(questions[0] ?? "", /fingerprint risk/);
-    assert.match(questions[1] ?? "", /project-local QVAC Doctor/);
-    assert.match(questions[2] ?? "", /exactly one pinned cache/);
-    assert.match(questions[3] ?? "", /later public submission/);
-    assert.equal(
-      questions[4],
-      `Write the final exact JSON to ${expected} [y/N] `,
-    );
+    assert.equal(questions.length, 2);
+    assert.match(questions[0] ?? "", /one disclosed local QVAC Atlas check/);
+    assert.match(questions[1] ?? "", /Submit anonymous report/);
     assert.match(visible.join(""), /Nothing was submitted/);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -300,8 +299,8 @@ test("anonymous submission is offered only after the exact local write", async (
     assert.equal(exit, 0);
     assert.deepEqual(events, ["written", "disclosed", "submitted"]);
     assert.deepEqual(submitted, [exactJson]);
-    assert.equal(questions.length, 6);
-    assert.match(questions[5] ?? "", /https:\/\/relay\.example/);
+    assert.equal(questions.length, 2);
+    assert.match(questions[1] ?? "", /Submit anonymous report/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -324,7 +323,7 @@ test("decline and prompt EOF after write make zero submission calls", async (t) 
           {
             ask: async () => {
               questionCount += 1;
-              if (questionCount <= 5) return "yes";
+              if (questionCount === 1) return "yes";
               if (mode === "eof") throw new Error("EOF private detail");
               return "no";
             },
@@ -337,7 +336,7 @@ test("decline and prompt EOF after write make zero submission calls", async (t) 
               preflight: async () => true,
               writeExclusive: async () => ({ status: "written" as const }),
             }),
-            runPipeline: writtenPipeline(exactJson) as never,
+            runPipeline: writtenPipeline(exactJson, false) as never,
             submissionClient: {
               origin: "https://relay.example",
               submit: async () => {
@@ -348,7 +347,7 @@ test("decline and prompt EOF after write make zero submission calls", async (t) 
           },
         );
         assert.equal(exit, 0);
-        assert.equal(questionCount, 6);
+        assert.equal(questionCount, 2);
         assert.equal(calls, 0);
       } finally {
         await rm(root, { recursive: true, force: true });
@@ -359,6 +358,7 @@ test("decline and prompt EOF after write make zero submission calls", async (t) 
 
 test("an ineligible written report never reaches submission consent or transport", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "atlas-real-ineligible-"));
+  const exactJson = await eligibleExactJson();
   let questions = 0;
   let calls = 0;
   try {
@@ -371,7 +371,7 @@ test("an ineligible written report never reaches submission consent or transport
       {
         ask: async () => {
           questions += 1;
-          return "yes";
+          return questions === 1 ? "yes" : "no";
         },
         stdout: () => {},
         stderr: () => {},
@@ -382,7 +382,7 @@ test("an ineligible written report never reaches submission consent or transport
           preflight: async () => true,
           writeExclusive: async () => ({ status: "written" as const }),
         }),
-        runPipeline: writtenPipeline('{"final":true}\n') as never,
+        runPipeline: writtenPipeline(exactJson, false) as never,
         submissionClient: {
           origin: "https://relay.example",
           submit: async () => {
@@ -393,7 +393,7 @@ test("an ineligible written report never reaches submission consent or transport
       },
     );
     assert.equal(exit, 0);
-    assert.equal(questions, 5);
+    assert.equal(questions, 2);
     assert.equal(calls, 0);
   } finally {
     await rm(root, { recursive: true, force: true });

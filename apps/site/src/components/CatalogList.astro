@@ -16,6 +16,9 @@ interface Props {
 const { entries, heading, id } = Astro.props;
 const filterDefinitions = [
   ["hardware", "Hardware"],
+  ["architecture", "Architecture"],
+  ["memory", "Memory"],
+  ["gpu", "GPU"],
   ["os", "Operating system"],
   ["qvac", "QVAC version"],
   ["requestedDevice", "Requested device"],
@@ -79,6 +82,16 @@ function limitation(entry: CatalogCardEntry): string {
 <section class="catalog" id={id} data-catalog>
   <h2>{heading}</h2>
   <form class="filters" data-filters aria-label={`${heading} filters`}>
+    <label class="filter-search">
+      <span>Search registry</span>
+      <input
+        type="search"
+        name="search"
+        data-search
+        placeholder="Apple M4, arm64, 16-31 GiB…"
+        autocomplete="off"
+      />
+    </label>
     {
       filterDefinitions.map(([key, label]) => (
         <label>
@@ -109,7 +122,11 @@ function limitation(entry: CatalogCardEntry): string {
         <li
           class:list={["result-card", { "fixture-card": entry.fixture }]}
           data-record
+          data-search-text={`${entry.title} ${entry.facets.hardware} ${entry.facets.architecture} ${entry.facets.memory} ${entry.facets.gpu} ${entry.facets.os} ${entry.facets.qvac} ${entry.facets.requestedDevice} ${entry.facets.observedDevice} ${entry.facets.outcome}`}
           data-hardware={entry.facets.hardware}
+          data-architecture={entry.facets.architecture}
+          data-memory={entry.facets.memory}
+          data-gpu={entry.facets.gpu}
           data-os={entry.facets.os}
           data-qvac={entry.facets.qvac}
           data-requested-device={entry.facets.requestedDevice}
@@ -138,6 +155,18 @@ function limitation(entry: CatalogCardEntry): string {
             <div>
               <dt>OS</dt>
               <dd>{entry.facets.os}</dd>
+            </div>
+            <div>
+              <dt>Architecture</dt>
+              <dd>{entry.facets.architecture}</dd>
+            </div>
+            <div>
+              <dt>Memory</dt>
+              <dd>{entry.facets.memory}</dd>
+            </div>
+            <div>
+              <dt>GPU</dt>
+              <dd>{entry.facets.gpu}</dd>
             </div>
             <div>
               <dt>QVAC</dt>

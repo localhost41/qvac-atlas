@@ -2,7 +2,7 @@
 import generatedCatalog from "../../generated/catalog.json";
 import Base from "../../layouts/Base.astro";
 import { sitePath } from "../../site-path.js";
-import type { CatalogData, CatalogReport } from "../../types/catalog.js";
+import type { CatalogData } from "../../types/catalog.js";
 
 export function getStaticPaths() {
   const catalog = generatedCatalog as unknown as CatalogData;
@@ -12,13 +12,11 @@ export function getStaticPaths() {
   }));
 }
 
-interface Props {
-  entry: CatalogReport;
-  fixture: boolean;
-}
-
 const { entry, fixture } = Astro.props;
 const report = entry.report;
+const runtime = report.runtime as { node_version?: unknown } | undefined;
+const profile = report.profile as { id?: unknown } | undefined;
+const result = report.result as { workload_status?: unknown } | undefined;
 ---
 
 <Base
@@ -48,8 +46,21 @@ const report = entry.report;
       </div>
       <div><dt>Source path</dt><dd>{entry.sourcePath}</dd></div>
       <div><dt>Hardware</dt><dd>{entry.facets.hardware}</dd></div>
+      <div><dt>Architecture</dt><dd>{entry.facets.architecture}</dd></div>
+      <div><dt>Memory</dt><dd>{entry.facets.memory}</dd></div>
+      <div><dt>GPU evidence</dt><dd>{entry.facets.gpu}</dd></div>
       <div><dt>Operating system</dt><dd>{entry.facets.os}</dd></div>
       <div><dt>QVAC SDK</dt><dd>{entry.facets.qvac}</dd></div>
+      <div>
+        <dt>Node runtime</dt><dd>
+          {String(runtime?.node_version ?? "unknown")}
+        </dd>
+      </div>
+      <div>
+        <dt>Workload profile</dt><dd>
+          {String(profile?.id ?? "unknown")}
+        </dd>
+      </div>
       <div>
         <dt>Requested device</dt><dd>{entry.facets.requestedDevice}</dd>
       </div>
@@ -58,6 +69,11 @@ const report = entry.report;
       </div>
       <div><dt>Derived observation</dt><dd>{entry.claim.observation}</dd></div>
       <div><dt>Derived claim</dt><dd>{entry.claim.claim}</dd></div>
+      <div>
+        <dt>Lifecycle result</dt><dd>
+          {String(result?.workload_status ?? "unknown")}
+        </dd>
+      </div>
     </dl>
 
     <section aria-labelledby="limits-title">

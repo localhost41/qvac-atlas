@@ -56,6 +56,26 @@ test("false real gate refuses before every effect", async () => {
   assert.deepEqual(calls, ["stderr"]);
 });
 
+test("contribute is the default-output real entry point and remains gated", async () => {
+  const calls: string[] = [];
+  assert.equal(
+    await dispatchCli(["contribute"], dependencies(calls), false),
+    2,
+  );
+  assert.deepEqual(calls, ["stderr"]);
+
+  const requests: string[] = [];
+  const deps = dependencies([]);
+  deps.loadRealCli = async () => ({
+    runEnabledRealCli: async (request) => {
+      requests.push(request.output);
+      return 0;
+    },
+  });
+  assert.equal(await dispatchCli(["contribute"], deps, true), 0);
+  assert.deepEqual(requests, ["qvac-atlas-report.json"]);
+});
+
 test("help forms succeed on stdout before every effect", async () => {
   const forms = [["--help"], ["-h"], ["probe", "--help"], ["probe", "-h"]];
   for (const args of forms) {

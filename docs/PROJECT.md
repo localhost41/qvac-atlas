@@ -12,14 +12,17 @@ Atlas does not claim universal hardware support, future-version compatibility, o
 
 ## V1 user journey
 
-1. A contributor runs the installed `qvac-atlas probe` from an explicit project
-   containing the supported QVAC SDK.
-2. Atlas explains what it will collect and obtains explicit consent.
+1. A contributor runs `npx --yes qvac-atlas@0.3.0 contribute` from an explicit
+   project containing the supported QVAC SDK.
+2. Atlas presents one combined disclosure for the local run and obtains one
+   explicit consent decision.
 3. Atlas runs official checks and one pinned QVAC workload in an isolated child process.
-4. Atlas creates a local, sanitized, schema-valid JSON report and previews it.
-5. Atlas writes the report locally; declining submission sends nothing.
-6. With one separate default-no confirmation, Atlas can submit that exact report
-   anonymously to a private review queue without requiring a GitHub account.
+4. Atlas shows a concise allowlisted summary, then writes the exact sanitized,
+   schema-valid JSON report locally.
+5. Atlas asks `Submit anonymous report? [y/N]`; declining or pressing Enter sends
+   nothing.
+6. A yes submits that exact report once to a private review queue without
+   requiring a GitHub account.
 7. CI and a human review and promote the report before it becomes searchable on
    the static site.
 
@@ -32,12 +35,15 @@ Atlas does not claim universal hardware support, future-version compatibility, o
   bundle and the official verifier may execute project configuration.
 - Isolated worker startup and one standardized small-LLM lifecycle profile.
 - Requested and directly observed backend recorded separately.
-- Local preview and JSON output, followed only by an explicit anonymous submission
-  choice to one pinned Atlas relay.
+- One combined local disclosure, a readable result summary, and JSON output,
+  followed only by an explicit anonymous submission choice to one pinned Atlas
+  relay.
 - Private GitHub-backed submission queue with no service database and no automatic
   public publication.
 - Git-backed reviewed reports.
-- Static site filtered by hardware, OS, QVAC version, backend, and outcome.
+- Static site with clear browse/contribute entry points, search, and filters by
+  hardware, architecture, memory, GPU, OS/kernel, QVAC version, backend, and
+  outcome.
 - Evidence and limitations visible for every public claim.
 
 ## Explicit non-goals

@@ -1,0 +1,77 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Contribute a QVAC hardware result — QVAC Atlas"
+  description="Run one privacy-bounded QVAC Atlas check and optionally submit its anonymous report."
+>
+  <section class="hero compact">
+    <p class="eyebrow">One command · two decisions</p>
+    <h1>Show the community where QVAC actually runs.</h1>
+    <p>
+      Atlas runs one pinned, privacy-bounded workload locally. Your report is
+      saved on your computer first. Only an explicit yes sends that exact report
+      to the anonymous review queue.
+    </p>
+  </section>
+
+  <section class="contribute-grid" aria-labelledby="command-title">
+    <div>
+      <h2 id="command-title">Run the check</h2>
+      <div class="command-box">
+        <code>npx --yes qvac-atlas@0.3.0 contribute</code>
+      </div>
+      <p class="muted">
+        The default output is a private <code>qvac-atlas-report.json</code> in your
+        project directory. Use <code>--output</code> only when you want a different
+        local filename.
+      </p>
+    </div>
+    <div>
+      <h2>What you will see</h2>
+      <ol class="steps">
+        <li>Read one combined disclosure and answer whether to run locally.</li>
+        <li>
+          Review a concise result summary with hardware, software, device, and
+          outcome details.
+        </li>
+        <li>
+          Answer <strong>Submit anonymous report? [y/N]</strong>. Enter keeps it
+          private.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="privacy-columns" aria-labelledby="privacy-title">
+    <div>
+      <h2 id="privacy-title">Collected and shown</h2>
+      <p>
+        Allowlisted fields include Apple SoC/CPU model, arm64 architecture,
+        memory bucket, GPU inventory when directly available, OS family and
+        kernel release, Node and QVAC versions, requested and observed device,
+        pinned profile, lifecycle phases, and sanitized outcome evidence.
+      </p>
+    </div>
+    <div>
+      <h2>Never collected</h2>
+      <p>
+        Atlas excludes usernames, hostname, home paths, serial numbers, IP and
+        network data, credentials, environment variables, prompts, and arbitrary
+        logs. Anonymous does not mean invisible to the network provider:
+        connection metadata can still exist outside Atlas.
+      </p>
+    </div>
+  </section>
+
+  <aside class="notice">
+    <h2>What happens after submission?</h2>
+    <p>
+      The exact local JSON is sent once to a private maintainer queue. It is not
+      public immediately, does not create an identity-verified claim, and is
+      published only after review. The public registry labels anonymous evidence
+      and keeps its limitations visible.
+    </p>
+  </aside>
+</Base>

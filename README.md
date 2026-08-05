@@ -21,7 +21,8 @@ validation, a fail-closed project-local SDK resolver, deterministic Git admissio
 and the static registry all pass the workspace gate. The CLI deliberately exposes
 only synthetic scenarios today. A deterministic, zero-runtime-dependency local
 `qvac-atlas@0.1.0` remains the reviewed fixture-only baseline. ATLAS-036 adds the
-source-complete `0.2.0` accountless submission path: one post-write choice, a
+source-complete `0.2.0` accountless submission path, and ATLAS-037 simplifies the
+next `0.3.0` candidate to one local-run decision plus one submission decision: a
 bounded HTTPS relay, a private GitHub App queue, and mechanically unverified
 anonymous source metadata. Its production relay origin remains disabled until the
 exact deployment passes a separate operations and privacy review.
@@ -54,9 +55,11 @@ with the [five-minute synthetic walkthrough](docs/contributing/five-minute-fixtu
 
 The complete anonymous submission path is implemented and locally tested, but the
 shipped source still pins its relay origin to `null` and keeps real mode disabled.
-Fixture output can never be submitted. After a reviewed deployment is pinned, an
-eligible real probe will write its report locally and offer one separate default-no
-choice to queue the exact previewed bytes without a GitHub account.
+Fixture output can never be submitted. After a reviewed deployment is pinned, the
+community command will be `npx --yes qvac-atlas@0.3.0 contribute`: it shows one
+combined local-run disclosure, a rich allowlisted result summary, saves the report
+privately, and asks `Submit anonymous report? [y/N]`. Enter keeps the report local;
+yes sends the exact saved bytes once to the private queue.
 Code, documentation, and fixture-only test contributions remain open.
 
 Atlas never submits silently, retries in the background, or publishes queue items

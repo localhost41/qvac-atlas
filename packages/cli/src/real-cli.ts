@@ -69,9 +69,11 @@ function interaction(
   outputPath: string,
   signal: AbortSignal,
   io: EnabledRealCliIo,
+  submissionClient: AnonymousSubmissionClient | null,
 ): RealProbeInteraction {
   const decide = async (question: string): Promise<boolean> =>
     yes(await io.ask(question, signal));
+  let localRunConsent: boolean | undefined;
   return {
     disclosePrivacy: async (view) => {
       io.stdout(
@@ -80,47 +82,98 @@ function interaction(
           `Collection: ${view.collection}.`,
           "The selected project code executes in bounded isolation, not a sandbox.",
           "The candidate is nonstandard and cannot create a compatibility claim.",
-          "Atlas installs nothing and performs approved cache effects before report preview.",
-          "Nothing is submitted unless you separately approve anonymous queueing after the final report is written.",
+          "Atlas installs nothing and performs only the disclosed cache and workload effects.",
+          "One local-run decision authorizes the audited project code and exactly one pinned workload.",
+          "Nothing is submitted unless you separately approve anonymous queueing after the local report is saved.",
           "",
         ].join("\n"),
       );
     },
-    decideFingerprint: () =>
-      decide(
-        "I understand the fingerprint risk and consent to local collection [y/N] ",
-      ),
+    decideFingerprint: async () => {
+      localRunConsent = await decide(
+        "Run one disclosed local QVAC Atlas check on this project? [y/N] ",
+      );
+      return localRunConsent;
+    },
     discloseProjectCode: async (view) => {
       io.stdout(
         `Project-code disclosure: exact current-project ${view.package}@${view.version}; ${view.containment}.\n`,
       );
     },
-    decideProjectCode: () =>
-      decide("Run the audited project-local QVAC Doctor and SDK code [y/N] "),
+    decideProjectCode: async () => localRunConsent === true,
     discloseWorkload: async (view) => {
       io.stdout(
         `Authoritative artifact and workload disclosure:\n${JSON.stringify(view, null, 2)}\n`,
       );
     },
-    decideWorkload: () =>
-      decide(
-        "Authorize exactly one pinned cache verify/download and one requested-GPU lifecycle [y/N] ",
-      ),
+    decideWorkload: async () => localRunConsent === true,
     preview: async (exactJson, kind) => {
-      io.stdout(
-        `--- ${kind} exact JSON ---\n${exactJson}--- end ${kind} exact JSON ---\n`,
-      );
+      if (kind !== "draft") return;
+      try {
+        const report = JSON.parse(exactJson) as {
+          platform?: {
+            cpu?: { model?: string };
+            architecture?: string;
+            memory_bucket?: string;
+            gpus?: Array<{ model?: string }>;
+            os?: { family?: string; version?: string };
+          };
+          runtime?: { node_version?: string };
+          qvac?: { sdk_version?: string | null };
+          profile?: { id?: string; requested_backend?: string };
+          execution?: {
+            backend_observation?: { backend?: string | null; status?: string };
+          };
+          result?: { workload_status?: string };
+        };
+        const platform = report.platform ?? {};
+        const cpu = platform.cpu?.model ?? "unknown CPU";
+        const gpu =
+          platform.gpus
+            ?.map((item) => item.model)
+            .filter(Boolean)
+            .join(", ") ||
+          (platform.os?.family === "macos"
+            ? "integrated GPU keyed by Apple SoC (exact inventory unavailable)"
+            : "GPU inventory unavailable");
+        io.stdout(
+          [
+            "QVAC Atlas result summary",
+            `Hardware: ${cpu} · ${platform.architecture ?? "unknown architecture"} · ${platform.memory_bucket ?? "unknown memory"}`,
+            `GPU: ${gpu}`,
+            `OS: ${platform.os?.family ?? "unknown"} ${platform.os?.version ?? "unknown"}`,
+            `Runtime: Node ${report.runtime?.node_version ?? "unknown"} · QVAC SDK ${report.qvac?.sdk_version ?? "unknown"}`,
+            `Workload: ${report.profile?.id ?? "unknown profile"} · requested ${report.profile?.requested_backend ?? "unknown"} · observed ${report.execution?.backend_observation?.backend ?? "unknown"} (${report.execution?.backend_observation?.status ?? "unknown"})`,
+            `Result: ${report.result?.workload_status ?? "unknown"}`,
+            "Only these allowlisted fields are retained; usernames, paths, network data, credentials, and arbitrary logs are excluded.",
+            "",
+          ].join("\n"),
+        );
+      } catch {
+        io.stdout("QVAC Atlas completed a privacy-bounded result preview.\n");
+      }
     },
     choosePublication: async (warning) => {
+      if (submissionClient === null) {
+        io.stdout(
+          "Anonymous submission is unavailable in this build; the report will remain private.\n",
+        );
+        return false;
+      }
       io.stdout(
-        `Publication warning: claim eligible=${warning.claimEligible}; currently admissible=${warning.currentlyAdmissible}; no upload occurs until a separate post-write choice.\n`,
+        `Anonymous submission: claim eligible=${warning.claimEligible}; admissible=${warning.currentlyAdmissible}. The exact report will be saved locally first; one bounded request follows only if you say yes.\n`,
       );
-      return decide(
-        "Mark this local report as intended for later public submission [y/N] ",
-      );
+      try {
+        return await decide("Submit anonymous report? [y/N] ");
+      } catch {
+        if (signal.aborted) throw new Error("submission-prompt-cancelled");
+        io.stdout(
+          "Submission choice was unavailable; the report will remain private.\n",
+        );
+        return false;
+      }
     },
-    confirmLocalWrite: () =>
-      decide(`Write the final exact JSON to ${outputPath} [y/N] `),
+    confirmLocalWrite: async () => true,
   };
 }
 
@@ -154,6 +207,18 @@ async function handleWrittenResult(
   client: AnonymousSubmissionClient | null,
 ): Promise<number> {
   io.stdout(`Candidate report written locally to ${outputPath}.\n`);
+  let publicationRequested = false;
+  try {
+    publicationRequested =
+      (JSON.parse(result.exactJson) as { consent?: { publication?: boolean } })
+        .consent?.publication === true;
+  } catch {
+    publicationRequested = false;
+  }
+  if (!publicationRequested) {
+    io.stdout("Private report saved. Nothing was submitted.\n");
+    return 0;
+  }
   let submission;
   try {
     submission = admitExactSubmission(result.exactJson);
@@ -173,7 +238,7 @@ async function handleWrittenResult(
     [
       "Anonymous submission disclosure",
       `Destination: ${client.origin}`,
-      "Payload: only the exact final JSON previewed above and written locally.",
+      "Payload: only the exact final JSON written locally immediately before this request.",
       "The relay stores it in a private GitHub review queue; queueing is not public publication or identity verification.",
       "Accountless is not network-anonymous: the hosting provider processes connection metadata, and GitHub records relay timing.",
       "Atlas performs one bounded request, keeps no application access log, and never retries in the background.",
@@ -182,26 +247,6 @@ async function handleWrittenResult(
       "",
     ].join("\n"),
   );
-  let approved = false;
-  try {
-    approved = yes(
-      await io.ask(
-        `Submit this exact report accountlessly to ${client.origin} [y/N] `,
-        signal,
-      ),
-    );
-  } catch {
-    if (signal.aborted) {
-      io.stderr(
-        "The local report remains saved. Anonymous submission was cancelled before a request started.\n",
-      );
-      return 130;
-    }
-  }
-  if (!approved) {
-    io.stdout("The report remains local. Nothing was submitted.\n");
-    return 0;
-  }
   try {
     const receipt = await client.submit(submission.exactJson, signal);
     io.stdout(
@@ -232,6 +277,10 @@ export async function runEnabledRealCli(
     const projectRoot = path.resolve(request.cwd);
     const outputPath = await normalizeOutputPath(projectRoot, request.output);
     request.signal.throwIfAborted();
+    const submissionClient =
+      overrides.submissionClient === undefined
+        ? configuredAnonymousSubmissionClient()
+        : overrides.submissionClient;
     const coordinator =
       overrides.createCoordinator?.(projectRoot) ??
       new ProductionRealCoordinator(projectRoot);
@@ -240,16 +289,17 @@ export async function runEnabledRealCli(
     const result = await (overrides.runPipeline ?? runRealProbePipeline)(
       { signal: request.signal },
       {
-        interaction: interaction(outputPath, request.signal, io),
+        interaction: interaction(
+          outputPath,
+          request.signal,
+          io,
+          submissionClient,
+        ),
         coordinator,
         output,
       },
     );
     if (result.status === "written") {
-      const submissionClient =
-        overrides.submissionClient === undefined
-          ? configuredAnonymousSubmissionClient()
-          : overrides.submissionClient;
       return await handleWrittenResult(
         result,
         outputPath,

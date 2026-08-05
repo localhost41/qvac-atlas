@@ -45,8 +45,22 @@ function exactReal(args: readonly string[]): { output: string } | null {
     : null;
 }
 
+function exactContribution(args: readonly string[]): { output: string } | null {
+  if (args[0] !== "contribute") return null;
+  if (args.length === 1) return { output: "qvac-atlas-report.json" };
+  if (args.length === 3 && args[1] === "--output" && validRealOutput(args[2])) {
+    return { output: args[2] };
+  }
+  return null;
+}
+
 function realUsage(): string {
-  return "Usage: qvac-atlas probe --real --output <path>\n";
+  return (
+    [
+      "Usage: qvac-atlas probe --real --output <path>",
+      "       qvac-atlas contribute [--output <path>]",
+    ].join("\n") + "\n"
+  );
 }
 
 function isHelp(args: readonly string[]): boolean {
@@ -76,9 +90,9 @@ export async function dispatchCli(
     dependencies.stdout(`${usage()}\n`);
     return 0;
   }
-  const real = exactReal(args);
+  const real = exactReal(args) ?? exactContribution(args);
   if (real === null) {
-    if (hasRealFlagIntent(args)) {
+    if (hasRealFlagIntent(args) || args[0] === "contribute") {
       dependencies.stderr(realUsage());
       return 2;
     }

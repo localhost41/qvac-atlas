@@ -112,19 +112,9 @@ test("private true seam completes the synthetic real path without enabling produ
   };
 
   const expectedQuestions = [
-    "I understand the fingerprint risk and consent to local collection [y/N] ",
-    "Run the audited project-local QVAC Doctor and SDK code [y/N] ",
-    "Authorize exactly one pinned cache verify/download and one requested-GPU lifecycle [y/N] ",
-    "Mark this local report as intended for later public submission [y/N] ",
-    `Write the final exact JSON to ${expectedOutput} [y/N] `,
+    "Run one disclosed local QVAC Atlas check on this project? [y/N] ",
   ];
-  const questionEvents = [
-    "ask:fingerprint",
-    "ask:project",
-    "ask:workload",
-    "ask:publication",
-    "ask:write",
-  ];
+  const questionEvents = ["ask:fingerprint"];
 
   try {
     const exit = await dispatchCli(
@@ -164,16 +154,14 @@ test("private true seam completes the synthetic real path without enabling produ
             value.startsWith("Authoritative artifact and workload disclosure:")
           )
             events.push("disclose:workload");
-          else if (value.startsWith("--- draft exact JSON ---"))
+          else if (value.startsWith("QVAC Atlas result summary"))
             events.push("preview:draft");
-          else if (value.startsWith("Publication warning:"))
-            events.push("warning:publication");
-          else if (value.startsWith("--- final exact JSON ---"))
-            events.push("preview:final");
-          else if (value.startsWith("Candidate report written locally to"))
-            events.push("complete");
-          else if (value.startsWith("Anonymous submission is disabled")) {
+          else if (value.startsWith("Anonymous submission is unavailable")) {
             // The source-pinned relay origin intentionally remains inactive.
+          } else if (value.startsWith("Candidate report written locally to"))
+            events.push("complete");
+          else if (value.startsWith("Private report saved")) {
+            // Expected local-only completion.
           } else assert.fail(`unexpected stdout shape: ${value.slice(0, 40)}`);
         },
         stderr: (value) => errors.push(value),
@@ -218,16 +206,10 @@ test("private true seam completes the synthetic real path without enabling produ
       "ask:fingerprint",
       "coordinator:resolve",
       "disclose:project",
-      "ask:project",
       "coordinator:doctor",
       "disclose:workload",
-      "ask:workload",
       "coordinator:workload",
       "preview:draft",
-      "warning:publication",
-      "ask:publication",
-      "preview:final",
-      "ask:write",
       "complete",
       "signal:remove",
     ]);
@@ -239,23 +221,14 @@ test("private true seam completes the synthetic real path without enabling produ
       forwardedSignal,
     ]);
 
-    assert.equal(visible.length, 8);
-    assert.match(visible[0]!, /candidate is nonstandard/);
-    assert.match(visible[2]!, /"requestedBackend": "gpu"/);
-    assert.match(visible[4]!, /claim eligible=false/);
-    assert.equal(
-      `${visible[6]}${visible[7]}`,
-      `Candidate report written locally to ${expectedOutput}.\nAnonymous submission is disabled in this build; the report remains local. Nothing was submitted.\n`,
-    );
-
-    const draftBytes = previewBytes(visible[3]!, "draft");
-    const finalBytes = previewBytes(visible[5]!, "final");
-    assert.equal(await readFile(expectedOutput, "utf8"), finalBytes);
-    const draft = JSON.parse(draftBytes) as AtlasReport;
+    const outputText = visible.join("");
+    assert.match(outputText, /candidate is nonstandard/);
+    assert.match(outputText, /QVAC Atlas result summary/);
+    assert.match(outputText, /Anonymous submission is unavailable/);
+    assert.match(outputText, /Private report saved/);
+    const finalBytes = await readFile(expectedOutput, "utf8");
     const report = JSON.parse(finalBytes) as AtlasReport;
-    assert.equal(draft.consent.publication, false);
-    assert.equal(report.consent.publication, true);
-    assert.equal(draft.report_id, report.report_id);
+    assert.equal(report.consent.publication, false);
     assert.equal(report.provenance.kind, "probe");
     assert.equal(report.provenance.fixture_id, null);
     assert.equal(report.profile.id, "atlas-smollm2-360m-lifecycle");

@@ -11,12 +11,15 @@ export type ObservationState =
 export type ActualDeviceClaim = "observed-success" | "reproduced-success";
 
 export interface CatalogFacets {
+  architecture: string;
   hardware: string;
+  memory: string;
   observedDevice: string;
   os: string;
   outcome: ObservationState;
   qvac: string;
   requestedDevice: string;
+  gpu: string;
 }
 
 export interface DerivedClaim {

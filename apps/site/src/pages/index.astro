@@ -78,6 +78,33 @@ const claims = catalog.claims.map((entry) => {
       workload, operating system, and hardware configuration. It does not
       predict compatibility across versions or devices.
     </p>
+    <div class="hero-actions">
+      <a class="button primary" href="#genuine-catalog"
+        >Browse compatibility results</a
+      >
+      <a class="button" href={sitePath("/contribute/")}
+        >Contribute your hardware result</a
+      >
+    </div>
+  </section>
+
+  <section class="registry-intro" aria-labelledby="registry-intro-title">
+    <div>
+      <p class="eyebrow">A living, reviewed registry</p>
+      <h2 id="registry-intro-title">
+        Search the evidence that matters to your setup.
+      </h2>
+      <p>
+        Filter by Apple SoC or CPU, architecture, memory, GPU, OS and kernel,
+        QVAC version, requested versus observed device, and result. Every card
+        links to the exact validated report and its limitations.
+      </p>
+    </div>
+    <dl class="registry-stats" aria-label="Registry summary">
+      <div><dt>{catalog.claims.length}</dt><dd>compatibility claims</dd></div>
+      <div><dt>{catalog.reports.length}</dt><dd>reviewed reports</dd></div>
+      <div><dt>{catalog.fixtures.length}</dt><dd>synthetic fixtures</dd></div>
+    </dl>
   </section>
 
   {
@@ -85,10 +112,13 @@ const claims = catalog.claims.map((entry) => {
       <aside class="notice" aria-labelledby="empty-registry-title">
         <h2 id="empty-registry-title">The genuine registry is not open yet</h2>
         <p>
-          Production profile admission is disabled until a hash-verified QVAC
-          lifecycle succeeds on real hardware. Fixture data remains isolated in
-          the fixture lab.
+          The registry is ready for reviewed anonymous results. It is empty
+          until the first report is contributed and admitted; fixture data
+          remains isolated in the fixture lab.
         </p>
+        <a class="text-link" href={sitePath("/contribute/")}>
+          Be the first contributor →
+        </a>
       </aside>
     )
   }

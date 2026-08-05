@@ -1,6 +1,6 @@
 # Task board
 
-Updated: 2026-08-04
+Updated: 2026-08-05
 
 | Task       | Owner               | Model            | Status            | Depends on                      | Deliverable                                                                                                  |
 | ---------- | ------------------- | ---------------- | ----------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -54,6 +54,7 @@ Updated: 2026-08-04
 | ATLAS-034D | quality workers     | Sol xhigh        | completed         | ATLAS-034A–034C                 | Integrated community-launch candidate and independent acceptance report                                      |
 | ATLAS-035  | release captain     | Sol xhigh + human| in progress       | ATLAS-034                       | Authorized fixture-only public launch: license, ownership, host, npm, Pages, release, and announcements       |
 | ATLAS-036  | root + reviewers    | Sol xhigh        | completed locally | ATLAS-034, D-019                | Explicit anonymous relay, private GitHub review queue, CLI consent, abuse controls, and end-to-end tests       |
+| ATLAS-037  | root                | Sol xhigh        | in progress       | ATLAS-034, ATLAS-036, D-020     | One-command contribution UX, richer privacy-bounded summary, and user-friendly static registry                |
 
 ## Queue rules
 

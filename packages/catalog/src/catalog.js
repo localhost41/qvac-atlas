@@ -183,14 +183,25 @@ function osLabel(report) {
   return `${release} · ${report.platform.architecture}`;
 }
 
+function gpuLabel(report) {
+  const gpus = report.platform.gpus.map((gpu) => gpu.model).filter(Boolean);
+  if (gpus.length > 0) return gpus.join(", ");
+  return usesAppleSiliconSocGpuIdentity(report)
+    ? "integrated Apple GPU (SoC-keyed)"
+    : "unknown";
+}
+
 function facets(report, outcome) {
   return {
+    architecture: report.platform.architecture,
     hardware: hardwareLabel(report),
+    memory: report.platform.memory_bucket,
     observedDevice: report.execution.backend_observation.backend ?? "unknown",
     os: osLabel(report),
     outcome,
     qvac: report.qvac.sdk_version ?? "unknown",
     requestedDevice: report.profile.requested_backend,
+    gpu: gpuLabel(report),
   };
 }
 

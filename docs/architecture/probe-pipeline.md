@@ -15,7 +15,7 @@ binds the exact current project resolver handle, normalized Doctor, contained pi
 acquisition, opaque execution grant, and directly supervised executor, but the
 literal false gate refuses before TTY, cwd, signal, prompt, or real-module effects.
 
-The pipeline is:
+The internal pipeline remains:
 
 ```text
 disclose
@@ -24,17 +24,20 @@ disclose
   -> normalize project-local Doctor evidence
   -> consume strict runner events
   -> assemble + schema-validate publication=false report
-  -> preview exact draft JSON
-  -> choose publication intent
-  -> revalidate + preview exact final JSON
-  -> approve exact local output path
+  -> validate a draft and render a privacy-bounded summary
+  -> choose anonymous submission
+  -> revalidate final JSON
+  -> automatic exclusive local write
   -> exclusive local write
 ```
 
 The state machine rejects skipped, repeated, and out-of-order transitions.
-Publication cannot be chosen before the draft preview. The write cannot occur
-before the final preview and separate write confirmation. Declining publication
-still permits a private local report. Declining fingerprint acknowledgement stops
+The community CLI presents one combined local-run decision; the project-code and
+workload callbacks consume that decision without additional prompts. It renders
+only allowlisted summary fields rather than dumping raw JSON, asks
+`Submit anonymous report? [y/N]` once, writes the exact final bytes locally first,
+and performs one request only when the answer is yes. Declining publication still
+permits a private local report. Declining local-run acknowledgement stops
 before platform collection, Doctor, runner, preview, or write.
 
 Noninteractive use is refused. V1 does not provide a `--yes`, environment-variable,
@@ -50,13 +53,14 @@ executor child's process-group disconnect fail-safe.
 ## Exact preview and write
 
 The draft is assembled with `consent.publication: false`, validated by the
-integrated `@qvac-atlas/schema` package, canonically serialized, and shown in full.
-After the publication choice, the consent field is updated, the report is
-revalidated, and the complete final bytes are shown again. Publication consent is
+integrated `@qvac-atlas/schema` package, canonically serialized, and reduced to a
+human-readable summary. After the anonymous submission choice, the consent field
+is updated, the report is revalidated, and the exact final bytes are written.
+Publication consent is
 not part of the evidence hash, so the report ID remains stable, while the serialized
 document correctly reflects the user's decision.
 
-The final preview string is exactly the string passed to the writer. The writer:
+The final serialized string is exactly the string passed to the writer. The writer:
 
 - requires an explicit absolute output path;
 - does not create parent directories;

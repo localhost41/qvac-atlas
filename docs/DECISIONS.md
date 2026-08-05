@@ -199,3 +199,28 @@ stays disabled until a reviewed HTTPS deployment is pinned in source. This decis
 supersedes only the earlier blanket prohibition on an API server and automatic
 submission in the bounded form above; the prohibitions on accounts, OAuth,
 telemetry, databases, silent upload, and automatic public publication remain.
+
+## D-020 — Contribution is one local decision plus one anonymous submission decision
+
+The community-facing contribution path is `npx --yes qvac-atlas@0.3.0 contribute`.
+It has no menu and no hidden flags: Atlas presents one combined disclosure for
+the local run, then shows a concise allowlisted result summary, saves the exact
+canonical JSON privately, and asks exactly `Submit anonymous report? [y/N]`.
+`No` or Enter writes the private report and performs zero network requests. `Yes`
+performs the single bounded relay request after the local write. An advanced
+`--output` option remains available for explicit local destinations.
+
+The summary may show Apple SoC/CPU model, architecture, memory bucket, directly
+available GPU inventory (or the explicitly limited Apple-SoC-keyed integrated
+GPU label), OS family and kernel release, Node and QVAC versions, profile,
+requested and directly observed device, lifecycle outcome, and limitations. It
+must never show usernames, hostnames, home paths, serials, network data,
+credentials, environment variables, prompts, or arbitrary logs.
+
+The static registry is a first-class user destination, not merely generated
+catalog output. Its home page links to browse and contribute actions, supports
+search and filters for the allowlisted hardware/software/device/result fields,
+and links each card to a shareable exact-report page. `/contribute/` explains
+the command, the two decisions, collection exclusions, local-first behavior,
+and the private-review-to-public-publication boundary. The site remains static,
+reviewed Git data with no accounts, database, analytics, or live API.

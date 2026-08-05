@@ -9,11 +9,11 @@ privacy, and activation reviews pass. The production relay origin is also pinned
 `null` until its separate deployment review passes, so the distributed candidate
 cannot contact an unreviewed destination.
 
-When both reviewed gates are eventually active, submission still happens only
-after final exact preview, publication intent, and a successful exclusive local
-write. Atlas names the destination, discloses the private GitHub queue and network
-metadata boundary, asks a separate default-no question, and performs one bounded
-request only after `yes`. It has no contributor credential, telemetry, background
+When both reviewed gates are eventually active, the `0.3.0` contribution flow
+will show one combined local-run disclosure, a concise allowlisted result summary,
+save the exact JSON with an exclusive local write, and ask exactly
+`Submit anonymous report? [y/N]`. Enter keeps it private; yes performs one bounded
+request after the write. It has no contributor credential, telemetry, background
 retry, or automatic public publication.
 
 ## Requirements

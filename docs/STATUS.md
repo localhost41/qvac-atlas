@@ -120,6 +120,10 @@ M1 — Local probe and registry vertical slice.
   cleanliness checks without claiming exact history or external release gates.
   Activation, first-report admission, and exceptional remediation gates are
   explicit and remain human-controlled.
+- ATLAS-037: the next community-facing candidate now has a single `contribute`
+  command, one local-run consent, one anonymous submission choice, richer
+  allowlisted summaries, searchable hardware/software facets, and a dedicated
+  static contribution page. The real gate and relay origin remain disabled.
 - ATLAS-032: exact contribution auditing traverses each relevant introduced Git
   edge and rejects intermediate report mutation, deletion, type, or mode drift even
   when the final endpoint restores the trusted blob. Traversal is exact and bounded.

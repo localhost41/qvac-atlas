@@ -37,7 +37,8 @@ a {
 
 a:focus-visible,
 button:focus-visible,
-select:focus-visible {
+select:focus-visible,
+input:focus-visible {
   outline: 3px solid #2f9e7a;
   outline-offset: 3px;
 }
@@ -155,7 +156,32 @@ h1 {
   margin-bottom: 0.3rem;
 }
 
+.filter-search {
+  grid-column: 1 / -1;
+}
+
+.command-box {
+  border: 1px solid var(--line);
+  background: #111713;
+  color: #e8f1eb;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.steps {
+  padding-left: 1.25rem;
+}
+
+.steps li + li {
+  margin-top: 0.7rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
 select,
+input,
 button {
   width: 100%;
   min-height: 2.75rem;
@@ -169,6 +195,63 @@ button {
 button {
   cursor: pointer;
   font-weight: 700;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.button {
+  display: inline-block;
+  border: 1px solid var(--accent);
+  border-radius: 0.3rem;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+  font-weight: 750;
+}
+
+.button.primary {
+  background: var(--accent);
+  color: var(--canvas);
+}
+
+.registry-intro,
+.contribute-grid,
+.privacy-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(14rem, 1fr);
+  gap: 2rem;
+  align-items: start;
+  margin-block: 2rem;
+}
+
+.registry-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.registry-stats div {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+.registry-stats dt {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.registry-stats dd {
+  color: var(--muted);
+  margin: 0;
+}
+
+.text-link {
+  font-weight: 750;
 }
 
 .result-count,
@@ -344,7 +427,10 @@ pre {
   }
 
   .filters,
-  .summary {
+  .summary,
+  .registry-intro,
+  .contribute-grid,
+  .privacy-columns {
     grid-template-columns: minmax(0, 1fr);
   }
 

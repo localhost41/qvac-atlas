@@ -32,10 +32,11 @@ function yes(value: string): boolean {
 
 export function usage(): string {
   return [
-    "QVAC Atlas creates a local, sanitized report and uploads nothing.",
+    "QVAC Atlas creates a local, sanitized report. Anonymous submission is always opt-in.",
     "",
     "Usage:",
     "  qvac-atlas probe --fixture <success|missing-qvac|worker-crash|timeout> --output <path> [--project <path>]",
+    "  qvac-atlas contribute [--output <path>]",
     "  qvac-atlas probe --real --output <path>",
     "",
     "This build accepts synthetic fixture scenarios only.",
