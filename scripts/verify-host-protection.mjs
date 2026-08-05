@@ -259,7 +259,15 @@ export function repositoryProtectionFailures({
     failures.push("linear history is not required");
   if (!isEnabled(protection?.required_conversation_resolution))
     failures.push("conversation resolution is not required");
-  if (!isEnabled(protection?.block_creations))
+  // GitHub does not expose push restrictions (and therefore cannot enforce
+  // block_creations) on personal-account repositories. Keep this control
+  // launch-blocking for organization repos, but do not report a false failure
+  // for the explicitly documented owner-operated personal-repo mode.
+  const personalRepository = repository?.owner?.type === "User";
+  if (
+    !isEnabled(protection?.block_creations) &&
+    (independentReviewer || !personalRepository)
+  )
     failures.push("matching branch creation is not blocked");
   if (!isDisabled(protection?.allow_force_pushes))
     failures.push("force pushes are not explicitly disabled");

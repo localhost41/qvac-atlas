@@ -237,3 +237,14 @@ This is an explicit availability and governance tradeoff, not evidence that an
 independent review occurred. The public site and npm release remain gated on the
 exact local and CI checks; the relay remains gated on its host and GitHub App
 controls.
+
+## D-022 — Personal GitHub repositories cannot enforce branch-creation blocking
+
+GitHub's branch-protection API only makes `block_creations` effective when push
+restrictions are configured, and personal-account repositories cannot configure
+those restrictions. The owner-operated `localhost41/qvac-atlas` repository
+therefore retains every supported protection control but records this one
+platform limitation explicitly. An organization-owned mirror can enable the
+additional restriction later; the verifier keeps the check launch-blocking for
+organization repositories and does not report a false failure for this confirmed
+personal-repository mode.
