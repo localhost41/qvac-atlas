@@ -303,6 +303,7 @@ export async function verifyHostProtection({
   branch,
   expectedHead,
   deploymentReviewer,
+  independentReviewer = true,
 }) {
   const codeownersText = await readFile(
     resolve(root, ".github/CODEOWNERS"),
@@ -357,6 +358,7 @@ export async function verifyHostProtection({
     expectedBranch: branch,
     expectedHead,
     deploymentReviewer,
+    independentReviewer,
     pages,
     pagesEnvironment,
     checkRuns,
